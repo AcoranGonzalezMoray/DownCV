@@ -1,0 +1,18 @@
+{
+  "name": "DownCV - Markdown CV & ATS Optimizer",
+  "short_name": "DownCV",
+  "description": "Local-first privacy-focused Markdown CV builder and ATS optimizer",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

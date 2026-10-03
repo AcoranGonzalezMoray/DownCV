@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  downcv:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: downcv-app
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      - NODE_ENV=production
