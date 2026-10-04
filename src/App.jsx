@@ -1,4 +1,11 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useCallback,
+  useRef,
+  useMemo,
+} from 'react';
 import useTheme from './hooks/useTheme';
 import useLocalStorage from './hooks/useLocalStorage';
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
@@ -483,33 +490,40 @@ export default function App() {
 
   const headerRef = useRef(null);
   const brandRef = useRef(null);
+  const brandTextRef = useRef(null);
   const switchRef = useRef(null);
   const actionsRef = useRef(null);
   const [switchCentered, setSwitchCentered] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (typeof ResizeObserver === 'undefined') {
       return undefined;
     }
     const check = () => {
       const header = headerRef.current;
       const brand = brandRef.current;
+      const brandText = brandTextRef.current;
       const box = switchRef.current;
       const actions = actionsRef.current;
       if (!header || !brand || !box || !actions || box.offsetWidth === 0) {
         return;
       }
       const rootFont = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-      const centre = header.clientWidth / 2 - (10 * rootFont) / 2;
+      const centre = header.clientWidth / 2 - 10 * rootFont;
       const half = box.offsetWidth / 2;
+      const paddingRight = parseFloat(getComputedStyle(header).paddingRight) || 0;
+      const brandTextWidth = brandText
+        ? Math.max(0, ...[...brandText.children].map((child) => child.scrollWidth))
+        : 0;
+      const brandMinRight = brand.offsetLeft + 48 + brandTextWidth;
+      const actionsLeft = header.clientWidth - paddingRight - actions.offsetWidth;
       const fits =
-        centre - half > brand.offsetLeft + brand.offsetWidth + 8 &&
-        centre + half < actions.offsetLeft - 8;
+        centre - half > brandMinRight + 8 && centre + half < actionsLeft - 8;
       setSwitchCentered((previous) => (previous === fits ? previous : fits));
     };
     check();
     const observer = new ResizeObserver(check);
-    [headerRef, brandRef, switchRef, actionsRef].forEach((ref) => {
+    [headerRef, brandRef, brandTextRef, switchRef, actionsRef].forEach((ref) => {
       if (ref.current) {
         observer.observe(ref.current);
       }
@@ -527,7 +541,7 @@ export default function App() {
           <div className="app-brand-icon flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl shadow-sm">
             <img src="/icon.jpg" alt="DownCV" className="h-full w-full object-cover" />
           </div>
-          <div className="min-w-0">
+          <div ref={brandTextRef} className="min-w-0">
             <h1 className="truncate whitespace-nowrap text-base font-bold tracking-tight text-[var(--ui-text-primary)]">
               {t.appTitle}
             </h1>
@@ -539,7 +553,7 @@ export default function App() {
 
         <div
           ref={switchRef}
-          className={`topbar-switch grid shrink-0 grid-cols-3 items-center gap-0.5 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-primary)] p-1 text-xs ${switchCentered ? 'topbar-switch-centered' : ''}`}
+          className={`topbar-switch grid shrink-0 grid-cols-3 items-center gap-0.5 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-primary)] p-1 text-xs ${switchCentered ? 'topbar-switch-centered' : ''} ${switchCentered ? '' : 'topbar-switch-flow'}`}
         >
           {viewButtons.map((v) => {
             const Icon = v.icon;
