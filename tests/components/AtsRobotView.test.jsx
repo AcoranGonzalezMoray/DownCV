@@ -71,6 +71,34 @@ describe('AtsRobotView', () => {
     expect(screen.getByText(/one single blob/)).toBeTruthy();
   });
 
+  it('splits a stored record without pageTexts back into its pages', () => {
+    render(
+      <AtsRobotView
+        record={{
+          charCount: 60,
+          pageCount: 3,
+          text: 'Ana Gomez\nAcme Corp\n\nKubernetes migration\n\nEducation\nBSc',
+        }}
+        t={t}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /What the robot read/ }));
+
+    expect(screen.getByText('Page 1')).toBeTruthy();
+    expect(screen.getByText('Page 2')).toBeTruthy();
+    expect(screen.getByText('Page 3')).toBeTruthy();
+    expect(screen.getByText(/Acme Corp/)).toBeTruthy();
+    expect(screen.getByText(/Kubernetes migration/)).toBeTruthy();
+    expect(screen.getByText(/Education/)).toBeTruthy();
+  });
+
+  it('reads the title in full instead of cutting it off', () => {
+    renderView();
+    const title = screen.getByRole('button', { name: /What the robot read/ });
+    expect(title.querySelector('.truncate')).toBe(null);
+    expect(screen.getByText(t.atsRobotTitle)).toBeTruthy();
+  });
+
   it('puts the extracted text on the clipboard, page breaks included', async () => {
     const writeText = vi.fn(async () => {});
     Object.assign(navigator, { clipboard: { writeText } });

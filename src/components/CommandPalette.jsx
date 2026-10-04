@@ -19,6 +19,9 @@ import {
   FolderOpen,
   Save,
   ArrowRight,
+  ArrowUp,
+  ArrowDown,
+  CornerDownLeft,
   GitBranch,
   FileSignature,
   BookOpen,
@@ -323,9 +326,14 @@ export default function CommandPalette({ open, onClose, actions, t }) {
         </div>
 
         <div className="flex items-center justify-between border-t border-[var(--ui-border-primary)] bg-[var(--ui-bg-secondary)] px-4 py-2 text-[11px] text-[var(--ui-text-tertiary)]">
-          <div className="flex items-center gap-2">
-            <span>↑↓ {t.cmdNavigate}</span>
-            <span>↵ {t.cmdSelect}</span>
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1">
+              <ArrowUp className="w-3 h-3" />
+              <ArrowDown className="w-3 h-3" /> {t.cmdNavigate}
+            </span>
+            <span className="flex items-center gap-1">
+              <CornerDownLeft className="w-3 h-3" /> {t.cmdSelect}
+            </span>
           </div>
           <span>Ctrl+K / Cmd+K</span>
         </div>

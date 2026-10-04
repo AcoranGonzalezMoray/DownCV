@@ -15,9 +15,9 @@ export const translations = {
     save: 'Save',
     saved: 'Saved',
     unsavedTooltip: 'Unsaved changes (Red Dot)',
-    openDraftOrSample: '📁 Open Saved CV / Sample...',
-    savedDraftsGroup: '💾 My Saved CVs',
-    sampleTemplatesGroup: '📋 Sample Templates',
+    openDraftOrSample: 'Open CV...',
+    savedDraftsGroup: 'My Saved CVs',
+    sampleTemplatesGroup: 'Sample Templates',
     insertSnippet: 'Insert:',
     expSnippetLabel: 'Experience',
     eduSnippetLabel: 'Education',
@@ -92,7 +92,7 @@ export const translations = {
     atsPdfTitle: 'ATS Score of the Real PDF',
     atsPdfIntro:
       'The CV is exported to a real PDF and the text layer of that file is what gets filtered, exactly like an ATS parser reads it.',
-    atsPdfEvaluate: 'Evaluate PDF',
+    atsPdfEvaluate: 'Evaluate',
     atsPdfEvaluating: 'Generating and reading the PDF...',
     atsPdfLatest: 'Last evaluation',
     atsPdfHistory: 'Evaluation history',
@@ -112,6 +112,8 @@ export const translations = {
     atsPdfTextLayer: 'Readable text layer',
     atsPdfTextLayerPass: 'The PDF exposes selectable text, so parsers can read it.',
     atsPdfTextLayerFail: 'The PDF has almost no selectable text.',
+    atsPdfNoTextLayer:
+      'This file has no text layer, so it looks like a scan or an image. Export it again from a text based editor.',
     atsPdfLength: 'Length',
     atsPdfLengthPass: 'Good amount of content for a one or two page CV.',
     atsPdfLengthFail: 'Too little or too much text for an ATS to process well.',
@@ -148,6 +150,8 @@ export const translations = {
     atsPdfFitOnePage: 'Fit on one page',
     atsPdfFitApplied: 'Layout adjusted, re-evaluating...',
     atsPdfFitImpossible: 'It does not fit on one page even at the minimum size.',
+    atsPdfFitPartial:
+      'Pages cut from {n} to {m}: this CV cannot reach one page without becoming unreadable.',
     atsPdfRevertFit: 'Undo layout change',
     atsPdfCompare: 'Compare with previous',
     atsPdfTrend: 'Score history',
@@ -181,6 +185,72 @@ export const translations = {
       'Around 450 to 600 words per page reads comfortably: cut or split the longest paragraphs.',
     atsPdfStuffingExample:
       'Use each keyword once or twice, in context, instead of repeating it on every line.',
+
+    atsPdfHeadings: 'Headings the parser can read',
+    atsPdfHeadingsPass: 'Every heading survives the conversion.',
+    atsPdfHeadingsFail: 'These headings never reach the sheet as a heading.',
+    atsPdfHeadingsSeen: 'headings kept',
+    atsPdfHeadingsExample:
+      'Keep section headings short and on their own line: a long title wraps and stops looking like a heading.',
+
+    atsPdfEmoji: 'Characters a parser drops',
+    atsPdfEmojiPass: 'No emoji and no image placeholder in the text layer.',
+    atsPdfEmojiFail: 'The text layer holds characters or blocks a parser cannot read.',
+    atsPdfEmojiExample:
+      'Replace the emoji with a word, and turn tables or images into a line of text.',
+
+    atsPdfDates: 'Dates and chronology',
+    atsPdfDatesPass: 'Dates are readable, consistent and not in the future.',
+    atsPdfDatesFail: 'The timeline is hard to read.',
+    atsPdfDatesFound: 'date ranges',
+    atsPdfDatesFuture: 'A date is in the future',
+    atsPdfDatesMixed: 'Two date styles are mixed',
+    atsPdfDatesOverlap: 'Two jobs claim the same months',
+    atsPdfDatesExample:
+      'Write every range the same way, as "Mar 2019 - Present", and check the dates of each job.',
+
+    atsPdfFilename: 'File name',
+    atsPdfFilenamePass: 'The file is named after you',
+    atsPdfFilenameFail: 'The file name is not the one an ATS expects.',
+    atsPdfFilenameProblem: 'problem',
+    atsPdfFilenameExample:
+      'Use Name_Surname_CV.pdf, without spaces, accents or words like "final" or "v2".',
+
+    atsPdfPhrasing: 'Weak phrasing',
+    atsPdfPhrasingPass: 'The bullets say what you did, not where you were.',
+    atsPdfPhrasingFail: 'Fillers that hide the achievement.',
+    atsPdfPhrasingExample:
+      'Replace "responsible for the billing service" with "Owned the billing service and cut failures 30%".',
+
+    atsPdfDuplicates: 'Repeated bullets',
+    atsPdfDuplicatesPass: 'No achievement is copied between jobs.',
+    atsPdfDuplicatesFail: 'The same bullet is repeated in several jobs.',
+    atsPdfDuplicatesExample: 'Write one line per job: what was different there.',
+
+    atsPdfLanguage: 'Language of the document',
+    atsPdfLanguagePass: 'Headings and bullets speak the same language.',
+    atsPdfLanguageFail:
+      'The headings are written in {a} and the bullets in {b}: a parser reads them as two documents.',
+    atsPdfLanguageSpanish: 'Spanish',
+    atsPdfLanguageEnglish: 'English',
+    atsPdfLanguageHeadings: 'Headings',
+    atsPdfLanguageBullets: 'Bullets',
+    atsPdfLanguageExample:
+      'A parser reads the two parts as two documents: keep the headings and the bullets in one language.',
+
+    atsGapsTitle: 'What is missing',
+    atsGapsEmpty: 'Nothing left to fix: this CV scores the full mark.',
+    atsReportLabel: 'Download report',
+    atsReportChecks: 'Every check',
+    atsReportGaps: 'What is missing',
+    atsReportFooter: 'Generated with DownCV',
+
+    atsImportTitle: 'Analyse another PDF',
+    atsImportLabel: 'Analyse an external PDF',
+    atsImportHint: 'Score the file you actually send, even if it did not come from here.',
+    atsImportRunning: 'Reading the PDF...',
+    atsImportEmpty: 'No file analysed yet.',
+    atsImportDiscard: 'Close',
 
     contactWarningTitle: 'Check your contact data',
     contactWarningPending: 'unverified',
@@ -337,7 +407,7 @@ export const translations = {
     atsRobotFootnote:
       'Broken accents, split words and stray symbols are the ones worth a second look: they are what turns a good CV into an empty field in a portal.',
 
-    atsSubRules: 'ATS Rules',
+    atsSubAnalyzer: 'ATS Analyzer',
     atsSubJob: 'Job Matcher',
 
     letterFromJob:
@@ -453,9 +523,9 @@ export const translations = {
     save: 'Guardar',
     saved: 'Guardado',
     unsavedTooltip: 'Cambios sin guardar (Punto Rojo)',
-    openDraftOrSample: '📁 Abrir CV Guardado / Ejemplo...',
-    savedDraftsGroup: '💾 Mis CVs Guardados',
-    sampleTemplatesGroup: '📋 Plantillas de Ejemplo',
+    openDraftOrSample: 'Abrir CV...',
+    savedDraftsGroup: 'Mis CVs Guardados',
+    sampleTemplatesGroup: 'Plantillas de Ejemplo',
     insertSnippet: 'Insertar:',
     expSnippetLabel: 'Experiencia',
     eduSnippetLabel: 'Educación',
@@ -530,7 +600,7 @@ export const translations = {
     atsPdfTitle: 'Puntuación ATS del PDF Real',
     atsPdfIntro:
       'El CV se exporta a un PDF real y lo que se filtra es la capa de texto de ese archivo, igual que lo lee un parser ATS.',
-    atsPdfEvaluate: 'Evaluar PDF',
+    atsPdfEvaluate: 'Evaluar',
     atsPdfEvaluating: 'Generando y leyendo el PDF...',
     atsPdfLatest: 'Última evaluación',
     atsPdfHistory: 'Historial de evaluaciones',
@@ -551,6 +621,8 @@ export const translations = {
     atsPdfTextLayer: 'Capa de texto legible',
     atsPdfTextLayerPass: 'El PDF expone texto seleccionable, un parser puede leerlo.',
     atsPdfTextLayerFail: 'El PDF apenas tiene texto seleccionable.',
+    atsPdfNoTextLayer:
+      'Este archivo no tiene capa de texto: parece un escaneo o una imagen. Vuelve a exportarlo desde un editor de texto.',
     atsPdfLength: 'Extensión',
     atsPdfLengthPass: 'Cantidad de contenido adecuada para un CV de una o dos páginas.',
     atsPdfLengthFail: 'Demasiado poco o demasiado texto para un buen análisis ATS.',
@@ -587,6 +659,8 @@ export const translations = {
     atsPdfFitOnePage: 'Ajustar a una página',
     atsPdfFitApplied: 'Diseño ajustado, vuelve a evaluar...',
     atsPdfFitImpossible: 'No cabe en una página ni con el tamaño mínimo.',
+    atsPdfFitPartial:
+      'Páginas reducidas de {n} a {m}: este CV no puede llegar a una página sin quedar ilegible.',
     atsPdfRevertFit: 'Deshacer ajuste de diseño',
     atsPdfCompare: 'Comparar con la anterior',
     atsPdfTrend: 'Historial de puntuación',
@@ -623,6 +697,72 @@ export const translations = {
       'Entre 450 y 600 palabras por página se lee cómodo: recorta o divide los párrafos más largos.',
     atsPdfStuffingExample:
       'Usa cada palabra clave una o dos veces, en contexto, en vez de repetirla en cada línea.',
+
+    atsPdfHeadings: 'Encabezados que el parser lee',
+    atsPdfHeadingsPass: 'Todos los encabezados sobreviven a la conversión.',
+    atsPdfHeadingsFail: 'Estos encabezados nunca llegan a la hoja como encabezado.',
+    atsPdfHeadingsSeen: 'encabezados conservados',
+    atsPdfHeadingsExample:
+      'Mantén los encabezados cortos y en su propia línea: un título largo se parte y deja de parecer un encabezado.',
+
+    atsPdfEmoji: 'Caracteres que el parser descarta',
+    atsPdfEmojiPass: 'Ni emojis ni marcadores de imagen en la capa de texto.',
+    atsPdfEmojiFail: 'La capa de texto tiene caracteres o bloques que un parser no lee.',
+    atsPdfEmojiExample:
+      'Cambia los emojis por una palabra y convierte tablas o imágenes en una línea de texto.',
+
+    atsPdfDates: 'Fechas y cronología',
+    atsPdfDatesPass: 'Fechas legibles, homogéneas y sin futuro.',
+    atsPdfDatesFail: 'La línea temporal es difícil de leer.',
+    atsPdfDatesFound: 'rangos de fechas',
+    atsPdfDatesFuture: 'Una fecha está en el futuro',
+    atsPdfDatesMixed: 'Se mezclan dos formatos de fecha',
+    atsPdfDatesOverlap: 'Dos puestos se solapan en el tiempo',
+    atsPdfDatesExample:
+      'Escribe todos los rangos igual, como "Mar 2019 - Actualidad", y revisa las fechas de cada puesto.',
+
+    atsPdfFilename: 'Nombre del archivo',
+    atsPdfFilenamePass: 'El archivo lleva tu nombre',
+    atsPdfFilenameFail: 'El nombre del archivo no es el que espera un ATS.',
+    atsPdfFilenameProblem: 'problema',
+    atsPdfFilenameExample:
+      'Usa Nombre_Apellidos_CV.pdf, sin espacios, acentos ni palabras como "final" o "v2".',
+
+    atsPdfPhrasing: 'Frases débiles',
+    atsPdfPhrasingPass: 'Las viñetas dicen lo que hiciste, no dónde estabas.',
+    atsPdfPhrasingFail: 'Relleno que tapa el logro.',
+    atsPdfPhrasingExample:
+      'Cambia "responsable del servicio de facturación" por "Lideré el servicio de facturación y reduje los fallos un 30%".',
+
+    atsPdfDuplicates: 'Viñetas repetidas',
+    atsPdfDuplicatesPass: 'Ningún logro copiado entre puestos.',
+    atsPdfDuplicatesFail: 'La misma viñeta se repite en varios puestos.',
+    atsPdfDuplicatesExample: 'Escribe una línea por puesto: qué había de diferente allí.',
+
+    atsPdfLanguage: 'Idioma del documento',
+    atsPdfLanguagePass: 'Encabezados y viñetas hablan el mismo idioma.',
+    atsPdfLanguageFail:
+      'Los encabezados están en {a} y las viñetas en {b}: un parser los lee como dos documentos.',
+    atsPdfLanguageSpanish: 'español',
+    atsPdfLanguageEnglish: 'inglés',
+    atsPdfLanguageHeadings: 'Encabezados',
+    atsPdfLanguageBullets: 'Viñetas',
+    atsPdfLanguageExample:
+      'Un parser lee las dos partes como dos documentos: mantén encabezados y viñetas en un solo idioma.',
+
+    atsGapsTitle: 'Qué falta para el full',
+    atsGapsEmpty: 'No queda nada que arreglar: este CV consigue la máxima nota.',
+    atsReportLabel: 'Descargar informe',
+    atsReportChecks: 'Todos los checks',
+    atsReportGaps: 'Qué falta',
+    atsReportFooter: 'Generado con DownCV',
+
+    atsImportTitle: 'Analizar otro PDF',
+    atsImportLabel: 'Analizar un PDF externo',
+    atsImportHint: 'Puntúa el archivo que envías de verdad, aunque no venga de aquí.',
+    atsImportRunning: 'Leyendo el PDF...',
+    atsImportEmpty: 'Todavía no se ha analizado ningún archivo.',
+    atsImportDiscard: 'Cerrar',
 
     contactWarningTitle: 'Revisa tus datos de contacto',
     contactWarningPending: 'sin verificar',
@@ -788,7 +928,7 @@ export const translations = {
     atsRobotFootnote:
       'Los acentos rotos, las palabras partidas y los símbolos sueltos son lo que hay que revisar: son lo que convierte un buen CV en un campo vacío en un portal.',
 
-    atsSubRules: 'Reglas ATS',
+    atsSubAnalyzer: 'Analizador ATS',
     atsSubJob: 'Comparar Oferta',
 
     letterFromJob:

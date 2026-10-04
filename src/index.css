@@ -467,7 +467,7 @@ body {
 }
 
 .cv-paper.border-style-line h3.cv-section-title {
-  border-bottom: 1.5px solid var(--cv-paper-primary);
+  border-bottom: 2px solid var(--cv-paper-primary);
 }
 .cv-paper.border-style-double h3.cv-section-title {
   border-bottom: 3px double var(--cv-paper-primary);
@@ -592,6 +592,30 @@ body {
   }
   .no-print {
     display: none !important;
+  }
+  /* The app shell is a viewport-sized flexbox with hidden overflow: without this
+     the printer only ever sees the first sheet. */
+  #root,
+  .app-shell,
+  .app-main,
+  .app-preview,
+  .app-preview-body {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .app-shell,
+  .app-main,
+  .app-preview-body {
+    display: block !important;
+  }
+  .app-shell {
+    width: auto !important;
+  }
+  .app-preview {
+    display: flex !important;
+    flex-direction: column !important;
   }
   .cv-paper-container {
     padding: 0 !important;

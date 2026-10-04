@@ -52,8 +52,7 @@ const renderEditor = (lang, markdown = CV) => {
   return { setMarkdown, view };
 };
 
-const click = (name) =>
-  fireEvent.click(screen.getByRole('button', { name: new RegExp(`\\+ ${name}`) }));
+const click = (name) => fireEvent.click(screen.getByRole('button', { name }));
 
 describe('MarkdownEditor insert buttons', () => {
   afterEach(() => cleanup());
@@ -61,7 +60,7 @@ describe('MarkdownEditor insert buttons', () => {
   it('names the buttons in the language of the interface', () => {
     renderEditor('es');
     for (const label of ['Experiencia', 'Educación', 'Habilidades', 'Certificación']) {
-      expect(screen.getByRole('button', { name: new RegExp(`\\+ ${label}`) })).toBeTruthy();
+      expect(screen.getByRole('button', { name: new RegExp(`${label}$`) })).toBeTruthy();
     }
   });
 
@@ -142,6 +141,88 @@ describe('MarkdownEditor insert buttons', () => {
 });
 
 const SKILLS_CV = '# Ana\n\n## SKILLS\n\nReact, \n\n## EXPERIENCE\n\n- Led things\n';
+
+describe('MarkdownEditor library dropdown', () => {
+  const onSelectSample = vi.fn();
+  const savedDrafts = [{ id: 'd1', name: 'Mi CV' }];
+
+  const renderLibrary = () =>
+    render(
+      <MarkdownEditor
+        markdown={CV}
+        setMarkdown={vi.fn()}
+        sampleCVs={samplesFor('en')}
+        lang="en"
+        onSelectSample={onSelectSample}
+        wordCount={42}
+        savedDrafts={savedDrafts}
+        onSaveDraft={vi.fn()}
+        currentDraftName=""
+        t={translations.en}
+        searchOpen={false}
+        setSearchOpen={vi.fn()}
+      />,
+    );
+
+  const trigger = () =>
+    screen.getByRole('button', { name: new RegExp(translations.en.openDraftOrSample) });
+
+  afterEach(() => {
+    cleanup();
+    onSelectSample.mockClear();
+  });
+
+  it('stays closed until it is asked for', () => {
+    renderLibrary();
+    expect(screen.queryByRole('menu')).toBe(null);
+    expect(trigger().getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('lists the drafts and the samples in groups, with an icon each', () => {
+    renderLibrary();
+    fireEvent.click(trigger());
+
+    const menu = screen.getByRole('menu');
+    expect(within(menu).getByText(translations.en.savedDraftsGroup)).toBeTruthy();
+    expect(within(menu).getByText(translations.en.sampleTemplatesGroup)).toBeTruthy();
+    expect(within(menu).getByText('Mi CV')).toBeTruthy();
+    samplesFor('en').forEach((sample) => {
+      expect(within(menu).getByText(sample.name)).toBeTruthy();
+    });
+    expect(menu.querySelectorAll('svg').length).toBeGreaterThan(0);
+  });
+
+  it('opens the CV that was pressed and closes', () => {
+    renderLibrary();
+    fireEvent.click(trigger());
+    const sample = samplesFor('en')[0];
+    fireEvent.click(screen.getByRole('menuitem', { name: new RegExp(sample.name) }));
+
+    expect(onSelectSample).toHaveBeenCalledWith(`sample:${sample.id}`);
+    expect(screen.queryByRole('menu')).toBe(null);
+  });
+
+  it('walks the list with the arrows and closes on Escape', () => {
+    renderLibrary();
+    fireEvent.click(trigger());
+    const items = screen.getAllByRole('menuitem');
+
+    fireEvent.keyDown(items[0], { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(items[1]);
+    fireEvent.keyDown(items[1], { key: 'End' });
+    expect(document.activeElement).toBe(items[items.length - 1]);
+
+    fireEvent.keyDown(document.activeElement, { key: 'Escape' });
+    expect(screen.queryByRole('menu')).toBe(null);
+  });
+
+  it('closes when the pointer lands outside', () => {
+    renderLibrary();
+    fireEvent.click(trigger());
+    fireEvent.mouseDown(document.body);
+    expect(screen.queryByRole('menu')).toBe(null);
+  });
+});
 
 function StatefulEditor({ initial, onScrollRatio = null, syncRequest = null }) {
   const [markdown, setMarkdown] = useState(initial);

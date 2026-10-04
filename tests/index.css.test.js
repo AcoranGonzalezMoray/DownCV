@@ -48,6 +48,43 @@ describe('the sheet of the preview', () => {
     const printed = css.slice(css.indexOf('@media print'));
     expect(printed).toMatch(/\.cv-paper\s*\{[^}]*zoom:\s*1\s*!important/);
   });
+
+  it('prints every sheet, because the app shell cannot clip the stack', () => {
+    const printed = css.slice(css.indexOf('@media print'));
+    const [rule] = rulesFor('.app-shell,');
+    expect(rule, 'no print rule releases the app shell').toBeTruthy();
+    expect(rule.body).toMatch(/height:\s*auto\s*!important/);
+    expect(rule.body).toMatch(/overflow:\s*visible\s*!important/);
+    expect(printed).toMatch(/\.app-main/);
+    expect(printed).toMatch(/\.app-preview-body/);
+    expect(app).toMatch(/app-shell/);
+    expect(preview).toMatch(/app-preview-body/);
+  });
+
+  it('takes the accent colour from the style panel, using the name the sheet reads', () => {
+    expect(preview).toMatch(/'--cv-paper-primary':\s*styles\.primaryColor/);
+    expect(preview).toMatch(/'--cv-paper-text':\s*styles\.textColor/);
+    expect(preview).toMatch(/'--cv-paper-subtext':\s*styles\.subtextColor/);
+    expect(css).toMatch(/color:\s*var\(--cv-paper-primary\)/);
+  });
+
+  it('draws the minimalist heading with the thinnest rule of every option', () => {
+    const widthOf = (selector) =>
+      Number(/([\d.]+)px/.exec(rulesFor(selector)[0].body)[1]);
+    const widths = [
+      widthOf('.border-style-minimal h3.cv-section-title'),
+      widthOf('.border-style-line h3.cv-section-title'),
+      widthOf('.border-style-double h3.cv-section-title'),
+      widthOf('.border-style-thick-left h3.cv-section-title'),
+    ];
+
+    expect(widths.every((width) => Number.isInteger(width))).toBe(true);
+    expect(widths[0]).toBeLessThan(widths[1]);
+    expect(widths[0]).toBeLessThan(widths[2]);
+    expect(widths[0]).toBeLessThan(widths[3]);
+    expect(Math.min(...widths)).toBe(widths[0]);
+    expect(preview).toMatch(/'--cv-paper-border':\s*`color-mix/);
+  });
 });
 
 describe('the bar of actions', () => {

@@ -473,6 +473,73 @@ describe('CVPreview zoom of the page', () => {
   });
 });
 
+describe('CVPreview spacer measurement', () => {
+  const SPACED_CV = `# Ana Gomez\n\nana@example.com | Madrid\n\n<br>\n\n## EXPERIENCIA\n\n### Acme\n\n- Logro con metricas\n\n<br>\n\n## EDUCACION\n\n### BSc\n`;
+
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+  });
+
+  it('does not invent pages when a lone <br> spacer reports no offset, as Chrome does', async () => {
+    vi.spyOn(HTMLElement.prototype, 'offsetTop', 'get').mockImplementation(function getTop() {
+      const parent = this.parentElement;
+      if (!parent?.classList?.contains('cv-paper-measure')) {
+        return 0;
+      }
+      if (this.tagName === 'BR') {
+        return 0;
+      }
+      return Array.prototype.indexOf.call(parent.children, this) * 100;
+    });
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function getHeight() {
+      return this.tagName === 'BR' ? 0 : 100;
+    });
+
+    renderPreview(SPACED_CV);
+    await act(async () => {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    });
+
+    const spacers = document.querySelectorAll('.cv-paper-measure > br');
+    expect(spacers.length).toBeGreaterThan(0);
+    expect(document.querySelectorAll('.cv-pages .cv-page').length).toBe(1);
+  });
+
+  it('reports the page count, so the ATS panel can fit the sheet the user sees', async () => {
+    const onPageCount = vi.fn();
+    vi.spyOn(HTMLElement.prototype, 'offsetTop', 'get').mockImplementation(function getTop() {
+      const parent = this.parentElement;
+      if (this.tagName === 'BR' || !parent?.classList?.contains('cv-paper-measure')) {
+        return 0;
+      }
+      return Array.prototype.indexOf.call(parent.children, this) * 100;
+    });
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function getHeight() {
+      return this.tagName === 'BR' ? 0 : 100;
+    });
+
+    render(
+      <CVPreview
+        markdown={SPACED_CV}
+        setMarkdown={noop}
+        styles={styles}
+        t={translations.en}
+        undo={noop}
+        redo={noop}
+        canUndo={false}
+        canRedo={false}
+        onPageCount={onPageCount}
+      />,
+    );
+    await act(async () => {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    });
+
+    expect(onPageCount).toHaveBeenLastCalledWith(1);
+  });
+});
+
 describe('CVPreview page navigation', () => {
   
   const LONG_CV = `# Ana Gomez\n\n${Array.from(

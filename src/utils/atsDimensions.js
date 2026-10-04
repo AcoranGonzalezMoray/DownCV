@@ -1,8 +1,8 @@
 export const DIMENSION_GROUPS = {
-  structure: ['text', 'pages', 'length', 'residue'],
-  contact: ['contact', 'sections'],
-  verbs: ['verbs'],
-  metrics: ['metrics', 'bullets'],
+  structure: ['text', 'pages', 'length', 'residue', 'emoji', 'language'],
+  contact: ['contact', 'sections', 'headings', 'dates', 'filename'],
+  verbs: ['verbs', 'phrasing'],
+  metrics: ['metrics', 'bullets', 'duplicates'],
   keywords: ['keywords', 'density', 'stuffing'],
 };
 

@@ -370,7 +370,8 @@ export const sampleCVs = [
   {
     id: 'fullstack-es',
     lang: 'es',
-    name: '🚀 Desarrollador Full-Stack Senior',
+    icon: 'code',
+    name: 'Desarrollador Full-Stack Senior',
     role: 'Desarrollador Full-Stack',
     category: 'Ingeniería',
     markdown: fullStackEs,
@@ -378,7 +379,8 @@ export const sampleCVs = [
   {
     id: 'fullstack-en',
     lang: 'en',
-    name: '🚀 Senior Full-Stack Developer',
+    icon: 'code',
+    name: 'Senior Full-Stack Developer',
     role: 'Full-Stack Developer',
     category: 'Engineering',
     markdown: fullStackEn,
@@ -386,7 +388,8 @@ export const sampleCVs = [
   {
     id: 'data-ai-es',
     lang: 'es',
-    name: '📊 Data Scientist & Ingeniera de IA',
+    icon: 'chart',
+    name: 'Data Scientist & Ingeniera de IA',
     role: 'Científica de Datos',
     category: 'Datos & IA',
     markdown: dataAiEs,
@@ -394,7 +397,8 @@ export const sampleCVs = [
   {
     id: 'data-ai-en',
     lang: 'en',
-    name: '📊 Data Scientist & AI Engineer',
+    icon: 'chart',
+    name: 'Data Scientist & AI Engineer',
     role: 'Data Scientist',
     category: 'Data & AI',
     markdown: dataAiEn,
@@ -402,7 +406,8 @@ export const sampleCVs = [
   {
     id: 'product-es',
     lang: 'es',
-    name: '💼 Product Manager Tech',
+    icon: 'target',
+    name: 'Product Manager Tech',
     role: 'Product Manager',
     category: 'Producto',
     markdown: productEs,
@@ -410,7 +415,8 @@ export const sampleCVs = [
   {
     id: 'product-en',
     lang: 'en',
-    name: '💼 Product Manager Tech',
+    icon: 'target',
+    name: 'Product Manager Tech',
     role: 'Product Manager',
     category: 'Product',
     markdown: productEn,
@@ -418,7 +424,8 @@ export const sampleCVs = [
   {
     id: 'engineer-es',
     lang: 'es',
-    name: '🏢 Ingeniero de Software Senior',
+    icon: 'building',
+    name: 'Ingeniero de Software Senior',
     role: 'Ingeniero de Software',
     category: 'Ingeniería',
     markdown: engineerEs,
@@ -426,8 +433,9 @@ export const sampleCVs = [
   {
     id: 'engineer-en',
     lang: 'en',
-    name: '🏢 Senior Software Engineer',
-    role: 'Senior Software Engineer',
+    icon: 'building',
+    name: 'Senior Software Engineer',
+    role: 'Software Engineer',
     category: 'Engineering',
     markdown: engineerEn,
   },

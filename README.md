@@ -57,8 +57,31 @@ Unlike web resume builders that process sensitive personal data on third-party s
       <details open>
         <summary>🛡️ Integrated ATS Simulator & Scorer</summary>
         
-> Scores your generated PDF against realistic ATS rules (text layer integrity, keyword density, action verbs, contact information, bullet quality, etc.).
-        
+> Scores your generated PDF against realistic ATS rules (text layer integrity, keyword density, action verbs, contact information, bullet quality, etc.). Also analyses a PDF you already have, and exports the report. The score is the sum of the rules that pass, out of 100. Both lexicons are measured together, so a bilingual CV is never punished for the language of its headings or of its interface.
+
+| Rule | Points | What it fails on |
+|---|---:|---|
+| `text` | 10 | The PDF has almost no selectable text (a scan or an image) |
+| `pages` | 8 | More than two pages |
+| `length` | 3 | Fewer than 200 or more than 900 words |
+| `contact` | 9 | Fewer than two of email, phone and profile link |
+| `sections` | 9 | Fewer than three standard sections found **as headings** |
+| `headings` | 4 | A source heading that never reaches the sheet as a heading (a title too long, wrapped into loose lines) |
+| `residue` | 6 | Markdown or HTML syntax visible in the text layer |
+| `emoji` | 3 | An emoji or an image/table placeholder a parser cannot read |
+| `verbs` | 10 | Fewer than four action verbs |
+| `metrics` | 8 | Fewer than two numbers behind the achievements |
+| `phrasing` | 5 | Fillers such as "responsible for" or "hard-working", with the verb that says it better |
+| `duplicates` | 3 | The same bullet copied into two jobs |
+| `keywords` | 5 | Fewer than four relevant terms, including the ones the detected role expects |
+| `bullets` | 4 | More than 30% of the experience bullets with no verb and no number |
+| `language` | 2 | Headings in one language and bullets in another |
+| `dates` | 4 | A date in the future, two date styles mixed, or two jobs claiming the same months |
+| `filename` | 2 | A file name without your name, with spaces, or marked "final" / "v2" |
+| `density` | 3 | A single page over 750 words (the densest page, not the average) |
+| `stuffing` | 2 | A term repeated four times in one line, or eating 6% of the document |
+
+The panel also groups them into five dimensions (structure, contact, verbs, metrics, keywords), lists what is missing sorted by points lost, and can download the whole report as HTML.
   <details>
     <summary>🎥 Demo</summary>
     <p align="center"> 
@@ -220,8 +243,8 @@ flowchart TD
 
     subgraph ATSPipeline ["ATS Analyzer Engine (Local)"]
         PA --> PT[pdfText.js - pdf.js Text Layer Extractor]
-        PT --> EVAL[atsPdfEvaluation.js - 12 Scoring Rules]
-        EVAL --> SCORE[ATS Score % + Detailed Recommendations]
+        PT -->         EVAL[atsPdfEvaluation.js - 19 Scoring Rules]
+        EVAL --> SCORE[ATS Score % + Gaps + Report]
         SCORE --> FIXES[markdownFixes.js - 1-Click Fixes]
         FIXES -. Apply Fix .-> MD
     end
@@ -232,7 +255,7 @@ flowchart TD
 1. **Vector Document Build**: `pdfModel.js` converts Markdown into structured style blocks. `pdfBuilder.js` renders real vector text via `jsPDF`.
 2. **Content-Keyed Caching**: `pdfArtifact.js` caches generated binary blobs based on a hash of the Markdown text and layout settings, ensuring scores and downloads never drift.
 3. **Text Layer Extraction**: `pdfText.js` invokes `pdf.js` to extract plain text per page, replicating how Enterprise ATS software (Workday, Taleo, Greenhouse) ingests resumes.
-4. **Scoring & Diagnostics**: `atsPdfEvaluation.js` checks 12 metrics: text layer existence, length, contact info, section structure, Markdown syntax residue, action verbs, metrics/numbers, bullet formatting, keyword density, and text density.
+4. **Scoring & Diagnostics**: `atsPdfEvaluation.js` checks 19 rules worth 100 points (see the table above): text layer existence, length, contact info, section structure, headings the parser cannot read, Markdown residue, exotic characters, action verbs, numbers, weak phrasing, duplicated bullets, keywords, bullet formatting, document language, dates and chronology, file name, page density and keyword stuffing. It can also score any PDF you already have (`evaluatePdfFile`).
 5. **Undoable Pure Fixes**: Detected formatting bugs (e.g. bold hashes, missing email prefix, invalid section headers) trigger single-click fixes applied via pure Markdown string transformations.
 
 ### How the Local AI Rewriter Works
@@ -350,8 +373,10 @@ DownCV/
 │   │   └── useMarkdownHistory.js     # Pure undo/redo state stack
 │   ├── utils/              # Pure business logic & formatting modules
 │   │   ├── aiEnhancer.js        # Local bullet enhancer + Ollama OpenAI-compatible client
-│   │   ├── atsPdfEvaluation.js   # Main ATS evaluation orchestration
-│   │   ├── atsScorer.js          # Action verbs, metrics lexicons & rules
+│   │   ├── atsDimensions.js     # Rule groups behind the radar chart
+│   │   ├── atsPdfEvaluation.js   # Main ATS evaluation orchestration (19 rules / 100 pts)
+│   │   ├── atsReport.js          # Standalone HTML score report
+│   │   ├── atsScorer.js          # Action verbs, keywords & weak phrase lexicons
 │   │   ├── contactScan.js        # Contact parser & regex scanner
 │   │   ├── coverLetter.js        # Template logic for cover letter creation
 │   │   ├── cvImport.js           # Converter from arbitrary text to clean MD

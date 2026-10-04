@@ -20,4 +20,14 @@ describe('translations', () => {
   it('only ships the two supported languages', () => {
     expect(Object.keys(translations).sort()).toEqual(['en', 'es']);
   });
+
+  it('labels the interface with words, never with an emoji', () => {
+    for (const lang of ['en', 'es']) {
+      for (const [key, value] of Object.entries(translations[lang])) {
+        expect(value, `${lang}.${key} carries an emoji`).not.toMatch(
+          /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}]/u,
+        );
+      }
+    }
+  });
 });
