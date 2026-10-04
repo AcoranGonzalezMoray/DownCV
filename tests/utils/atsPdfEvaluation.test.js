@@ -16,6 +16,8 @@ import { applyFix, applyAllFixes, canApplyFix, pendingFixes } from '../../src/ut
 import { diffLines, diffStats, scoreTrend } from '../../src/utils/evaluationDiff';
 import { artifactKey, clearPdfArtifacts, getPdfArtifact, peekPdfArtifact } from '../../src/utils/pdfArtifact';
 import { scanContacts } from '../../src/utils/contactScan';
+import { sampleCVs } from '../../src/data/sampleCVs';
+import { translations } from '../../src/data/translations';
 
 const styles = {
   fontFamily: "'Inter', sans-serif",
@@ -387,7 +389,9 @@ describe('evaluatePdfText', () => {
     ).join(' ');
     const result = evaluatePdfText(extraction(stuffed), { lang: 'en' });
     expect(byId(result, 'stuffing').pass).toBe(false);
-    expect(result.found.stuffed).toEqual(expect.arrayContaining(['leadership']));
+    expect(result.found.stuffed.map((entry) => entry.term)).toEqual(
+      expect.arrayContaining(['leadership']),
+    );
 
     const natural = [
       'Led the agile team that rebuilt the billing platform, mentoring two junior engineers along the way.',
@@ -399,6 +403,33 @@ describe('evaluatePdfText', () => {
     const naturalResult = evaluatePdfText(extraction(natural), { lang: 'en' });
     expect(byId(naturalResult, 'stuffing').pass).toBe(true);
     expect(naturalResult.found.stuffed).toEqual([]);
+  });
+
+  it('catches a technology repeated over and over, not only soft skills', () => {
+    const padded = Array.from({ length: 20 }, () => 'Kubernetes').join(' ');
+    const filler = Array.from({ length: 60 }, (_, index) => `topic${index}`).join(' ');
+    const result = evaluatePdfText(
+      extraction(
+        [
+          'Ana Gomez',
+          'ana@mail.com | +34 600 123 456 | linkedin.com/in/ana',
+          'EXPERIENCE',
+          'Acme Corp',
+          '- Led the migration of 12 services to Kubernetes, cutting deploys by 45%.',
+          `${padded} ${filler}`,
+          'EDUCATION',
+          'BSc Computer Science',
+          'SKILLS',
+          'Kubernetes, Docker, AWS',
+        ].join('\n'),
+        { pageCount: 1 },
+      ),
+      { lang: 'en' },
+    );
+
+    expect(byId(result, 'stuffing').pass).toBe(false);
+    expect(result.found.stuffed.map((entry) => entry.term)).toContain('kubernetes');
+    expect(byId(result, 'stuffing').examples.join(' ')).toContain('kubernetes');
   });
 
   it('evaluates Spanish CVs with the Spanish lexicon', () => {
@@ -535,7 +566,7 @@ describe('evaluatePdfText', () => {
     expect(byId(result, 'bullets').pass).toBe(true);
   });
 
-  it('measures keywords with the lexicon of the CV language', () => {
+  it('measures keywords with both lexicons, so the interface language changes nothing', () => {
     const spanish = evaluatePdfText(
       extraction('Liderazgo, colaboracion, gestion de proyectos, innovacion, cliente, agilidad.'),
       { lang: 'es' },
@@ -546,11 +577,10 @@ describe('evaluatePdfText', () => {
       extraction('Liderazgo, colaboracion, gestion de proyectos, innovacion, cliente, agilidad.'),
       { lang: 'en' },
     );
-    expect(sameTextInEnglish.found.keywords.length).toBe(0);
+    expect(sameTextInEnglish.found.keywords).toEqual(spanish.found.keywords);
   });
 
-  it('explains with examples every check that fails', () => {
-    const result = evaluatePdfText(extraction('Ana\n\n2018 - 2024', { pageCount: 5 }), {
+  it('explains with examples every check that fails', () => {    const result = evaluatePdfText(extraction('Ana\n\n2018 - 2024', { pageCount: 5 }), {
       lang: 'en',
     });
     const failed = result.checks.filter((check) => !check.pass);
@@ -575,6 +605,132 @@ describe('evaluatePdfText', () => {
 
     const spanish = evaluatePdfText(extraction('Ana\n\n## EXPERIENCIA\n\nAcme'), { lang: 'es' });
     expect(spanish.found.missingSections).toContain('HABILIDADES');
+  });
+
+  it('does not count a section a bullet only mentions', () => {
+    const result = evaluatePdfText(
+      extraction(
+        [
+          'Ana Gomez',
+          'ana@mail.com | +34 600 123 456 | linkedin.com/in/ana',
+          'EXPERIENCE',
+          'Acme Corp',
+          '- Delivered 30 projects in 2023 and grew the team by 4 people',
+          '- Led the billing platform migration to Kubernetes, cutting deploys by 45%',
+          '- Automated the release pipeline and reduced incidents by 25%',
+          'SKILLS',
+          'Node.js, React, SQL',
+        ].join('\n'),
+      ),
+      { lang: 'en' },
+    );
+
+    expect(result.found.sectionLabels).toEqual(expect.arrayContaining(['EXPERIENCE', 'SKILLS']));
+    expect(result.found.sectionLabels).not.toContain('PROJECTS');
+    expect(result.found.missingSections).toContain('PROJECTS');
+  });
+
+  it('does not read a job subtitle as a section heading', () => {
+    const text = [
+      'Ana Gomez',
+      'ana@mail.com | +34 600 123 456 | linkedin.com/in/ana',
+      'EXPERIENCE',
+      'Acme Corp',
+      'Technical lead',
+      '- Led the migration of 12 services to Kubernetes, cutting deploys by 45%',
+      '- Reduced infrastructure costs by 18000 euros per year',
+      'EDUCATION',
+      'BSc Computer Science',
+    ].join('\n');
+    const result = evaluatePdfText(extraction(text), { lang: 'en' });
+
+    expect(result.found.bullets).toBe(2);
+    expect(byId(result, 'bullets').pass).toBe(true);
+    expect(result.found.sectionLabels).not.toContain('SKILLS');
+  });
+
+  it('measures a bilingual CV with the lexicon its bullets are written in', () => {
+    const text = [
+      'Ana Gomez',
+      'ana@mail.com | +34 600 123 456 | linkedin.com/in/ana',
+      'EXPERIENCIA LABORAL',
+      'Acme Corp',
+      '- Led the billing platform migration to Kubernetes, cutting deploys by 45%',
+      '- Managed a team of 9 engineers and was responsible for the roadmap',
+      '- Built the CI/CD pipelines and the release process for the platform',
+      '- Automated the release checks and reduced incidents by 25%',
+      'FORMACIÓN',
+      'BSc Computer Science',
+      'HABILIDADES',
+      'Node.js, React, SQL, Docker, ci/cd, leadership, communication',
+    ].join('\n');
+    const result = evaluatePdfText(extraction(text), { lang: 'es' });
+    const englishUi = evaluatePdfText(extraction(text), { lang: 'en' });
+
+    expect(byId(result, 'verbs').pass).toBe(true);
+    expect(byId(result, 'keywords').pass).toBe(true);
+    expect(byId(result, 'bullets').pass).toBe(true);
+    expect(result.found.emptyBullets).toBe(0);
+    expect(result.found.verbs).toEqual(expect.arrayContaining(['led', 'managed', 'built']));
+    expect(englishUi.score).toBe(result.score);
+  });
+
+  it('picks the role with the most evidence, not the first marker', () => {
+    const platform = evaluatePdfText(
+      extraction(
+        [
+          'Ana Gomez',
+          'ana@mail.com | +34 600 123 456 | linkedin.com/in/ana',
+          'EXPERIENCE',
+          'Platform engineer on Kubernetes and Terraform infrastructure.',
+          '- Migrated 12 services to Kubernetes across three clusters.',
+          '- Automated the deployment of the Kubernetes platform with Terraform.',
+          '- Reduced infrastructure costs by 18000 euros per year.',
+          'SKILLS',
+          'React, Node.js, SQL',
+        ].join('\n'),
+      ),
+      { lang: 'en' },
+    );
+
+    expect(platform.found.role).toBe('devops');
+  });
+
+  it('matches the Spanish role words written with accents', () => {
+    const text = [
+      'Ana Gomez',
+      'ana@mail.com | +34 600 123 456 | linkedin.com/in/ana',
+      'EXPERIENCIA',
+      'Acme Corp',
+      '- Lideré la migración de 12 servicios a Kubernetes, reduciendo el tiempo un 45%.',
+      '- Automaticé la monitorización y reduje los incidentes un 25%.',
+      'FORMACIÓN',
+      'Grado en Informatica',
+      'HABILIDADES',
+      'Monitorización, priorización, agilidad',
+    ].join('\n');
+    const result = evaluatePdfText(extraction(text), { lang: 'es' });
+
+    expect(result.found.roleKeywords.length).toBeGreaterThan(0);
+    expect(result.found.keywords).toEqual(expect.arrayContaining(['monitorización']));
+  });
+
+  it('reads a metric the same way twice in a row', () => {
+    const text = [
+      'Ana Gomez',
+      'ana@mail.com | +34 600 123 456 | linkedin.com/in/ana',
+      'EXPERIENCE',
+      'Acme Corp',
+      '- Migration and billing work for the platform',
+      '- Kubernetes, Docker and dashboards',
+      '- Led the migration, cutting deploys by 45%',
+    ].join('\n');
+    const first = evaluatePdfText(extraction(text), { lang: 'en' });
+    const second = evaluatePdfText(extraction(text), { lang: 'en' });
+
+    expect(first.score).toBe(second.score);
+    expect(first.found.emptyBullets).toBe(second.found.emptyBullets);
+    expect(first.found.metrics).toEqual(second.found.metrics);
   });
 
   it('quotes the bullets that say nothing', () => {
@@ -633,6 +789,30 @@ describe('evaluatePdf', () => {
     expect(() => JSON.stringify(record)).not.toThrow();
     expect(JSON.parse(JSON.stringify(record)).score).toBe(record.score);
   });
+
+  it('says a file without a text layer looks like a scan', async () => {
+    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+
+    await expect(evaluatePdf('', styles, { lang: 'en', deps: { pdfjs } })).rejects.toThrow(
+      translations.en.atsPdfNoTextLayer,
+    );
+  });
+
+  it('never calls the bundled samples stuffed, whatever their vocabulary', async () => {
+    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+
+    for (const sample of sampleCVs) {
+      const record = await evaluatePdf(sample.markdown, styles, {
+        lang: sample.lang,
+        bullet: '•',
+        deps: { pdfjs },
+      });
+      const stuffing = record.checks.find((check) => check.id === 'stuffing');
+
+      expect(stuffing.pass, `${sample.id} was called stuffed: ${stuffing.msg}`).toBe(true);
+      expect(record.found.stuffed).toEqual([]);
+    }
+  }, 60000);
 });
 
 describe('fitToPages', () => {

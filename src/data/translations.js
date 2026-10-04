@@ -112,6 +112,8 @@ export const translations = {
     atsPdfTextLayer: 'Readable text layer',
     atsPdfTextLayerPass: 'The PDF exposes selectable text, so parsers can read it.',
     atsPdfTextLayerFail: 'The PDF has almost no selectable text.',
+    atsPdfNoTextLayer:
+      'This file has no text layer, so it looks like a scan or an image. Export it again from a text based editor.',
     atsPdfLength: 'Length',
     atsPdfLengthPass: 'Good amount of content for a one or two page CV.',
     atsPdfLengthFail: 'Too little or too much text for an ATS to process well.',
@@ -553,6 +555,8 @@ export const translations = {
     atsPdfTextLayer: 'Capa de texto legible',
     atsPdfTextLayerPass: 'El PDF expone texto seleccionable, un parser puede leerlo.',
     atsPdfTextLayerFail: 'El PDF apenas tiene texto seleccionable.',
+    atsPdfNoTextLayer:
+      'Este archivo no tiene capa de texto: parece un escaneo o una imagen. Vuelve a exportarlo desde un editor de texto.',
     atsPdfLength: 'Extensión',
     atsPdfLengthPass: 'Cantidad de contenido adecuada para un CV de una o dos páginas.',
     atsPdfLengthFail: 'Demasiado poco o demasiado texto para un buen análisis ATS.',

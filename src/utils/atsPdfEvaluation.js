@@ -40,26 +40,20 @@ const ROLE_KEYWORDS = {
     marketing: ['seo', 'campaign', 'analytics', 'content', 'conversion'],
     design: ['ux', 'figma', 'prototyping', 'accessibility', 'research'],
   },
+
   es: {
     frontend: ['react', 'css', 'accesibilidad', 'responsive', 'testing', 'rendimiento'],
     backend: ['api', 'microservicios', 'base de datos', 'sql', 'cache', 'fiabilidad'],
     fullstack: ['react', 'node.js', 'api', 'base de datos', 'ci/cd', 'testing'],
-    devops: [
-      'ci/cd',
-      'kubernetes',
-      'terraform',
-      'monitorizaci[oó]n',
-      'automatizaci[oó]n',
-      'fiabilidad',
-    ],
+    devops: ['ci/cd', 'kubernetes', 'terraform', 'monitorización', 'automatización', 'fiabilidad'],
     data: ['sql', 'tableau', 'etl', 'dashboards', 'python', 'analítica'],
     ml: ['machine learning', 'python', 'mlops', 'llm', 'datos', 'pipelines'],
-    qa: ['automatizaci[oó]n de pruebas', 'testing', 'regresi[oó]n', 'ci/cd', 'calidad'],
+    qa: ['automatización de pruebas', 'testing', 'regresión', 'ci/cd', 'calidad'],
     mobile: ['android', 'ios', 'react native', 'testing', 'rendimiento'],
-    product: ['roadmap', 'stakeholders', 'agil', 'm[eé]tricas', 'priorizaci[oó]n'],
-    sales: ['crm', 'pipeline', 'negociaci[oó]n', 'cuota', 'prospeccci[oó]n'],
-    marketing: ['seo', 'campaign', 'analítica', 'contenidos', 'conversi[oó]n'],
-    design: ['ux', 'figma', 'prototipado', 'accesibilidad', 'investigaci[oó]n'],
+    product: ['roadmap', 'stakeholders', 'agil', 'métricas', 'priorización'],
+    sales: ['crm', 'pipeline', 'negociación', 'cuota', 'prospección'],
+    marketing: ['seo', 'campaña', 'analítica', 'contenidos', 'conversión'],
+    design: ['ux', 'figma', 'prototipado', 'accesibilidad', 'investigación'],
   },
 };
 
@@ -78,9 +72,18 @@ const ROLE_MARKERS = [
   { role: 'design', re: /designer|product design|\bux\b|\bui\b/i },
 ];
 
+
 function detectRole(flat) {
-  const match = ROLE_MARKERS.find((candidate) => candidate.re.test(flat));
-  return match ? match.role : null;
+  let best = null;
+  let bestHits = 0;
+  for (const candidate of ROLE_MARKERS) {
+    const hits = (flat.match(new RegExp(candidate.re.source, 'gi')) || []).length;
+    if (hits > bestHits) {
+      best = candidate.role;
+      bestHits = hits;
+    }
+  }
+  return best;
 }
 
 const LANGUAGE_MARKERS = {
@@ -169,18 +172,38 @@ export function detectCvLanguage(text) {
   return spanish > english ? 'es' : 'en';
 }
 
+const MAX_HEADING_CHARS = 32;
+
+const ALL_SECTIONS = SECTIONS.en.concat(SECTIONS.es);
+
+function isHeadingLine(raw) {
+  const line = String(raw || '').trim();
+  if (!line || BULLET_RE.test(line)) {
+    return false;
+  }
+  const clean = line.replace(/^#{1,6}\s*/, '').trim();
+  if (!clean || clean.length > MAX_HEADING_CHARS || /[.,;:!?]$/.test(clean)) {
+    return false;
+  }
+  const letters = clean.replace(/[^A-Za-zÀ-ÿ]/g, '');
+  if (letters.length < 3) {
+    return false;
+  }
+  const words = clean.split(/\s+/);
+  const allCaps = letters === letters.toUpperCase();
+  const isMarkdownHeading = /^#{1,6}\s/.test(line);
+  const isOneWord = words.length === 1;
+  return allCaps || isMarkdownHeading || isOneWord;
+}
+
 export function splitIntoSections(text) {
   const sections = { intro: [] };
   let current = 'intro';
   for (const raw of String(text || '').split('\n')) {
-    const line = raw.trim();
-    const isHeading =
-      line.length > 0 &&
-      line.length <= 32 &&
-      !BULLET_RE.test(line) &&
-      SECTIONS.en.concat(SECTIONS.es).some((section) => section.re.test(line));
-    if (isHeading) {
-      const match = SECTIONS.en.concat(SECTIONS.es).find((section) => section.re.test(line));
+    const match = isHeadingLine(raw)
+      ? ALL_SECTIONS.find((section) => section.re.test(raw))
+      : null;
+    if (match) {
       current = match.key;
       sections[current] = sections[current] || [];
       continue;
@@ -204,8 +227,9 @@ const MAX_STORED_PAGE_TEXT = 4000;
 const BULLET_RE = /^[•\-\u25aa\u25b8\u2713*]\s+/;
 const VERB_AT_START_RE = /^[•\-\u25aa\u25b8\u2713*]?\s*([A-Za-z\u00C0-\u024F]+)/;
 const LONG_PARAGRAPH_WORDS = 60;
-const STUFFING_REPEAT = 6;
-const STUFFING_DENSITY = 0.12;
+const STUFFING_MIN_COUNT = 6;
+const STUFFING_MIN_DENSITY = 0.06;
+const STUFFING_IN_LINE = 4;
 const DENSE_WORDS_PER_PAGE = 750;
 
 function grade(score) {
@@ -231,13 +255,64 @@ const stripAccents = (value) => value.normalize('NFD').replace(/[\u0300-\u036f]/
 function collect(list, text) {
   const haystack = stripAccents(text.toLowerCase());
   return list.filter((word) =>
-    new RegExp(`\\b${escapeRegExp(stripAccents(word).toLowerCase())}`, 'i').test(haystack),
+    new RegExp(`\\b${escapeRegExp(stripAccents(word).toLowerCase())}\\b`, 'i').test(haystack),
   );
 }
 
-const countOccurrences = (text, word) => {
-  const matches = text.match(new RegExp(`\\b${escapeRegExp(word)}\\b`, 'gi'));
-  return matches ? matches.length : 0;
+
+const metricMatches = (text) => String(text || '').match(new RegExp(METRIC_RE.source, 'gi')) || [];
+const hasMetric = (text) => metricMatches(text).length > 0;
+
+const STOP_WORDS = new Set([
+  'the', 'and', 'for', 'with', 'that', 'this', 'from', 'into', 'over', 'under', 'per',
+  'our', 'out', 'all', 'any', 'but', 'not', 'you', 'are', 'was', 'were', 'has', 'had',
+  'his', 'her', 'its', 'their', 'they', 'them', 'she', 'him', 'who', 'what', 'when',
+  'which', 'while', 'been', 'being', 'also', 'more', 'most', 'other', 'than', 'then',
+  'these', 'those', 'such', 'only', 'own', 'same', 'too', 'very', 'can', 'will', 'just',
+  'about', 'after', 'before', 'between', 'both', 'each', 'few', 'more', 'other', 'some',
+  'through', 'where', 'while', 'years', 'year', 'across', 'using', 'used', 'use',
+  'de', 'del', 'la', 'el', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'en',
+  'con', 'para', 'por', 'que', 'se', 'su', 'sus', 'al', 'es', 'son', 'fue', 'como',
+  'más', 'pero', 'sobre', 'entre', 'desde', 'hasta', 'año', 'años', 'usando', 'usó',
+]);
+
+const termsOf = (line) =>
+  stripAccents(String(line || '').toLowerCase())
+    .split(/[^\p{L}\p{N}+#.-]+/u)
+    .map((term) => term.replace(/^[.-]+|[.-]+$/g, ''))
+    .filter((term) => term.length >= 3 && !STOP_WORDS.has(term) && !/^\d+$/.test(term));
+
+const repeatedTerms = (text, wordCount) => {
+  const counts = new Map();
+  const perLine = new Map();
+
+  for (const term of termsOf(text)) {
+    counts.set(term, (counts.get(term) || 0) + 1);
+  }
+  for (const line of String(text || '').split('\n')) {
+    const seen = new Map();
+    for (const term of termsOf(line)) {
+      seen.set(term, (seen.get(term) || 0) + 1);
+    }
+    for (const [term, hits] of seen) {
+      perLine.set(term, Math.max(perLine.get(term) || 0, hits));
+    }
+  }
+
+  const total = wordCount > 0 ? wordCount : [...counts.values()].reduce((a, b) => a + b, 0);
+  return [...counts.entries()]
+    .map(([term, count]) => ({
+      term,
+      count,
+      share: count / total,
+      inLine: perLine.get(term) || 0,
+    }))
+    .filter(
+      (entry) =>
+        entry.inLine >= STUFFING_IN_LINE ||
+        (entry.count >= STUFFING_MIN_COUNT && entry.share >= STUFFING_MIN_DENSITY),
+    )
+    .sort((a, b) => b.inLine - a.inLine || b.count - a.count);
 };
 
 const bulletLines = (text) =>
@@ -287,8 +362,8 @@ export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = ''
   const wordCount = extraction.wordCount ?? words.length;
 
   const cvLang = detectCvLanguage(text) || lang;
-  const isSpanish = cvLang === 'es';
-  const verbLexicon = isSpanish ? SPANISH_VERBS : ENGLISH_VERBS;
+  const verbLexicon = [...ENGLISH_VERBS, ...SPANISH_VERBS];
+  const keywordLexicon = [...ATS_KEYWORDS, ...ATS_KEYWORDS_ES];
 
   const hasText = charCount >= 200;
   add(
@@ -338,8 +413,11 @@ export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = ''
     },
   );
 
+  const bySection = splitIntoSections(text);
+  const sectionKeys = new Set(Object.keys(bySection).filter((key) => key !== 'intro'));
   const expectedSections = SECTIONS[cvLang] || SECTIONS.en;
-  const foundSections = expectedSections.filter((section) => section.re.test(flat));
+  const foundSections = expectedSections.filter((section) => sectionKeys.has(section.key));
+  const missingSections = expectedSections.filter((section) => !sectionKeys.has(section.key));
   const sections = foundSections.length;
   add(
     'sections',
@@ -351,10 +429,7 @@ export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = ''
       fix: sections >= 3 ? undefined : { type: 'insertSummary', lang: cvLang },
       examples: [
         `${t.exFound}: ${foundSections.map((section) => section.label).join(', ') || '-'}`,
-        `${t.exMissing}: ${expectedSections
-          .filter((section) => !section.re.test(flat))
-          .map((section) => section.label)
-          .join(', ')}`,
+        `${t.exMissing}: ${missingSections.map((section) => section.label).join(', ')}`,
       ],
     },
   );
@@ -383,7 +458,7 @@ export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = ''
     },
   );
 
-  const metrics = Array.from(new Set(text.match(METRIC_RE) || [])).slice(0, 10);
+  const metrics = Array.from(new Set(metricMatches(text))).slice(0, 10);
   add(
     'metrics',
     10,
@@ -395,10 +470,10 @@ export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = ''
     },
   );
 
-  const keywords = collect(isSpanish ? ATS_KEYWORDS_ES : ATS_KEYWORDS, flat);
   const role = detectRole(flat);
   const roleKeywords = (ROLE_KEYWORDS[cvLang] || ROLE_KEYWORDS.en)[role] || [];
   const missingRoleKeywords = roleKeywords.filter((keyword) => !collect([keyword], flat).length);
+  const keywords = collect([...keywordLexicon, ...roleKeywords], flat);
   add(
     'keywords',
     5,
@@ -415,14 +490,11 @@ export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = ''
     },
   );
 
-  const bySection = splitIntoSections(text);
   const experienceBullets = bulletLines((bySection.experience || []).join('\n'));
   const emptyBullets = experienceBullets.filter((line) => {
-    const hasMetric = METRIC_RE.test(line);
-    METRIC_RE.lastIndex = 0;
     const [, firstWord] = VERB_AT_START_RE.exec(line) || [];
     const hasVerb = firstWord ? collect(verbLexicon, firstWord).length > 0 : false;
-    return !hasMetric && !hasVerb;
+    return !hasMetric(line) && !hasVerb;
   });
   const bulletOk =
     experienceBullets.length === 0 || emptyBullets.length / experienceBullets.length <= 0.3;
@@ -462,11 +534,8 @@ export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = ''
     },
   );
 
-  const stuffed = keywords.filter(
-    (keyword) => countOccurrences(flat, stripAccents(keyword.toLowerCase())) > STUFFING_REPEAT,
-  );
-  const stuffingDensity = words.length > 0 ? keywords.length / words.length : 0;
-  const stuffingOk = stuffed.length === 0 && stuffingDensity <= STUFFING_DENSITY;
+  const stuffed = repeatedTerms(text, words.length);
+  const stuffingOk = stuffed.length === 0;
   add(
     'stuffing',
     2,
@@ -474,17 +543,12 @@ export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = ''
     t.atsPdfStuffing,
     stuffingOk
       ? t.atsPdfStuffingPass
-      : stuffed.length > 0
-        ? `${t.atsPdfStuffingFail} (${stuffed.join(', ')})`
-        : t.atsPdfStuffingFail,
+      : `${t.atsPdfStuffingFail} (${stuffed.map((entry) => `${entry.term} x${entry.count}`).join(', ')})`,
     {
       examples: [
         ...stuffed
           .slice(0, 4)
-          .map(
-            (keyword) =>
-              `"${keyword}" x${countOccurrences(flat, stripAccents(keyword.toLowerCase()))}`,
-          ),
+          .map((entry) => `"${entry.term}" x${entry.count} (${Math.round(entry.share * 100)}%)`),
         t.atsPdfStuffingExample,
       ],
     },
@@ -498,9 +562,7 @@ export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = ''
     roleKeywords,
     sections,
     sectionLabels: foundSections.map((section) => section.label),
-    missingSections: expectedSections
-      .filter((section) => !section.re.test(flat))
-      .map((section) => section.label),
+    missingSections: missingSections.map((section) => section.label),
     contact: { email: contactFound[0], phone: contactFound[1], profile: contactFound[2] },
     bullets: experienceBullets.length,
     emptyBullets: emptyBullets.length,
@@ -533,8 +595,12 @@ export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = ''
 
 export async function evaluatePdf(markdown, styles, options = {}) {
   const lang = options.lang || 'en';
+  const t = translations[lang] || translations.en;
   const artifact = getPdfArtifact(markdown, styles, options);
   const extraction = await extractPdfText(await artifact.blob.arrayBuffer(), options.deps);
+  if ((extraction.charCount ?? 0) < 50) {
+    throw new Error(t.atsPdfNoTextLayer);
+  }
   const result = evaluatePdfText(
     { ...extraction, pageCount: extraction.pageCount || artifact.pages },
     { lang, text: markdown },
