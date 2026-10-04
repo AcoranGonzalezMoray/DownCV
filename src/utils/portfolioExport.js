@@ -8,7 +8,6 @@ const CODE_PLACEHOLDER = 'CODE';
 
 const SPACER_RE = /^(?:<br\s*\/?>|<hr\s*\/?>|\s|[-*_=])+$/i;
 
-// The export is HTML, not Markdown: **bold** and *italic* must arrive as tags.
 export function inlineHtml(markdown = '') {
   let html = escapeHtml(markdown).replace(
     /`([^`]+)`/g,
@@ -24,7 +23,6 @@ export function inlineHtml(markdown = '') {
       /\[([^\]\n]+)\]\(([^)\s]+)\)/g,
       '<a href="$2" class="text-cyan-400 hover:underline" target="_blank" rel="noreferrer">$1</a>',
     );
-  // An unpaired marker is Markdown noise, not content.
   html = html.replace(/\*\*/g, '').replace(/__/g, '');
   return html.replace(
     new RegExp(`${CODE_PLACEHOLDER}([^]+)${CODE_PLACEHOLDER}`, 'g'),
@@ -32,9 +30,6 @@ export function inlineHtml(markdown = '') {
   );
 }
 
-// The file is downloaded and opened by whatever the reader uses, so every
-// non-ASCII character travels as an entity: accents and bullets cannot be
-// re-read as mojibake.
 const asciiEntities = (html) =>
   html.replace(/[\u0080-\uffff]/g, (char) => `&#${char.codePointAt(0)};`);
 

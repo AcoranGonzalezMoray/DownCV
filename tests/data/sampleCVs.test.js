@@ -73,4 +73,14 @@ describe('sampleCVs', () => {
   it('gives every sample a unique id, so a draft can point at it', () => {
     expect(new Set(sampleCVs.map((sample) => sample.id)).size).toBe(sampleCVs.length);
   });
+
+  it('names and illustrates every sample with an icon instead of an emoji', () => {
+    const icons = ['code', 'chart', 'target', 'building'];
+    for (const sample of sampleCVs) {
+      expect(sample.name, `${sample.id} still carries an emoji`).not.toMatch(
+        /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u,
+      );
+      expect(icons, `${sample.id} has no known icon`).toContain(sample.icon);
+    }
+  });
 });

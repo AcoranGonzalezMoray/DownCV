@@ -2,6 +2,7 @@
 import {
   CheckCircle2,
   XCircle,
+  ArrowRight,
   ShieldCheck,
   Award,
   Loader2,
@@ -189,7 +190,7 @@ function CheckRow({ check, onFix, canFix, fixLabel }) {
                 key={index}
                 className="text-[10px] leading-relaxed text-[var(--ui-text-tertiary)]"
               >
-                <span className="text-[var(--ui-accent)]">→</span> {example}
+                <ArrowRight className="w-3 h-3 inline text-[var(--ui-accent)]" /> {example}
               </li>
             ))}
           </ul>
@@ -341,8 +342,6 @@ export default function ATSAnalyzer({
     setNotice(null);
     try {
       const { fitToPages, scaleLayout } = await import('../utils/pdfBuilder');
-      // A retry starts from the layout the previous round already reached, so a
-      // PDF that already fits on one page does not abort the round with an error.
       const base = tighten < 1 ? scaleLayout(styles, tighten) : styles;
       const result = fitToPages(markdown, base, {
         bullet: styles.bulletStyle,
@@ -368,8 +367,6 @@ export default function ATSAnalyzer({
             .replace('{m}', String(result.pages)),
         );
       }
-      // The PDF and the printed sheet are laid out by two different engines, so
-      // keep tightening until the reader the user sees also reaches one page.
       setFitWatch({ goal: 1, tighten: round2(tighten * FIT_ROUND_TIGHTENING) });
     } catch (e) {
       setError(e?.message || t.atsPdfError);
@@ -638,7 +635,8 @@ export default function ATSAnalyzer({
               disabled={busy}
               className="w-full flex items-center justify-center gap-2 rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-1.5 text-xs font-medium text-amber-400 transition hover:bg-amber-400/20 disabled:opacity-60"
             >
-              <Wand2 className="w-3.5 h-3.5" /> {t.atsPdfFitOnePage} ({latest.pageCount} → 1)
+              <Wand2 className="w-3.5 h-3.5" /> {t.atsPdfFitOnePage} ({latest.pageCount}
+              <ArrowRight className="w-3 h-3" /> 1)
             </button>
           )}
 

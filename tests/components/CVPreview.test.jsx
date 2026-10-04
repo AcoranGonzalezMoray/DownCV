@@ -487,7 +487,6 @@ describe('CVPreview spacer measurement', () => {
       if (!parent?.classList?.contains('cv-paper-measure')) {
         return 0;
       }
-      // Chrome reports offsetTop 0 for a <br>, so reading through it invents pages.
       if (this.tagName === 'BR') {
         return 0;
       }

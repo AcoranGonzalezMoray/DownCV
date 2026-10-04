@@ -78,8 +78,6 @@ describe('the sheet of the preview', () => {
       widthOf('.border-style-thick-left h3.cv-section-title'),
     ];
 
-    // Browsers paint borders on whole pixels, so a fractional rule would land
-    // on the same line as the solid one.
     expect(widths.every((width) => Number.isInteger(width))).toBe(true);
     expect(widths[0]).toBeLessThan(widths[1]);
     expect(widths[0]).toBeLessThan(widths[2]);

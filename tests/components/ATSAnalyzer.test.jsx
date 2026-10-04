@@ -297,8 +297,6 @@ describe('ATSAnalyzer', () => {
 
   it('does not claim it does not fit when the PDF already reached one page', async () => {
     vi.mocked(evaluatePdf).mockResolvedValue(evaluation({ pageCount: 4 }));
-    // After the first round the PDF is already on one page, so the next rounds
-    // report no change: that must not be read as "it does not fit".
     vi.mocked(fitToPages).mockImplementation((markdownArg, stylesArg, options) =>
       options.maxScale < 1
         ? { changed: false, reached: true, pages: 1, originalPages: 1, styles: stylesArg }

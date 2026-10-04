@@ -16,6 +16,10 @@ import {
   BookOpen,
   Award,
   Link2,
+  FolderOpen,
+  BarChart3,
+  Target,
+  Building2,
 } from 'lucide-react';
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts';
 import { applyInlineFormat } from '../utils/markdownFormat';
@@ -28,6 +32,13 @@ import {
   suggestSkills,
 } from '../utils/skillSuggestions';
 import { ratioAtOffset, scrollRatio } from '../utils/scrollSync';
+
+const SAMPLE_ICONS = {
+  code: Code,
+  chart: BarChart3,
+  target: Target,
+  building: Building2,
+};
 
 export default function MarkdownEditor({
   markdown,
@@ -149,6 +160,78 @@ export default function MarkdownEditor({
     { id: 'skills', label: t.skillsSnippetLabel, hint: t.skillsSnippetHint, icon: Code },
     { id: 'certification', label: t.certSnippetLabel, hint: t.certSnippetHint, icon: Award },
   ];
+
+  const [libraryOpen, setLibraryOpen] = useState(false);
+  const libraryRef = useRef(null);
+  const libraryButtonRef = useRef(null);
+
+  const libraryItems = [
+    ...savedDrafts.map((draft) => ({
+      key: `draft:${draft.id}`,
+      label: draft.name,
+      hint: t.saved,
+      icon: FileText,
+      group: t.savedDraftsGroup,
+    })),
+    ...sampleCVs.map((sample) => ({
+      key: `sample:${sample.id}`,
+      label: sample.name,
+      hint: sample.category,
+      icon: SAMPLE_ICONS[sample.icon] || FileText,
+      group: t.sampleTemplatesGroup,
+    })),
+  ];
+
+  useEffect(() => {
+    if (!libraryOpen) {
+      return undefined;
+    }
+    const onPointerDown = (event) => {
+      if (!libraryRef.current?.contains(event.target)) {
+        setLibraryOpen(false);
+      }
+    };
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setLibraryOpen(false);
+        libraryButtonRef.current?.focus();
+      }
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [libraryOpen]);
+
+  const pickFromLibrary = (key) => {
+    setLibraryOpen(false);
+    libraryButtonRef.current?.focus();
+    onSelectSample(key);
+  };
+
+  const onLibraryKeyDown = (event) => {
+    const last = libraryItems.length - 1;
+    const current = libraryItems.findIndex((item) => item.key === event.currentTarget.dataset.key);
+    let next = null;
+    if (event.key === 'ArrowDown') {
+      next = current >= last ? 0 : current + 1;
+    } else if (event.key === 'ArrowUp') {
+      next = current <= 0 ? last : current - 1;
+    } else if (event.key === 'Home') {
+      next = 0;
+    } else if (event.key === 'End') {
+      next = last;
+    }
+    if (next === null) {
+      return;
+    }
+    event.preventDefault();
+    libraryRef.current
+      ?.querySelectorAll('[role="menuitem"]')
+      [next]?.focus();
+  };
 
   const formatSelection = (type) => {
     const textarea = textareaRef.current;
@@ -336,32 +419,68 @@ export default function MarkdownEditor({
           >
             <Search className="w-4 h-4" /> <span className="hidden sm:inline">Search</span>
           </button>
-          <div className="relative inline-block">
-            <select
-              onChange={(e) => onSelectSample(e.target.value)}
-              className="bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-tertiary)] text-xs text-[var(--ui-text-secondary)] font-medium py-1.5 px-2.5 rounded border border-[var(--ui-border-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--ui-accent)] cursor-pointer max-w-[160px]"
-              value=""
+          <div className="relative" ref={libraryRef}>
+            <button
+              type="button"
+              ref={libraryButtonRef}
+              onClick={() => setLibraryOpen((value) => !value)}
+              aria-haspopup="menu"
+              aria-expanded={libraryOpen}
+              title={t.openDraftOrSample}
+              className="flex items-center gap-1.5 bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-tertiary)] text-xs font-medium text-[var(--ui-text-secondary)] py-1.5 px-2.5 rounded border border-[var(--ui-border-primary)] transition hover:border-[var(--ui-accent)]/50"
             >
-              <option value="" disabled>
-                {t.openDraftOrSample}
-              </option>
-              {savedDrafts.length > 0 && (
-                <optgroup label={t.savedDraftsGroup}>
-                  {savedDrafts.map((d) => (
-                    <option key={`draft-${d.id}`} value={`draft:${d.id}`}>
-                      📄 {d.name}
-                    </option>
-                  ))}
-                </optgroup>
+              <FolderOpen className="w-4 h-4 text-[var(--ui-accent)] shrink-0" />
+              <span className="max-w-[120px] truncate">{t.openDraftOrSample}</span>
+              {libraryOpen ? (
+                <ChevronUp className="w-3 h-3 shrink-0" />
+              ) : (
+                <ChevronDown className="w-3 h-3 shrink-0" />
               )}
-              <optgroup label={t.sampleTemplatesGroup}>
-                {sampleCVs.map((cv) => (
-                  <option key={`sample-${cv.id}`} value={`sample:${cv.id}`}>
-                    {cv.name}
-                  </option>
-                ))}
-              </optgroup>
-            </select>
+            </button>
+
+            {libraryOpen && (
+              <div
+                role="menu"
+                aria-label={t.openDraftOrSample}
+                className="absolute right-0 top-full mt-1 z-50 w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] shadow-xl overflow-hidden"
+              >
+                {[t.savedDraftsGroup, t.sampleTemplatesGroup]
+                  .filter((group) => libraryItems.some((item) => item.group === group))
+                  .map((group) => (
+                    <div key={group} className="py-1">
+                      <p className="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--ui-text-muted)]">
+                        {group}
+                      </p>
+                      {libraryItems
+                        .filter((item) => item.group === group)
+                        .map((item) => {
+                          const Icon = item.icon;
+                          return (
+                            <button
+                              key={item.key}
+                              type="button"
+                              role="menuitem"
+                              data-key={item.key}
+                              onKeyDown={onLibraryKeyDown}
+                              onClick={() => pickFromLibrary(item.key)}
+                              className="w-full flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition hover:bg-[var(--ui-accent-muted)] focus:outline-none focus:bg-[var(--ui-accent-muted)]"
+                            >
+                              <Icon className="w-3.5 h-3.5 shrink-0 text-[var(--ui-accent)]" />
+                              <span className="min-w-0">
+                                <span className="block truncate text-xs font-medium text-[var(--ui-text-primary)]">
+                                  {item.label}
+                                </span>
+                                <span className="block truncate text-[10px] text-[var(--ui-text-tertiary)]">
+                                  {item.hint}
+                                </span>
+                              </span>
+                            </button>
+                          );
+                        })}
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
           <button
             onClick={openSaveModal}
@@ -465,7 +584,8 @@ export default function MarkdownEditor({
               title={snip.hint}
               className="px-2 py-1 rounded bg-[var(--ui-bg-card)] hover:bg-[var(--ui-accent-muted)] text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] border border-[var(--ui-border-primary)] transition shrink-0 flex items-center gap-1"
             >
-              <Icon className="w-3 h-3" /> + {snip.label}
+              <Icon className="w-3 h-3" />
+              {snip.label}
             </button>
           );
         })}

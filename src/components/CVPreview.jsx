@@ -217,7 +217,6 @@ export default function CVPreview({
   const measurePagination = useCallback(() => {
     const node = measureRef.current;
     const children = node ? Array.from(node.children) : [];
-    // A lone <br> spacer reports offsetTop 0, so measuring through it invents pages.
     const blocks = children.filter((child) => child.tagName !== 'BR');
     if (blocks.length === 0) {
       setPagePlan((previous) => (samePagePlan(previous, [[]]) ? previous : [[]]));
@@ -896,7 +895,6 @@ export default function CVPreview({
     '--cv-margin-x': `${styles.marginX}px`,
     '--cv-section-gap': `${styles.sectionGap}px`,
     '--cv-item-gap': `${styles.itemGap}px`,
-    // The sheet reads these names, so the style panel colours have to use them too.
     '--cv-paper-primary': styles.primaryColor,
     '--cv-paper-text': styles.textColor,
     '--cv-paper-subtext': styles.subtextColor,
