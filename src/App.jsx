@@ -1,11 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  useLayoutEffect,
-  useCallback,
-  useRef,
-  useMemo,
-} from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo } from 'react';
 import useTheme from './hooks/useTheme';
 import useLocalStorage from './hooks/useLocalStorage';
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
@@ -517,8 +510,7 @@ export default function App() {
         : 0;
       const brandMinRight = brand.offsetLeft + 48 + brandTextWidth;
       const actionsLeft = header.clientWidth - paddingRight - actions.offsetWidth;
-      const fits =
-        centre - half > brandMinRight + 8 && centre + half < actionsLeft - 8;
+      const fits = centre - half > brandMinRight + 8 && centre + half < actionsLeft - 8;
       setSwitchCentered((previous) => (previous === fits ? previous : fits));
     };
     check();
