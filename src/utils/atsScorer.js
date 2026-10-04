@@ -68,7 +68,6 @@ export const SPANISH_VERBS = [
   'escalé',
 ];
 
-
 export const ENGLISH_VERBS = [
   'architected',
   'spearheaded',
@@ -183,8 +182,6 @@ export const ENGLISH_VERBS = [
   'armed',
 ];
 
-
-
 export const WEAK_PHRASES = {
   en: [
     'responsible for',
@@ -233,7 +230,6 @@ export const WEAK_PHRASES = {
     'uso de',
   ],
 };
-
 
 export const PHRASE_REWRITES = {
   en: {

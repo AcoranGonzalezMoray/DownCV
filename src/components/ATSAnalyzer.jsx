@@ -412,7 +412,8 @@ export default function ATSAnalyzer({
     }
   };
 
-  const downloadReport = async () => {    if (!latest) {
+  const downloadReport = async () => {
+    if (!latest) {
       return;
     }
     const { downloadAtsReport } = await import('../utils/atsReport');
@@ -425,7 +426,8 @@ export default function ATSAnalyzer({
     });
   };
 
-  const revertFit = () => {    if (!fitBackup) {
+  const revertFit = () => {
+    if (!fitBackup) {
       return;
     }
     setStyles((previous) => ({ ...previous, ...pickLayout(fitBackup) }));

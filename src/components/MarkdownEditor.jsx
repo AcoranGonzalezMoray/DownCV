@@ -228,9 +228,7 @@ export default function MarkdownEditor({
       return;
     }
     event.preventDefault();
-    libraryRef.current
-      ?.querySelectorAll('[role="menuitem"]')
-      [next]?.focus();
+    libraryRef.current?.querySelectorAll('[role="menuitem"]')[next]?.focus();
   };
 
   const formatSelection = (type) => {

@@ -20,7 +20,6 @@ const bar = (percent, tone) => `
         <div class="h-full rounded-full ${tone}" style="width: ${Math.max(0, Math.min(100, percent))}%"></div>
       </div>`;
 
-
 export function generateAtsReport(record, { dimensions = [], t, title = 'ATS report' } = {}) {
   const checks = record?.checks || [];
   const gaps = record?.gaps || [];
@@ -138,9 +137,7 @@ export function generateAtsReport(record, { dimensions = [], t, title = 'ATS rep
 
     <footer class="mt-12 border-t border-slate-800/80 pt-6 text-center text-xs text-slate-500">
       <p>${new Date(record?.createdAt || Date.now()).toLocaleString()}</p>
-      <p class="mt-1">${escapeHtml(
-        t?.atsReportFooter ?? 'Generated with DownCV',
-      )}</p>
+      <p class="mt-1">${escapeHtml(t?.atsReportFooter ?? 'Generated with DownCV')}</p>
     </footer>
   </div>
 </body>

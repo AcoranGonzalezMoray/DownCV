@@ -13,7 +13,6 @@ import {
   PHRASE_REWRITES,
 } from './atsScorer';
 
-
 export const CHECK_POINTS = {
   text: 10,
   pages: 8,
@@ -105,7 +104,6 @@ const ROLE_MARKERS = [
   { role: 'marketing', re: /marketing|growth|seo/i },
   { role: 'design', re: /designer|product design|\bux\b|\bui\b/i },
 ];
-
 
 function detectRole(flat) {
   let best = null;
@@ -207,9 +205,22 @@ export function detectCvLanguage(text, { minWords = 15 } = {}) {
 }
 
 const MONTH_NUMBERS = {
-  jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
-  jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
-  ene: 1, abr: 4, ago: 8, dic: 12,
+  jan: 1,
+  feb: 2,
+  mar: 3,
+  apr: 4,
+  may: 5,
+  jun: 6,
+  jul: 7,
+  aug: 8,
+  sep: 9,
+  oct: 10,
+  nov: 11,
+  dec: 12,
+  ene: 1,
+  abr: 4,
+  ago: 8,
+  dic: 12,
 };
 const MONTH_WORD = `(?:${Object.keys(MONTH_NUMBERS).join('|')})[a-z\\u00E0-\\u00FF]*\\.?`;
 const OPEN_WORD = '(?:present|actualidad|presente|now|hoy|current|actual)';
@@ -272,8 +283,6 @@ const uniqueMatches = (text, pattern) => {
   return [...new Set((String(text || '').match(pattern) || []).map((hit) => hit.trim()))];
 };
 
-
-
 export function analyseDates(text, { now = CURRENT_YEAR } = {}) {
   const source = String(text || '');
   const tokens = dateTokens(source);
@@ -282,7 +291,10 @@ export function analyseDates(text, { now = CURRENT_YEAR } = {}) {
 
   for (let index = 0; index < tokens.length; index += 1) {
     const from = tokens[index];
-    const gap = source.slice(from.end, index + 1 < tokens.length ? tokens[index + 1].start : source.length);
+    const gap = source.slice(
+      from.end,
+      index + 1 < tokens.length ? tokens[index + 1].start : source.length,
+    );
     const openTail = OPEN_TAIL.test(gap);
     const next = tokens[index + 1];
 
@@ -294,14 +306,18 @@ export function analyseDates(text, { now = CURRENT_YEAR } = {}) {
       continue;
     }
     if (openTail) {
-      ranges.push({ from: from.at, to: tokenAt(now, 11), open: true, raw: `${from.raw} - Present` });
+      ranges.push({
+        from: from.at,
+        to: tokenAt(now, 11),
+        open: true,
+        raw: `${from.raw} - Present`,
+      });
       sourceStyles.add(from.style);
     }
   }
 
-  
   const future = ranges.filter((range) => range.to > tokenAt(now, 11));
-  
+
   const styles = [...new Set([...sourceStyles].filter((style) => style !== 'years'))];
   const overlaps = [];
   for (let i = 0; i < ranges.length; i += 1) {
@@ -331,8 +347,6 @@ const normaliseBullet = (line) =>
     .replace(/\s+/g, ' ')
     .trim();
 
-
-
 export function findDuplicateBullets(bullets) {
   const seen = new Map();
   for (const line of bullets) {
@@ -347,8 +361,6 @@ export function findDuplicateBullets(bullets) {
     .map(([key, count]) => ({ text: key, count }))
     .sort((a, b) => b.count - a.count);
 }
-
-
 
 export function findWeakPhrases(text) {
   const flat = stripAccents(String(text || '').toLowerCase());
@@ -372,10 +384,9 @@ export function findWeakPhrases(text) {
   return [...found.values()].sort((a, b) => b.count - a.count);
 }
 
-const EXOTIC_RE = /[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\u{FE0F}\u{20E3}]/u;
+const EXOTIC_RE =
+  /[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\u{FE0F}\u{20E3}]/u;
 const NO_TEXT_PLACEHOLDER = /\[(?:contenido no textual|no textual content)\]/gi;
-
-
 
 export function findExoticCharacters(text) {
   const source = String(text || '');
@@ -393,8 +404,19 @@ export function findExoticCharacters(text) {
 }
 
 const FILENAME_NOISE = new Set([
-  'final', 'final2', 'version', 'copy', 'new', 'nuevo', 'copia', 'updated', 'rev', 'draft',
-  'borrador', 'ultima', 'última',
+  'final',
+  'final2',
+  'version',
+  'copy',
+  'new',
+  'nuevo',
+  'copia',
+  'updated',
+  'rev',
+  'draft',
+  'borrador',
+  'ultima',
+  'última',
 ]);
 
 export function analyseFilename(markdown) {
@@ -408,7 +430,7 @@ export function analyseFilename(markdown) {
   if (/\s/.test(name)) {
     problems.push('spaces');
   }
-  
+
   const tokens = withoutExt.split(/[_.-]+/).filter(Boolean);
   if (tokens.some((token) => FILENAME_NOISE.has(token) || /^v\d+$/.test(token))) {
     problems.push('version-marker');
@@ -444,8 +466,7 @@ function isHeadingLine(raw) {
   const allCaps = letters === letters.toUpperCase();
   const isMarkdownHeading = /^#{1,6}\s/.test(line);
   const isOneWord = words.length === 1;
-  
-  
+
   const opensWithSection =
     clean.length > MAX_HEADING_CHARS &&
     clean.length <= MAX_LONG_HEADING_CHARS &&
@@ -457,9 +478,7 @@ export function splitIntoSections(text) {
   const sections = { intro: [] };
   let current = 'intro';
   for (const raw of String(text || '').split('\n')) {
-    const match = isHeadingLine(raw)
-      ? ALL_SECTIONS.find((section) => section.re.test(raw))
-      : null;
+    const match = isHeadingLine(raw) ? ALL_SECTIONS.find((section) => section.re.test(raw)) : null;
     if (match) {
       current = match.key;
       sections[current] = sections[current] || [];
@@ -516,21 +535,119 @@ function collect(list, text) {
   );
 }
 
-
 const metricMatches = (text) => String(text || '').match(new RegExp(METRIC_RE.source, 'gi')) || [];
 const hasMetric = (text) => metricMatches(text).length > 0;
 
 const STOP_WORDS = new Set([
-  'the', 'and', 'for', 'with', 'that', 'this', 'from', 'into', 'over', 'under', 'per',
-  'our', 'out', 'all', 'any', 'but', 'not', 'you', 'are', 'was', 'were', 'has', 'had',
-  'his', 'her', 'its', 'their', 'they', 'them', 'she', 'him', 'who', 'what', 'when',
-  'which', 'while', 'been', 'being', 'also', 'more', 'most', 'other', 'than', 'then',
-  'these', 'those', 'such', 'only', 'own', 'same', 'too', 'very', 'can', 'will', 'just',
-  'about', 'after', 'before', 'between', 'both', 'each', 'few', 'more', 'other', 'some',
-  'through', 'where', 'while', 'years', 'year', 'across', 'using', 'used', 'use',
-  'de', 'del', 'la', 'el', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'en',
-  'con', 'para', 'por', 'que', 'se', 'su', 'sus', 'al', 'es', 'son', 'fue', 'como',
-  'más', 'pero', 'sobre', 'entre', 'desde', 'hasta', 'año', 'años', 'usando', 'usó',
+  'the',
+  'and',
+  'for',
+  'with',
+  'that',
+  'this',
+  'from',
+  'into',
+  'over',
+  'under',
+  'per',
+  'our',
+  'out',
+  'all',
+  'any',
+  'but',
+  'not',
+  'you',
+  'are',
+  'was',
+  'were',
+  'has',
+  'had',
+  'his',
+  'her',
+  'its',
+  'their',
+  'they',
+  'them',
+  'she',
+  'him',
+  'who',
+  'what',
+  'when',
+  'which',
+  'while',
+  'been',
+  'being',
+  'also',
+  'more',
+  'most',
+  'other',
+  'than',
+  'then',
+  'these',
+  'those',
+  'such',
+  'only',
+  'own',
+  'same',
+  'too',
+  'very',
+  'can',
+  'will',
+  'just',
+  'about',
+  'after',
+  'before',
+  'between',
+  'both',
+  'each',
+  'few',
+  'more',
+  'other',
+  'some',
+  'through',
+  'where',
+  'while',
+  'years',
+  'year',
+  'across',
+  'using',
+  'used',
+  'use',
+  'de',
+  'del',
+  'la',
+  'el',
+  'los',
+  'las',
+  'un',
+  'una',
+  'unos',
+  'unas',
+  'y',
+  'o',
+  'en',
+  'con',
+  'para',
+  'por',
+  'que',
+  'se',
+  'su',
+  'sus',
+  'al',
+  'es',
+  'son',
+  'fue',
+  'como',
+  'más',
+  'pero',
+  'sobre',
+  'entre',
+  'desde',
+  'hasta',
+  'año',
+  'años',
+  'usando',
+  'usó',
 ]);
 
 const termsOf = (line) =>
@@ -623,15 +740,9 @@ export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = ''
   const keywordLexicon = [...ATS_KEYWORDS, ...ATS_KEYWORDS_ES];
 
   const hasText = charCount >= 200;
-  add(
-    'text',
-    hasText,
-    t.atsPdfTextLayer,
-    hasText ? t.atsPdfTextLayerPass : t.atsPdfTextLayerFail,
-    {
-      examples: [`${charCount} ${t.atsPdfChars}.`, t.atsPdfTextLayerExample],
-    },
-  );
+  add('text', hasText, t.atsPdfTextLayer, hasText ? t.atsPdfTextLayerPass : t.atsPdfTextLayerFail, {
+    examples: [`${charCount} ${t.atsPdfChars}.`, t.atsPdfTextLayerExample],
+  });
 
   const pageOk = pageCount >= 1 && pageCount <= 2;
   add(
@@ -687,11 +798,6 @@ export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = ''
     },
   );
 
-  
-  
-  
-  
-  
   const judgeable = charCount >= 200;
 
   const sourceHeadings = listSections(sourceText).map((section) => section.title);
@@ -714,8 +820,7 @@ export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = ''
     if (words.length === 0) {
       return false;
     }
-    
-    
+
     const kept = Math.max(
       0,
       ...[...sheetHeadings].map(
@@ -869,9 +974,7 @@ export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = ''
     },
   );
 
-  const weak = findWeakPhrases(
-    experienceBullets.length > 0 ? experienceBullets.join('\n') : text,
-  );
+  const weak = findWeakPhrases(experienceBullets.length > 0 ? experienceBullets.join('\n') : text);
   const weakTotal = weak.reduce((total, entry) => total + entry.count, 0);
   const phrasingOk =
     experienceBullets.length === 0 ? weakTotal === 0 : weakTotal / experienceBullets.length <= 0.34;
@@ -898,12 +1001,12 @@ export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = ''
     'duplicates',
     judgeable && duplicates.length === 0,
     t.atsPdfDuplicates,
-    duplicates.length === 0 ? t.atsPdfDuplicatesPass : `${t.atsPdfDuplicatesFail} (${duplicates.length})`,
+    duplicates.length === 0
+      ? t.atsPdfDuplicatesPass
+      : `${t.atsPdfDuplicatesFail} (${duplicates.length})`,
     {
       examples: [
-        ...duplicates
-          .slice(0, 3)
-          .map((entry) => `"${entry.text.slice(0, 70)}..." x${entry.count}`),
+        ...duplicates.slice(0, 3).map((entry) => `"${entry.text.slice(0, 70)}..." x${entry.count}`),
         t.atsPdfDuplicatesExample,
       ],
     },
@@ -918,8 +1021,8 @@ export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = ''
     t.atsPdfLanguage,
     mixed
       ? t.atsPdfLanguageFail
-        .replace('{a}', headingLang === 'es' ? t.atsPdfLanguageSpanish : t.atsPdfLanguageEnglish)
-        .replace('{b}', bulletLang === 'es' ? t.atsPdfLanguageSpanish : t.atsPdfLanguageEnglish)
+          .replace('{a}', headingLang === 'es' ? t.atsPdfLanguageSpanish : t.atsPdfLanguageEnglish)
+          .replace('{b}', bulletLang === 'es' ? t.atsPdfLanguageSpanish : t.atsPdfLanguageEnglish)
       : t.atsPdfLanguagePass,
     {
       examples: [
@@ -931,7 +1034,6 @@ export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = ''
     },
   );
 
-  
   const pageWords = (extraction.pages || [])
     .map((page) => (page.lines || []).join('\n').split(/\s+/).filter(Boolean).length)
     .filter((count) => count > 0);
@@ -1004,7 +1106,6 @@ export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = ''
     filename,
   };
 
-  
   const gaps = checks
     .filter((check) => !check.pass)
     .map((check) => ({
@@ -1037,8 +1138,6 @@ export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = ''
     sourceHash: hashMarkdown(sourceText || text),
   };
 }
-
-
 
 export async function evaluatePdfFile(file, options = {}) {
   const lang = options.lang || 'en';

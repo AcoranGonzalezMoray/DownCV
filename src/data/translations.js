@@ -225,8 +225,7 @@ export const translations = {
     atsPdfDuplicates: 'Repeated bullets',
     atsPdfDuplicatesPass: 'No achievement is copied between jobs.',
     atsPdfDuplicatesFail: 'The same bullet is repeated in several jobs.',
-    atsPdfDuplicatesExample:
-      'Write one line per job: what was different there.',
+    atsPdfDuplicatesExample: 'Write one line per job: what was different there.',
 
     atsPdfLanguage: 'Language of the document',
     atsPdfLanguagePass: 'Headings and bullets speak the same language.',

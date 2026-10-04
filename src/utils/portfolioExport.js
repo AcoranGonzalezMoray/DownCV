@@ -9,10 +9,7 @@ const CODE_PLACEHOLDER = 'CODE';
 const SPACER_RE = /^(?:<br\s*\/?>|<hr\s*\/?>|\s|[-*_=])+$/i;
 
 export function inlineHtml(markdown = '') {
-  let html = escapeHtml(markdown).replace(
-    /`([^`]+)`/g,
-    `${CODE_PLACEHOLDER}$1${CODE_PLACEHOLDER}`,
-  );
+  let html = escapeHtml(markdown).replace(/`([^`]+)`/g, `${CODE_PLACEHOLDER}$1${CODE_PLACEHOLDER}`);
   html = html
     .replace(/\*\*([^*\n]+)\*\*/g, '<strong class="font-semibold text-white">$1</strong>')
     .replace(/__([^_\n]+)__/g, '<span class="underline">$1</span>')
