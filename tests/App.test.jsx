@@ -53,7 +53,7 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: /Job Matcher/ }));
     expect(screen.getByText('Target seniority')).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: /ATS Rules/ }));
+    fireEvent.click(screen.getByRole('button', { name: /ATS Analyzer/ }));
     expect(screen.queryByText('Target seniority')).toBe(null);
   });
 

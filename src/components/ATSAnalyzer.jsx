@@ -7,6 +7,9 @@ import {
   Award,
   Loader2,
   FileText,
+  Upload,
+  X,
+  Gauge,
   History,
   ChevronDown,
   ChevronUp,
@@ -22,6 +25,7 @@ import {
   Sparkles,
   Check,
   FileSignature,
+  FileDown,
 } from 'lucide-react';
 import { hashMarkdown, toHistoryRecord } from '../utils/atsPdfHistory';
 import { applyFix, applyAllFixes, canApplyFix, pendingFixes } from '../utils/markdownFixes';
@@ -277,6 +281,7 @@ export default function ATSAnalyzer({
   history,
   setHistory,
   previewPageCount = 1,
+  currentDraftName = '',
   jobBrief = '',
   onJobBriefChange = null,
   onRequestLetter = null,
@@ -386,8 +391,41 @@ export default function ATSAnalyzer({
     fitToOnePage({ tighten: fitWatch.tighten });
   }, [previewPageCount, fitWatch, status]);
 
-  const revertFit = () => {
-    if (!fitBackup) {
+  const importPdfRef = useRef(null);
+  const [imported, setImported] = useState(null);
+  const [importStatus, setImportStatus] = useState('idle');
+
+  const analysePdfFile = async (file) => {
+    if (!file) {
+      return;
+    }
+    setImportStatus('running');
+    setError(null);
+    try {
+      const { evaluatePdfFile } = await import('../utils/atsPdfEvaluation');
+      setImported(await evaluatePdfFile(file, { lang }));
+      setImportStatus('done');
+    } catch (e) {
+      setImported(null);
+      setImportStatus('error');
+      setError(e?.message || t.atsPdfError);
+    }
+  };
+
+  const downloadReport = async () => {    if (!latest) {
+      return;
+    }
+    const { downloadAtsReport } = await import('../utils/atsReport');
+    const { scoreDimensions } = await import('../utils/atsDimensions');
+    downloadAtsReport(latest, {
+      dimensions: scoreDimensions(latest.checks),
+      t,
+      sourceMarkdown: markdown,
+      title: currentDraftName || t.atsPreviewTitle,
+    });
+  };
+
+  const revertFit = () => {    if (!fitBackup) {
       return;
     }
     setStyles((previous) => ({ ...previous, ...pickLayout(fitBackup) }));
@@ -440,7 +478,7 @@ export default function ATSAnalyzer({
           onClick={() => setSubTab('ats')}
           className={`flex-1 py-1.5 px-2 rounded-md flex items-center justify-center gap-1.5 transition ${subTab === 'ats' ? 'bg-[var(--ui-accent)] text-[var(--ui-text-inverse)] shadow-sm' : 'text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)]'}`}
         >
-          <ShieldCheck className="w-3.5 h-3.5" /> {t.atsSubRules}
+          <ShieldCheck className="w-3.5 h-3.5" /> {t.atsSubAnalyzer}
         </button>
         <button
           type="button"
@@ -607,12 +645,12 @@ export default function ATSAnalyzer({
                 </>
               ) : (
                 <>
-                  <FileText className="w-4 h-4" /> {t.atsPdfEvaluate}
+                  <Gauge className="w-4 h-4" /> {t.atsPdfEvaluate}
                 </>
               )}
             </button>
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {fitBackup && (
                 <button
                   type="button"
@@ -622,7 +660,36 @@ export default function ATSAnalyzer({
                   <Undo2 className="w-3.5 h-3.5" /> {t.atsPdfRevertFit}
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() => importPdfRef.current?.click()}
+                disabled={importStatus === 'running'}
+                title={t.atsImportHint}
+                aria-label={t.atsImportLabel}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[var(--ui-border-primary)] px-2 py-1.5 text-xs font-medium text-[var(--ui-text-tertiary)] transition hover:border-[var(--ui-accent)]/50 hover:text-[var(--ui-text-primary)] disabled:opacity-60 disabled:cursor-progress"
+              >
+                {importStatus === 'running' ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> {t.atsImportRunning}
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-3.5 h-3.5" /> {t.atsImportLabel}
+                  </>
+                )}
+              </button>
             </div>
+            <input
+              type="file"
+              ref={importPdfRef}
+              accept=".pdf,application/pdf"
+              className="hidden"
+              onChange={(event) => {
+                const [file] = event.target.files || [];
+                analysePdfFile(file);
+                event.target.value = '';
+              }}
+            />
           </div>
 
           {needsFit && (
@@ -718,6 +785,44 @@ export default function ATSAnalyzer({
               )}
 
               <ScoreBreakdown checks={latest.checks} t={t} lang={lang} />
+
+              <section className="rounded-xl border border-[var(--ui-border-primary)] p-3 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="flex items-center gap-1.5 text-xs font-semibold text-[var(--ui-text-secondary)]">
+                    <Target className="w-3.5 h-3.5 text-[var(--ui-accent)]" /> {t.atsGapsTitle}
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={downloadReport}
+                    className="inline-flex items-center gap-1 rounded-lg border border-[var(--ui-border-primary)] px-2 py-1 text-[11px] font-medium text-[var(--ui-text-secondary)] transition hover:border-[var(--ui-accent)]/50 hover:text-[var(--ui-text-primary)]"
+                  >
+                    <FileDown className="w-3 h-3" /> {t.atsReportLabel}
+                  </button>
+                </div>
+                {latest.gaps?.length ? (
+                  <ol className="space-y-1" aria-label={t.atsGapsTitle}>
+                    {[...latest.gaps]
+                      .sort((a, b) => b.lost - a.lost)
+                      .slice(0, 6)
+                      .map((gap) => (
+                        <li key={gap.id} className="flex items-start gap-2 text-[11px]">
+                          <span className="shrink-0 rounded bg-amber-400/10 px-1 font-mono text-[10px] text-amber-400">
+                            -{gap.lost}
+                          </span>
+                          <span className="min-w-0 text-[var(--ui-text-tertiary)]">
+                            <span className="font-medium text-[var(--ui-text-secondary)]">
+                              {gap.title}
+                            </span>{' '}
+                            {gap.msg}
+                          </span>
+                        </li>
+                      ))}
+                  </ol>
+                ) : (
+                  <p className="text-[11px] text-[var(--ui-text-tertiary)]">{t.atsGapsEmpty}</p>
+                )}
+              </section>
+
               <AtsRobotView record={latest} t={t} />
 
               <ul className="space-y-2">
@@ -756,6 +861,56 @@ export default function ATSAnalyzer({
                   )}
                 </button>
               )}
+            </section>
+          )}
+
+          {imported && (
+            <section className="rounded-xl border border-[var(--ui-border-primary)] p-3 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="flex items-center gap-1.5 text-xs font-semibold text-[var(--ui-text-secondary)]">
+                  <FileText className="w-3.5 h-3.5 text-[var(--ui-accent)]" /> {t.atsImportTitle}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setImported(null)}
+                  className="inline-flex items-center gap-1 rounded-lg border border-[var(--ui-border-primary)] px-2 py-1 text-[11px] text-[var(--ui-text-tertiary)] transition hover:text-[var(--ui-text-primary)]"
+                >
+                  <X className="w-3 h-3" /> {t.atsImportDiscard}
+                </button>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <ScoreCircle score={imported.score} size="w-10 h-10" />
+                  <div className="min-w-0 text-[11px] text-[var(--ui-text-tertiary)]">
+                    <div className="truncate font-medium text-[var(--ui-text-secondary)]">
+                      {imported.fileName}
+                    </div>
+                    <div>
+                      {imported.pageCount} {t.atsPdfPages} · {imported.wordCount} {t.atsPdfWords}
+                    </div>
+                  </div>
+                </div>
+                {imported.gaps?.length ? (
+                  <ul className="space-y-0.5" aria-label={t.atsGapsTitle}>
+                    {imported.gaps.slice(0, 5).map((gap) => (
+                      <li key={gap.id} className="flex items-start gap-2 text-[11px]">
+                        <span className="shrink-0 rounded bg-red-400/10 px-1 font-mono text-[10px] text-red-400">
+                          -{gap.lost}
+                        </span>
+                        <span className="min-w-0 text-[var(--ui-text-tertiary)]">
+                          <span className="font-medium text-[var(--ui-text-secondary)]">
+                            {gap.title}
+                          </span>{' '}
+                          {gap.msg}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-[11px] text-[var(--ui-text-tertiary)]">{t.atsGapsEmpty}</p>
+                )}
+                <AtsRobotView record={imported} t={t} />
+              </div>
             </section>
           )}
 

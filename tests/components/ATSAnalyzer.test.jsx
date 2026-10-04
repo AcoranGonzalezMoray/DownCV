@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
-import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent, waitFor, within } from '@testing-library/react';
 import React from 'react';
 import ATSAnalyzer from '../../src/components/ATSAnalyzer';
 import { evaluatePdf } from '../../src/utils/atsPdfEvaluation';
@@ -269,6 +269,49 @@ describe('ATSAnalyzer', () => {
 
     fireEvent.click(screen.getByRole('button', { name: new RegExp(t.atsPdfFitOnePage) }));
     await waitFor(() => expect(screen.getByText(t.atsPdfFitImpossible)).toBeTruthy());
+  });
+
+  it('downloads a report file instead of doing nothing', async () => {
+    const record = evaluation({
+      score: 78,
+      maxScore: 100,
+      gaps: [{ id: 'dates', title: 'Dates', lost: 4, msg: 'overlap', fix: null }],
+    });
+    global.URL.createObjectURL = vi.fn(() => 'blob:report');
+    global.URL.revokeObjectURL = vi.fn();
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    renderAnalyzer({ history: [{ ...record, id: 'report-record' }] });
+
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(t.atsReportLabel) }));
+
+    await waitFor(() => expect(global.URL.createObjectURL).toHaveBeenCalled());
+    expect(click).toHaveBeenCalled();
+  });
+
+  it('sorts what is missing by impact and offers the report', async () => {
+    vi.mocked(evaluatePdf).mockResolvedValue(
+      evaluation({
+        score: 70,
+        grade: 'C',
+        pageCount: 3,
+        maxScore: 100,
+        gaps: [
+          { id: 'pages', title: 'Page count', lost: 8, msg: 'Three pages', fix: { type: 'fit' } },
+          { id: 'contact', title: 'Contact', lost: 9, msg: 'Missing email', fix: null },
+        ],
+      }),
+    );
+    const { state } = renderAnalyzer();
+    clickEvaluate();
+    await waitFor(() => expect(state.history).toHaveLength(1));
+
+    expect(screen.getByText(translations.en.atsGapsTitle)).toBeTruthy();
+    const list = screen.getByRole('list', { name: translations.en.atsGapsTitle });
+    const impacts = within(list)
+      .getAllByRole('listitem')
+      .map((item) => Number(item.textContent.match(/-(\d+)/)[1]));
+    expect(impacts).toEqual([...impacts].sort((a, b) => b - a));
+    expect(screen.getByRole('button', { name: new RegExp(translations.en.atsReportLabel) })).toBeTruthy();
   });
 
   it('keeps tightening until the reader also lands on one page', async () => {
