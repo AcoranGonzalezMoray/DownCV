@@ -198,6 +198,11 @@ body {
   }
 }
 
+.topbar-switch.topbar-switch-flow {
+  position: static;
+  transform: none;
+}
+
 .app-editor {
   background-color: var(--ui-bg-primary);
   border-right: 1px solid var(--ui-border-primary);

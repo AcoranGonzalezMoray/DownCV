@@ -1222,7 +1222,7 @@ export default function CVPreview({
         />
       )}
 
-      <div className="no-print absolute bottom-4 right-4 z-30 flex flex-col gap-1 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)]/90 p-1 shadow-md backdrop-blur-sm">
+      <div className="no-print absolute bottom-4 right-4 z-30 flex flex-col gap-1 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] p-1 shadow-md">
         {[
           { label: t.previewZoomIn, icon: ZoomIn, action: () => zoomBy(ZOOM_STEP) },
           { label: t.previewZoomOut, icon: ZoomOut, action: () => zoomBy(1 / ZOOM_STEP) },
