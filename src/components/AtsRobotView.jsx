@@ -3,6 +3,37 @@ import { Bot, Copy, Check, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-
 
 const MAX_PAGES = 5;
 
+const PAGE_BREAK = /\n[ \t]*\n+/;
+
+function chunkLines(lines, count) {
+  const size = Math.ceil(lines.length / count) || 1;
+  const chunks = [];
+  for (let index = 0; index < count; index += 1) {
+    chunks.push(lines.slice(index * size, (index + 1) * size).join('\n'));
+  }
+  return chunks;
+}
+
+export function resolvePages(record) {
+  const stored = (record.pageTexts || []).map((page) => (typeof page === 'string' ? page : ''));
+  const count = Number(record.pageCount) || 0;
+  if (count && stored.length === count) {
+    return stored;
+  }
+  if (!count) {
+    return stored.length ? stored : [record.text || ''];
+  }
+  const text = record.text || '';
+  if (!text) {
+    return stored.length ? stored : chunkLines([], count);
+  }
+  const breaks = text.split(PAGE_BREAK);
+  if (breaks.length === count) {
+    return breaks;
+  }
+  return chunkLines(text.split('\n'), count);
+}
+
 export default function AtsRobotView({ record, t }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -21,7 +52,7 @@ export default function AtsRobotView({ record, t }) {
   if (!record) {
     return null;
   }
-  const pages = record.pageTexts?.length ? record.pageTexts : [record.text || ''];
+  const pages = resolvePages(record);
 
   const copy = async () => {
     try {
@@ -43,10 +74,10 @@ export default function AtsRobotView({ record, t }) {
           type="button"
           onClick={() => setOpen((value) => !value)}
           aria-expanded={open}
-          className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-[11px] font-semibold text-[var(--ui-text-primary)] transition hover:text-[var(--ui-accent)]"
+          className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-left text-[11px] font-semibold text-[var(--ui-text-primary)] transition hover:text-[var(--ui-accent)]"
         >
           <Bot className="w-3.5 h-3.5 shrink-0 text-[var(--ui-accent)]" />
-          <span className="truncate">{t.atsRobotTitle}</span>
+          <span className="min-w-0">{t.atsRobotTitle}</span>
           <span className="shrink-0 font-mono text-[10px] font-normal text-[var(--ui-text-muted)]">
             {record.charCount} {t.atsRobotChars}
           </span>

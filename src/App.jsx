@@ -195,6 +195,8 @@ export default function App() {
 
   const [atsHistory, setAtsHistory] = useLocalStorage('ats_pdf_history', []);
   const latestAts = atsHistory[0] || null;
+  const [previewPageCount, setPreviewPageCount] = useState(1);
+  const readPreviewPageCount = useCallback((count) => setPreviewPageCount(count), []);
   const wordCount = markdown.trim().split(/\s+/).filter(Boolean).length;
 
   const contactCheck = useContactVerification(markdown);
@@ -289,7 +291,7 @@ export default function App() {
       sectionGap: result.styles.sectionGap,
       itemGap: result.styles.itemGap,
     }));
-    return true;
+    return result.reached;
   }, []);
 
   useEffect(() => {
@@ -524,7 +526,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-[var(--ui-bg-primary)] font-sans text-[var(--ui-text-primary)]">
+    <div className="app-shell flex h-screen w-screen flex-col overflow-hidden bg-[var(--ui-bg-primary)] font-sans text-[var(--ui-text-primary)]">
       <header
         ref={headerRef}
         className="relative min-h-14 shrink-0 gap-x-3 gap-y-1 border-b border-[var(--ui-border-primary)] bg-[var(--ui-bg-secondary)] px-3 no-print sm:px-4 flex items-center flex-wrap py-1"
@@ -723,8 +725,8 @@ export default function App() {
         onOpenChange={setContactsOpen}
       />
 
-      <div className="flex flex-1 overflow-hidden">
-        <div className="flex flex-1 overflow-hidden">
+      <div className="app-main flex flex-1 overflow-hidden">
+        <div className="app-main flex flex-1 overflow-hidden">
           {(viewMode === 'split' || viewMode === 'editor') && (
             <div
               data-tour="editor"
@@ -770,6 +772,7 @@ export default function App() {
                 lang={lang}
                 aiEnabled={aiSettings.enabled}
                 aiSettings={aiSettings}
+                onPageCount={readPreviewPageCount}
               />
             </div>
           )}
@@ -798,6 +801,7 @@ export default function App() {
               lang={lang}
               history={atsHistory}
               setHistory={setAtsHistory}
+              previewPageCount={previewPageCount}
               jobBrief={jobBrief}
               onJobBriefChange={setJobBrief}
               onRequestLetter={openLetterForJob}

@@ -1,4 +1,4 @@
-﻿import { jsPDF } from 'jspdf';
+import { jsPDF } from 'jspdf';
 import { buildPdfModel, resolveFontFamily, sanitizeForPdf } from './pdfModel';
 
 const PAGE = { width: 595.28, height: 841.89 };
@@ -78,6 +78,7 @@ export function renderPdfDocument(markdown, styles, options = {}) {
 
   let y = marginY;
   let page = 1;
+  let used = marginY;
   const ensureSpace = (height) => {
     if (y + height > PAGE.height - marginY) {
       doc.addPage();
@@ -172,8 +173,16 @@ export function renderPdfDocument(markdown, styles, options = {}) {
 
     if (isSection && block.border && block.border !== 'badge') {
       const ruleY = y + blockLineHeight * lines.length - size * 0.45;
+      const ruleWidth =
+        block.border === 'double'
+          ? 1.2
+          : block.border === 'thick-left'
+            ? 2.4
+            : block.border === 'minimal'
+              ? 0.5
+              : 0.9;
       doc.setDrawColor(...(block.border === 'minimal' ? colors.border : colorOf('primary')));
-      doc.setLineWidth(block.border === 'double' ? 1.2 : block.border === 'thick-left' ? 2.4 : 0.9);
+      doc.setLineWidth(ruleWidth);
       if (block.border === 'thick-left') {
         doc.line(marginX, y - size, marginX, y + blockLineHeight * lines.length);
       } else if (block.border === 'double') {
@@ -184,9 +193,11 @@ export function renderPdfDocument(markdown, styles, options = {}) {
       }
     }
     y += height + (isSection ? 4 : 0);
+    used = Math.max(used, y);
   }
 
-  return { doc, pages: page, model };
+  const fill = Math.min(1, Math.max(0, (used - marginY) / (PAGE.height - marginY * 2)));
+  return { doc, pages: page, model, fill };
 }
 
 function drawBlockLines(doc, lines, left, top, size, lineHeight, family, color, maxWidth, align) {
@@ -215,79 +226,84 @@ export function buildPdf(markdown, styles, options = {}) {
   return { doc, blob, pages, model, bytes: blob.size };
 }
 
+const FIT_FLOORS = {
+  fontSize: 9,
+  lineHeight: 1.15,
+  sectionGap: 5,
+  itemGap: 3,
+  marginX: 14,
+  marginY: 12,
+};
+
+const round2 = (value) => Math.round(value * 100) / 100;
+
+export function scaleLayout(styles, scale) {
+  const factor = Math.min(1, Math.max(0, Number(scale) || 0));
+  const clamp = (key, value) => Math.max(FIT_FLOORS[key], value);
+  return {
+    ...styles,
+    fontSize: round2(clamp('fontSize', styles.fontSize * factor)),
+    lineHeight: round2(clamp('lineHeight', styles.lineHeight * (0.55 + 0.45 * factor))),
+    sectionGap: Math.round(clamp('sectionGap', styles.sectionGap * factor)),
+    itemGap: Math.round(clamp('itemGap', styles.itemGap * factor)),
+    marginX: Math.round(clamp('marginX', styles.marginX * (0.45 + 0.55 * factor))),
+    marginY: Math.round(clamp('marginY', styles.marginY * (0.45 + 0.55 * factor))),
+  };
+}
+
 export function fitToPages(markdown, styles, options = {}) {
   const targetPages = options.targetPages || 1;
-  const round2 = (value) => Math.round(value * 100) / 100;
+  const ceiling = Math.min(1, Math.max(0, options.maxScale ?? 1));
   const pagesOf = (candidate) => renderPdfDocument(markdown, candidate, options).pages;
   const originalPages = pagesOf(styles);
   if (originalPages <= targetPages) {
-    return { styles, pages: originalPages, originalPages, changed: false, steps: [] };
+    return {
+      styles,
+      pages: originalPages,
+      originalPages,
+      changed: false,
+      reached: true,
+      steps: [],
+    };
   }
 
-  const floors = {
-    lineHeight: 1.2,
-    sectionGap: 6,
-    itemGap: 4,
-    marginX: 16,
-    marginY: 14,
-    fontSize: 9,
-  };
   const steps = [];
-  let candidate = { ...styles };
-  const reduce = (patch, label) => {
-    candidate = { ...candidate, ...patch };
-    const pages = pagesOf(candidate);
-    steps.push({ label, value: Object.values(patch)[0], pages });
-    return pages <= targetPages;
-  };
+  const floorLayout = scaleLayout(styles, 0);
+  const floorPages = pagesOf(floorLayout);
+  steps.push({ label: 'tightest', pages: floorPages, value: 0 });
 
-  while (
-    candidate.lineHeight > floors.lineHeight &&
-    !reduce(
-      { lineHeight: Math.max(floors.lineHeight, round2(candidate.lineHeight - 0.03)) },
-      'lineHeight',
-    )
-  ) {}
+  const topLayout = scaleLayout(styles, ceiling);
+  const topPages = pagesOf(topLayout);
+  steps.push({ label: 'scale', pages: topPages, value: round2(ceiling) });
 
-  while (
-    (candidate.sectionGap > floors.sectionGap || candidate.itemGap > floors.itemGap) &&
-    !reduce(
-      {
-        sectionGap: Math.max(floors.sectionGap, candidate.sectionGap - 2),
-        itemGap: Math.max(floors.itemGap, candidate.itemGap - 1),
-      },
-      'gaps',
-    )
-  ) {}
-
-  while (
-    (candidate.marginX > floors.marginX || candidate.marginY > floors.marginY) &&
-    !reduce(
-      {
-        marginX: Math.max(floors.marginX, candidate.marginX - 2),
-        marginY: Math.max(floors.marginY, candidate.marginY - 2),
-      },
-      'margins',
-    )
-  ) {}
-
-  let guard = 0;
-  while (candidate.fontSize > floors.fontSize && guard < 16) {
-    if (
-      reduce({ fontSize: Math.max(floors.fontSize, round2(candidate.fontSize - 0.25)) }, 'fontSize')
-    ) {
-      break;
+  let best = topPages <= targetPages ? { styles: topLayout, pages: topPages } : null;
+  if (floorPages <= targetPages) {
+    let safe = 0;
+    let room = best ? ceiling : 1;
+    while (room - safe > 0.01) {
+      const middle = (safe + room) / 2;
+      const candidate = scaleLayout(styles, middle);
+      const pages = pagesOf(candidate);
+      steps.push({ label: 'scale', pages, value: round2(middle) });
+      if (pages <= targetPages) {
+        safe = middle;
+        best = { styles: candidate, pages };
+      } else {
+        room = middle;
+      }
     }
-    guard += 1;
+  }
+  if (!best) {
+    best = { styles: floorLayout, pages: floorPages };
   }
 
-  const pages = pagesOf(candidate);
-  const changed = pages <= targetPages && layoutDiffers(styles, candidate);
+  const changed = layoutDiffers(styles, best.styles) && best.pages < originalPages;
   return {
-    styles: changed ? candidate : styles,
-    pages: changed ? pages : originalPages,
+    styles: changed ? best.styles : styles,
+    pages: changed ? best.pages : originalPages,
     originalPages,
     changed,
+    reached: best.pages <= targetPages,
     steps,
   };
 }

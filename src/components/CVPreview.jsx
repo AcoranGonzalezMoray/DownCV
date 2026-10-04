@@ -130,6 +130,7 @@ export default function CVPreview({
   lang = 'en',
   aiEnabled = false,
   aiSettings = {},
+  onPageCount = null,
 }) {
   const pagesRef = useRef(null);
   const pageRefs = useRef([]);
@@ -216,25 +217,33 @@ export default function CVPreview({
   const measurePagination = useCallback(() => {
     const node = measureRef.current;
     const children = node ? Array.from(node.children) : [];
-    if (children.length === 0) {
+    // A lone <br> spacer reports offsetTop 0, so measuring through it invents pages.
+    const blocks = children.filter((child) => child.tagName !== 'BR');
+    if (blocks.length === 0) {
       setPagePlan((previous) => (samePagePlan(previous, [[]]) ? previous : [[]]));
       return;
     }
 
-    const advances = children.map((child, index) => {
-      const next = children[index + 1];
+    const last = blocks[blocks.length - 1];
+    const trailingBreaks = children.length - 1 - children.indexOf(last);
+    const trailingHeight =
+      trailingBreaks * (parseFloat(window.getComputedStyle(node).lineHeight) || 0);
+    const advances = blocks.map((block, index) => {
+      const next = blocks[index + 1];
       if (next) {
-        return Math.max(0, next.offsetTop - child.offsetTop);
+        return Math.max(0, next.offsetTop - block.offsetTop);
       }
-      const last = window.getComputedStyle(child);
-      return child.offsetHeight + (parseFloat(last.marginBottom) || 0);
+      const style = window.getComputedStyle(block);
+      return block.offsetHeight + (parseFloat(style.marginBottom) || 0) + trailingHeight;
     });
+
+    const positions = blocks.map((block) => children.indexOf(block));
     const plan = planPages(advances, {
       contentHeight: contentHeightFor(styles.marginY),
-      keepWithNext: chunks.map(keepsWithNext),
-    });
+      keepWithNext: blocks.map((block) => keepsWithNext(block.innerHTML)),
+    }).map((page) => page.map((position) => positions[position]));
     setPagePlan((previous) => (samePagePlan(previous, plan) ? previous : plan));
-  }, [chunks, styles.marginY]);
+  }, [styles.marginY]);
 
   useLayoutEffect(() => {
     let pending = 0;
@@ -887,9 +896,12 @@ export default function CVPreview({
     '--cv-margin-x': `${styles.marginX}px`,
     '--cv-section-gap': `${styles.sectionGap}px`,
     '--cv-item-gap': `${styles.itemGap}px`,
-    '--cv-primary-color': styles.primaryColor,
-    '--cv-text-color': styles.textColor,
-    '--cv-subtext-color': styles.subtextColor,
+    // The sheet reads these names, so the style panel colours have to use them too.
+    '--cv-paper-primary': styles.primaryColor,
+    '--cv-paper-text': styles.textColor,
+    '--cv-paper-subtext': styles.subtextColor,
+    '--cv-paper-border': `color-mix(in srgb, ${styles.primaryColor} 32%, #ffffff)`,
+    '--cv-paper-bullet': styles.textColor,
     '--cv-bullet-style': `'${styles.bulletStyle} '`,
   };
 
@@ -919,8 +931,12 @@ export default function CVPreview({
     pageRefs.current.length = pages.length;
   }, [pages.length]);
 
+  useEffect(() => {
+    onPageCount?.(pages.length);
+  }, [pages.length, onPageCount]);
+
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-[var(--ui-bg-primary)] relative">
+    <div className="app-preview flex h-full flex-col overflow-hidden bg-[var(--ui-bg-primary)] relative">
       <div className="flex items-center justify-between gap-2 border-b border-[var(--ui-border-primary)] bg-[var(--ui-bg-secondary)] p-3 no-print shrink-0">
         <div className="flex items-center gap-2 min-w-0">
           <FileCheck className="w-5 h-5 shrink-0 text-[var(--ui-accent)]" />
@@ -1116,7 +1132,7 @@ export default function CVPreview({
         </p>
       )}
 
-      <div className="flex min-h-0 flex-1">
+      <div className="app-preview-body flex min-h-0 flex-1">
         <PageThumbnails
           pages={pagePlan}
           activePage={activePage}

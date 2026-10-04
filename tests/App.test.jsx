@@ -1,4 +1,4 @@
-﻿import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent, act } from '@testing-library/react';
 import React from 'react';
 import App from '../src/App';
@@ -85,7 +85,7 @@ describe('App', () => {
 
     const sheet = document.querySelector('.cv-page .cv-paper');
     expect(sheet.className).toMatch(/border-style-double/);
-    expect(sheet.style.getPropertyValue('--cv-primary-color')).toBe('#881337');
+    expect(sheet.style.getPropertyValue('--cv-paper-primary')).toBe('#881337');
   });
 
   it('switches a template from the styles panel to the same result', () => {
@@ -93,7 +93,7 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: /Serif Premium/ }));
     const sheet = document.querySelector('.cv-page .cv-paper');
     expect(sheet.className).toMatch(/border-style-double/);
-    expect(sheet.style.getPropertyValue('--cv-primary-color')).toBe('#881337');
+    expect(sheet.style.getPropertyValue('--cv-paper-primary')).toBe('#881337');
   });
 
   it('switches the view without losing the document', () => {

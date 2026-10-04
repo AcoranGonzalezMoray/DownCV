@@ -668,11 +668,13 @@ describe('fitToPages', () => {
   });
 
   
-  it('reports no change when even the smallest layout does not fit', () => {
+  it('still cuts pages when one page is out of reach', () => {
     const huge = longCv + '\n\n## EXTRA\n\n' + 'word '.repeat(4000);
     const result = fitToPages(huge, styles, { targetPages: 1 });
-    expect(result.changed).toBe(false);
-    expect(result.styles).toBe(styles);
+    expect(result.changed).toBe(true);
+    expect(result.reached).toBe(false);
+    expect(result.pages).toBeLessThan(result.originalPages);
+    expect(renderPdfDocument(huge, result.styles).pages).toBe(result.pages);
   }, 30000);
 });
 

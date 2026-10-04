@@ -1,8 +1,46 @@
 import { exportFilename } from './exportName';
 
+const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ESCAPES[char]);
+
+const CODE_PLACEHOLDER = 'CODE';
+
+const SPACER_RE = /^(?:<br\s*\/?>|<hr\s*\/?>|\s|[-*_=])+$/i;
+
+// The export is HTML, not Markdown: **bold** and *italic* must arrive as tags.
+export function inlineHtml(markdown = '') {
+  let html = escapeHtml(markdown).replace(
+    /`([^`]+)`/g,
+    `${CODE_PLACEHOLDER}$1${CODE_PLACEHOLDER}`,
+  );
+  html = html
+    .replace(/\*\*([^*\n]+)\*\*/g, '<strong class="font-semibold text-white">$1</strong>')
+    .replace(/__([^_\n]+)__/g, '<span class="underline">$1</span>')
+    .replace(/(^|[\s(])\*([^*\n]+)\*/g, '$1<em>$2</em>')
+    .replace(/(^|[\s(])_([^_\n]+)_/g, '$1<em>$2</em>')
+    .replace(/~~([^~\n]+)~~/g, '<s>$1</s>')
+    .replace(
+      /\[([^\]\n]+)\]\(([^)\s]+)\)/g,
+      '<a href="$2" class="text-cyan-400 hover:underline" target="_blank" rel="noreferrer">$1</a>',
+    );
+  // An unpaired marker is Markdown noise, not content.
+  html = html.replace(/\*\*/g, '').replace(/__/g, '');
+  return html.replace(
+    new RegExp(`${CODE_PLACEHOLDER}([^]+)${CODE_PLACEHOLDER}`, 'g'),
+    '<code class="rounded bg-slate-900 px-1 py-0.5 text-xs text-cyan-300">$1</code>',
+  );
+}
+
+// The file is downloaded and opened by whatever the reader uses, so every
+// non-ASCII character travels as an entity: accents and bullets cannot be
+// re-read as mojibake.
+const asciiEntities = (html) =>
+  html.replace(/[\u0080-\uffff]/g, (char) => `&#${char.codePointAt(0)};`);
+
 export function generatePortfolioHtml(markdown = '') {
   const text = String(markdown || '').trim();
-  const lines = text.split('\n').map((l) => l.trim());
+  const lines = text.split('\n').map((line) => line.trim());
 
   let name = 'My Portfolio';
   let title = 'Professional';
@@ -10,13 +48,16 @@ export function generatePortfolioHtml(markdown = '') {
 
   for (let i = 0; i < Math.min(lines.length, 8); i++) {
     const line = lines[i];
+    if (!line || SPACER_RE.test(line)) {
+      continue;
+    }
     if (line.startsWith('# ') && name === 'My Portfolio') {
       name = line.replace(/^#\s+/, '').trim();
     } else if (line.startsWith('**') && line.endsWith('**') && title === 'Professional') {
       title = line.replace(/^\*\*|\*\*$/g, '').trim();
     } else if (line.includes('@') || line.includes('|') || line.includes('http')) {
-      line.split('|').forEach((c) => {
-        const item = c.trim();
+      line.split('|').forEach((entry) => {
+        const item = entry.trim();
         if (item) {
           contacts.push(item);
         }
@@ -34,7 +75,7 @@ export function generatePortfolioHtml(markdown = '') {
       sections.push(currentSection);
       return;
     }
-    if (currentSection && line) {
+    if (currentSection && line && !SPACER_RE.test(line)) {
       currentSection.content.push(line);
     }
   });
@@ -44,20 +85,22 @@ export function generatePortfolioHtml(markdown = '') {
       let bodyHtml = '';
       const items = sec.content;
 
-      if (/skill|habilidad|competencia/i.test(sec.title)) {
+      if (/skill|habilidad|competencia|language|idioma/i.test(sec.title)) {
         const skillsList = items
-          .map((i) => i.replace(/^[-*•]\s*/, '').replace(/^\*\*.*?\*\*:\s*/, ''))
+          .map((item) => item.replace(/^[-*\u2022]\s*/, '').replace(/^\*\*.*?\*\*:\s*/, ''))
           .join(', ')
           .split(',')
-          .map((s) => s.trim())
+          .map((value) => value.trim())
           .filter(Boolean);
 
         bodyHtml = `
         <div class="flex flex-wrap gap-2 mt-4">
           ${skillsList
             .map(
-              (s) =>
-                `<span class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-cyan-400 border border-slate-700/60">${s}</span>`,
+              (value) =>
+                `<span class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-cyan-400 border border-slate-700/60">${escapeHtml(
+                  value,
+                )}</span>`,
             )
             .join('\n')}
         </div>`;
@@ -67,30 +110,42 @@ export function generatePortfolioHtml(markdown = '') {
 
         items.forEach((line) => {
           if (line.startsWith('#### ')) {
-            currentItem = { title: line.replace(/^####\s+/, ''), bullets: [] };
+            currentItem = { title: line.replace(/^####\s+/, ''), bullets: [], notes: [] };
             parsedItems.push(currentItem);
           } else if (currentItem && line.startsWith('- ')) {
             currentItem.bullets.push(line.replace(/^-\s+/, ''));
-          } else if (!currentItem && line) {
-            parsedItems.push({ text: line });
+          } else if (currentItem) {
+            currentItem.notes.push(line);
+          } else {
+            parsedItems.push({ paragraph: line });
           }
         });
+
+        const usable = (values) => values.filter((line) => line && !SPACER_RE.test(line));
 
         bodyHtml = `
         <div class="space-y-6 mt-4">
           ${parsedItems
             .map((item) => {
-              if (item.text) {
-                return `<p class="text-slate-300 text-sm leading-relaxed">${item.text}</p>`;
+              if (item.paragraph !== undefined) {
+                return `<p class="text-slate-300 text-sm leading-relaxed">${inlineHtml(item.paragraph)}</p>`;
               }
+              const notes = usable(item.notes);
               return `
               <div class="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-cyan-500/40 transition">
-                <h4 class="text-base font-semibold text-white">${item.title}</h4>
+                <h4 class="text-base font-semibold text-white">${inlineHtml(item.title)}</h4>
                 ${
                   item.bullets.length > 0
                     ? `<ul class="mt-3 space-y-1.5 text-sm text-slate-300 list-disc list-inside">
-                        ${item.bullets.map((b) => `<li>${b}</li>`).join('\n')}
+                        ${item.bullets.map((b) => `<li>${inlineHtml(b)}</li>`).join('\n')}
                        </ul>`
+                    : ''
+                }
+                ${
+                  notes.length > 0
+                    ? `<div class="mt-2 space-y-1 text-sm text-slate-400">${notes
+                        .map((line) => `<p>${inlineHtml(line)}</p>`)
+                        .join('\n')}</div>`
                     : ''
                 }
               </div>`;
@@ -103,19 +158,19 @@ export function generatePortfolioHtml(markdown = '') {
       <section class="mt-12">
         <h3 class="text-xl font-bold tracking-tight text-white border-b border-slate-800 pb-3 flex items-center gap-2">
           <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
-          ${sec.title}
+          ${inlineHtml(sec.title)}
         </h3>
         ${bodyHtml}
       </section>`;
     })
     .join('\n');
 
-  return `<!DOCTYPE html>
+  return asciiEntities(`<!DOCTYPE html>
 <html lang="en" class="dark scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${name} - ${title}</title>
+  <title>${escapeHtml(name)} - ${escapeHtml(title)}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -129,11 +184,14 @@ export function generatePortfolioHtml(markdown = '') {
     <!-- Header / Hero -->
     <header class="pb-10 border-b border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
       <div>
-        <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl">${name}</h1>
-        <p class="mt-2 text-xl font-medium text-cyan-400">${title}</p>
+        <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl">${inlineHtml(name)}</h1>
+        <p class="mt-2 text-xl font-medium text-cyan-400">${inlineHtml(title)}</p>
         <div class="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-400">
           ${contacts
-            .map((c) => `<span class="inline-flex items-center gap-1.5">• <span>${c}</span></span>`)
+            .map(
+              (c) =>
+                `<span class="inline-flex items-center gap-1.5">&bull; <span>${inlineHtml(c)}</span></span>`,
+            )
             .join('\n')}
         </div>
       </div>
@@ -155,12 +213,12 @@ export function generatePortfolioHtml(markdown = '') {
     </footer>
   </div>
 </body>
-</html>`;
+</html>`);
 }
 
 export function exportToPortfolioHtml(markdown = '') {
   const html = generatePortfolioHtml(markdown);
-  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const blob = new Blob(['\ufeff', html], { type: 'text/html;charset=utf-8' });
   const filename = exportFilename(markdown, 'html');
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -168,7 +226,7 @@ export function exportToPortfolioHtml(markdown = '') {
   a.download = filename;
   document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
+  a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   return true;
 }

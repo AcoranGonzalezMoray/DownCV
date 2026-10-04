@@ -148,6 +148,8 @@ export const translations = {
     atsPdfFitOnePage: 'Fit on one page',
     atsPdfFitApplied: 'Layout adjusted, re-evaluating...',
     atsPdfFitImpossible: 'It does not fit on one page even at the minimum size.',
+    atsPdfFitPartial:
+      'Pages cut from {n} to {m}: this CV cannot reach one page without becoming unreadable.',
     atsPdfRevertFit: 'Undo layout change',
     atsPdfCompare: 'Compare with previous',
     atsPdfTrend: 'Score history',
@@ -587,6 +589,8 @@ export const translations = {
     atsPdfFitOnePage: 'Ajustar a una página',
     atsPdfFitApplied: 'Diseño ajustado, vuelve a evaluar...',
     atsPdfFitImpossible: 'No cabe en una página ni con el tamaño mínimo.',
+    atsPdfFitPartial:
+      'Páginas reducidas de {n} a {m}: este CV no puede llegar a una página sin quedar ilegible.',
     atsPdfRevertFit: 'Deshacer ajuste de diseño',
     atsPdfCompare: 'Comparar con la anterior',
     atsPdfTrend: 'Historial de puntuación',

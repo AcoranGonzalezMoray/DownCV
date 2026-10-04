@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   CheckCircle2,
   XCircle,
@@ -30,6 +30,9 @@ import ScoreBreakdown from './ScoreBreakdown';
 import AtsRobotView from './AtsRobotView';
 
 const MAX_HISTORY = 20;
+const MAX_FIT_ROUNDS = 3;
+const FIT_ROUND_TIGHTENING = 0.94;
+const round2 = (value) => Math.round(value * 100) / 100;
 
 const scoreClasses = (score) => {
   if (score >= 85) {
@@ -272,15 +275,19 @@ export default function ATSAnalyzer({
   lang,
   history,
   setHistory,
+  previewPageCount = 1,
   jobBrief = '',
   onJobBriefChange = null,
   onRequestLetter = null,
 }) {
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState(null);
+  const [notice, setNotice] = useState(null);
   const [openId, setOpenId] = useState(null);
   const [showDiff, setShowDiff] = useState(false);
   const [fitBackup, setFitBackup] = useState(null);
+  const [fitWatch, setFitWatch] = useState(null);
+  const fitRounds = useRef(0);
   const [subTab, setSubTab] = useState('ats');
   const [targetLevel, setTargetLevel] = useState('mid');
   const [jobMatch, setJobMatch] = useState(null);
@@ -307,6 +314,8 @@ export default function ATSAnalyzer({
   const runEvaluation = async (sourceMarkdown = markdown, sourceStyles = styles) => {
     setStatus('running');
     setError(null);
+    setNotice(null);
+    setFitWatch(null);
     try {
       const { evaluatePdf } = await import('../utils/atsPdfEvaluation');
       const evaluation = await evaluatePdf(sourceMarkdown, sourceStyles, {
@@ -315,7 +324,8 @@ export default function ATSAnalyzer({
       });
       const record = toHistoryRecord(evaluation);
       pushRecord(record);
-      setOpenId(record.id);
+      setOpenId(null);
+      setShowDiff(false);
       setStatus('idle');
       return record;
     } catch (e) {
@@ -325,25 +335,59 @@ export default function ATSAnalyzer({
     }
   };
 
-  const fitToOnePage = async () => {
+  const fitToOnePage = async ({ tighten = 1 } = {}) => {
     setStatus('fitting');
     setError(null);
+    setNotice(null);
     try {
-      const { fitToPages } = await import('../utils/pdfBuilder');
-      const result = fitToPages(markdown, styles, { bullet: styles.bulletStyle, targetPages: 1 });
-      if (!result.changed) {
+      const { fitToPages, scaleLayout } = await import('../utils/pdfBuilder');
+      // A retry starts from the layout the previous round already reached, so a
+      // PDF that already fits on one page does not abort the round with an error.
+      const base = tighten < 1 ? scaleLayout(styles, tighten) : styles;
+      const result = fitToPages(markdown, base, {
+        bullet: styles.bulletStyle,
+        targetPages: 1,
+        maxScale: tighten,
+      });
+      const next = result.changed ? result.styles : base;
+
+      if (!layoutMoved(styles, next)) {
         setError(t.atsPdfFitImpossible);
         setStatus('error');
         return;
       }
-      setFitBackup(styles);
-      setStyles((previous) => ({ ...previous, ...pickLayout(result.styles) }));
-      await runEvaluation(markdown, result.styles);
+      if (!fitBackup) {
+        setFitBackup(styles);
+      }
+      setStyles((previous) => ({ ...previous, ...pickLayout(next) }));
+      await runEvaluation(markdown, next);
+      if (result.pages > 1) {
+        setNotice(
+          t.atsPdfFitPartial
+            .replace('{n}', String(result.originalPages))
+            .replace('{m}', String(result.pages)),
+        );
+      }
+      // The PDF and the printed sheet are laid out by two different engines, so
+      // keep tightening until the reader the user sees also reaches one page.
+      setFitWatch({ goal: 1, tighten: round2(tighten * FIT_ROUND_TIGHTENING) });
     } catch (e) {
       setError(e?.message || t.atsPdfError);
       setStatus('error');
     }
   };
+
+  useEffect(() => {
+    if (!fitWatch || status !== 'idle' || fitRounds.current >= MAX_FIT_ROUNDS) {
+      return;
+    }
+    if (previewPageCount <= fitWatch.goal) {
+      setFitWatch(null);
+      return;
+    }
+    fitRounds.current += 1;
+    fitToOnePage({ tighten: fitWatch.tighten });
+  }, [previewPageCount, fitWatch, status]);
 
   const revertFit = () => {
     if (!fitBackup) {
@@ -351,6 +395,8 @@ export default function ATSAnalyzer({
     }
     setStyles((previous) => ({ ...previous, ...pickLayout(fitBackup) }));
     setFitBackup(null);
+    fitRounds.current = 0;
+    setFitWatch(null);
   };
 
   const applyCheckFix = async (check) => {
@@ -585,12 +631,21 @@ export default function ATSAnalyzer({
           {needsFit && (
             <button
               type="button"
-              onClick={fitToOnePage}
+              onClick={() => {
+                fitRounds.current = 0;
+                fitToOnePage();
+              }}
               disabled={busy}
               className="w-full flex items-center justify-center gap-2 rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-1.5 text-xs font-medium text-amber-400 transition hover:bg-amber-400/20 disabled:opacity-60"
             >
               <Wand2 className="w-3.5 h-3.5" /> {t.atsPdfFitOnePage} ({latest.pageCount} → 1)
             </button>
+          )}
+
+          {notice && (
+            <p className="text-[11px] leading-relaxed flex items-start gap-2 rounded border border-amber-400/40 bg-amber-400/10 px-2 py-1.5 text-amber-400">
+              <AlertTriangle className="w-3.5 h-3.5 mt-px shrink-0" /> {notice}
+            </p>
           )}
 
           {status === 'error' && (
@@ -723,6 +778,7 @@ export default function ATSAnalyzer({
                           setOpenId(isOpen ? null : record.id);
                           setShowDiff(false);
                         }}
+                        aria-expanded={isOpen}
                         className={`w-full flex items-center justify-between gap-2 rounded-lg border px-2.5 py-2 text-left transition ${isOpen ? scoreClasses(record.score) : 'border-[var(--ui-border-primary)] hover:border-[var(--ui-accent)]/40'}`}
                       >
                         <span className="flex items-center gap-2 min-w-0">
@@ -772,4 +828,8 @@ export default function ATSAnalyzer({
 function pickLayout(styles) {
   const { fontSize, lineHeight, marginX, marginY, sectionGap, itemGap } = styles;
   return { fontSize, lineHeight, marginX, marginY, sectionGap, itemGap };
+}
+
+function layoutMoved(before, after) {
+  return Object.keys(pickLayout(after)).some((key) => before[key] !== after[key]);
 }

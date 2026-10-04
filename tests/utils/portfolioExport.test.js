@@ -1,5 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
-import { generatePortfolioHtml, exportToPortfolioHtml } from '../../src/utils/portfolioExport';
+import {
+  generatePortfolioHtml,
+  exportToPortfolioHtml,
+  inlineHtml,
+} from '../../src/utils/portfolioExport';
 
 const sampleCV = `
 # Alex Rivera
@@ -37,5 +41,35 @@ describe('portfolioExport', () => {
     const success = exportToPortfolioHtml(sampleCV);
     expect(success).toBe(true);
     expect(global.URL.createObjectURL).toHaveBeenCalled();
+  });
+
+  it('renders the Markdown inline syntax as HTML, so no ** ever reaches the file', () => {
+    const cv = `# Ana\n\n**Senior Backend Developer** | *Mar 2019 - Dec 2021*\n\n### Innova Software Lab\n- Built high performance REST and GraphQL APIs in **Node.js (Express/NestJS)** serving more than **2 million requests a day**.\n- Optimised queries in \`PostgreSQL\` and saw [the site](https://example.dev) grow.\n`;
+
+    const html = generatePortfolioHtml(cv);
+
+    expect(html).not.toContain('**');
+    expect(html).toContain('<strong class="font-semibold text-white">Node.js (Express/NestJS)</strong>');
+    expect(html).toContain('<em>Mar 2019 - Dec 2021</em>');
+    expect(html).toContain('<code class="rounded bg-slate-900');
+    expect(html).toContain('<a href="https://example.dev"');
+  });
+
+  it('escapes the text instead of trusting it', () => {
+    expect(inlineHtml('<script>alert(1)</script>')).not.toContain('<script>');
+    expect(inlineHtml('a & b')).toContain('&amp;');
+  });
+
+  it('never ships a raw <br>, a lone ** or a non-ASCII byte in the file', () => {
+    const cv = `# Ana Gómez\n\n**Backend Engineer** | *Remote*\n\n### ACERCA DE\n<br>\n**Languages:** Spanish (native), English (C1)\n\n- Built APIs in **Node.js**\n<br>\n### EXPERIENCIA\n#### Acme\n**Stack:** Go, Postgres\n<br>\n`;
+
+    const html = generatePortfolioHtml(cv);
+
+    expect(html).not.toMatch(/<br\s*\/?>/i);
+    expect(html).not.toContain('**');
+    expect(html).toContain('<strong class="font-semibold text-white">Stack:</strong>');
+    expect(html).toContain('<strong class="font-semibold text-white">Languages:</strong>');
+    expect(html).toContain('Ana G&#243;mez');
+    expect(html).toMatch(/^[\x00-\x7f]*$/);
   });
 });
