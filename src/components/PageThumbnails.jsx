@@ -1,5 +1,3 @@
-import React from 'react';
-
 const WIDTH = 64;
 const HEIGHT = 90;
 

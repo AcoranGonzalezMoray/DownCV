@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle2, FileUp, Loader2, Upload, X } from 'lucide-react';
 import { IMPORT_EXTENSIONS, readImportFile } from '../utils/importFiles';
 import { textToMarkdown } from '../utils/cvImport';

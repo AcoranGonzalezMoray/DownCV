@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Sparkles, X, Loader2, ArrowRight } from 'lucide-react';
 
 export default function AiRewritePopover({

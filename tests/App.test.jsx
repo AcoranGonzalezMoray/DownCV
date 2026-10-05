@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent, act } from '@testing-library/react';
-import React from 'react';
 import App from '../src/App';
 
 beforeEach(() => {

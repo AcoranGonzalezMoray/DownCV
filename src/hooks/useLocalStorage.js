@@ -7,7 +7,7 @@ export default function useLocalStorage(key, initialValue) {
     try {
       const item = window.localStorage.getItem(STORAGE_KEY_PREFIX + key);
       return item ? JSON.parse(item) : initialValue;
-    } catch (e) {
+    } catch (_e) {
       return initialValue;
     }
   });
@@ -18,7 +18,7 @@ export default function useLocalStorage(key, initialValue) {
         const valueToStore = value instanceof Function ? value(storedValue) : value;
         setStoredValue(valueToStore);
         window.localStorage.setItem(STORAGE_KEY_PREFIX + key, JSON.stringify(valueToStore));
-      } catch (e) {}
+      } catch (_e) {}
     },
     [key, storedValue],
   );
@@ -27,7 +27,7 @@ export default function useLocalStorage(key, initialValue) {
     try {
       window.localStorage.removeItem(STORAGE_KEY_PREFIX + key);
       setStoredValue(initialValue);
-    } catch (e) {}
+    } catch (_e) {}
   }, [key, initialValue]);
 
   return [storedValue, setValue, removeValue];

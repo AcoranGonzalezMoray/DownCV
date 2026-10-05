@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
-import React from 'react';
 import AppTour, { buildTourSteps } from '../../src/components/AppTour';
 import { translations } from '../../src/data/translations';
 

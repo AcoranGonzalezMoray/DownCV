@@ -1,4 +1,3 @@
-import React from 'react';
 import { Palette, Type, Sliders, AlignLeft, RotateCcw } from 'lucide-react';
 import { LAYOUT_TEMPLATES, applyTemplate, matchTemplate } from '../data/templates';
 import TemplatePreview from './TemplatePreview';

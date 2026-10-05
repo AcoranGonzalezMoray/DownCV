@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Sparkles, X, PlugZap, Check, AlertTriangle, Loader2 } from 'lucide-react';
 import { callAIEndpoint } from '../utils/aiEnhancer';
 

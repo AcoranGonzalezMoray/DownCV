@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Copy, FileText, Printer, AlertTriangle, X, Briefcase } from 'lucide-react';
 import {
   buildCoverLetter,

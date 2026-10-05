@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import StyleControls from '../../src/components/StyleControls';
 import { applyTemplate } from '../../src/data/templates';
 import { translations } from '../../src/data/translations';

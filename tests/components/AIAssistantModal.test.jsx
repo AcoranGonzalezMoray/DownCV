@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent, act } from '@testing-library/react';
-import React from 'react';
 import AIAssistantModal from '../../src/components/AIAssistantModal';
 import { callAIEndpoint } from '../../src/utils/aiEnhancer';
 

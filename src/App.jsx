@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo } from 'react';
 import useTheme from './hooks/useTheme';
 import useLocalStorage from './hooks/useLocalStorage';
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
@@ -115,7 +115,7 @@ export default function App() {
   useEffect(() => {
     try {
       localStorage.setItem('downcv_drafts', JSON.stringify(savedDrafts));
-    } catch (e) {}
+    } catch (_e) {}
   }, [savedDrafts]);
 
   const isUnsaved = markdown !== lastSavedMarkdown;

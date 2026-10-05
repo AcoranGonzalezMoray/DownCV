@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent, act } from '@testing-library/react';
-import React from 'react';
 import AtsRobotView from '../../src/components/AtsRobotView';
 import { translations } from '../../src/data/translations';
 

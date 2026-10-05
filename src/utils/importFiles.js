@@ -167,7 +167,7 @@ export async function readImportFile(file) {
       try {
         const { jsonResumeToMarkdown } = await import('./jsonResume');
         return { text: jsonResumeToMarkdown(raw), kind: 'json' };
-      } catch (err) {
+      } catch (_err) {
         return { text: raw, kind: 'json' };
       }
     }

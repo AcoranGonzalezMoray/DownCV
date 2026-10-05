@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, act, fireEvent, waitFor } from '@testing-library/react';
-import React from 'react';
 import CVPreview from '../../src/components/CVPreview';
 import { callAIEndpoint } from '../../src/utils/aiEnhancer';
 import { translations } from '../../src/data/translations';

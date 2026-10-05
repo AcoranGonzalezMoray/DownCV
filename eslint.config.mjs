@@ -14,7 +14,7 @@ export default [
       '@eslint-react': eslintReact.configs['recommended'].plugins['@eslint-react'],
     },
     rules: {
-      'no-unused-vars': 'warn',
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
       'no-console': 'warn',
       'prefer-const': 'error',
       'no-var': 'error',

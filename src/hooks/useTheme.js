@@ -15,7 +15,7 @@ function getInitialTheme() {
     if (stored === 'dark' || stored === 'light') {
       return stored;
     }
-  } catch (e) {}
+  } catch (_e) {}
   return getSystemPreference();
 }
 
@@ -27,7 +27,7 @@ export default function useTheme() {
     root.setAttribute('data-theme', theme);
     try {
       localStorage.setItem(STORAGE_KEY, theme);
-    } catch (e) {}
+    } catch (_e) {}
   }, [theme]);
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function useTheme() {
         if (!localStorage.getItem(STORAGE_KEY)) {
           setThemeState(e.matches ? 'dark' : 'light');
         }
-      } catch (err) {}
+      } catch (_err) {}
     };
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);

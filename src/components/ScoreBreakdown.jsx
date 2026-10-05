@@ -1,4 +1,3 @@
-import React from 'react';
 import { Radar as RadarIcon, ListChecks, AlertTriangle } from 'lucide-react';
 import { dimensionAdvice, scoreDimensions } from '../utils/atsDimensions';
 
