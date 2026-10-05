@@ -84,7 +84,7 @@ Scans your Markdown for every email, phone and link and makes you approve each o
 Keep one tailored CV per position instead of overwriting a single document. Name each version after the offer (`Acme · Frontend Engineer`), then open, rename, duplicate or delete them independently — each one shows the keywords it adds or removes versus the CV on screen, and can be linked to a real `.md` file on disk.
 
 <p align="center">
-  <img src="./public/captures/cv-versions-per-job.gif" alt="CV Versions per Job Offer Demo" width="800" style="border-radius: 12px" />
+  <img src="https://github.com/user-attachments/assets/9ac71e4a-4fce-429b-bd9d-ddf379cf43ff" alt="CV Versions per Job Offer Demo" width="800" style="border-radius: 12px" />
 </p>
 
 ### 🤖 ATS Rewriting with Local Ollama
