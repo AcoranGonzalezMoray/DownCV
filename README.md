@@ -31,34 +31,17 @@ Unlike web resume builders that process sensitive personal data on third-party s
 
 ## ✨ Key Features
 
-<table>
-  <!-- Feature 1 -->
-  <tr>
-    <td>
-      <img src="https://img.shields.io/badge/feature-editor-blue" width="125" align="right"/>
-      <details open>
-        <summary>⚡ Bi-directional Markdown Editor & Live Preview</summary>
-        
-> Edit raw Markdown or select text on the A4 page preview to format elements directly without breaking document syntax.
-        
-  <details>
-    <summary>🎥 Demo</summary>
-    <p align="center"> 
-      <img src="./public/captures/markdown-editor-preview.gif" alt="Bi-directional Markdown Editor Demo" align="center" width="800" style="border-radius: 12px"/>
-    </p>
-  </details>
-</details>
-    </td>
-  </tr>
+### ⚡ Bi-directional Markdown Editor & Live Preview
 
-  <!-- Feature 2 -->
-  <tr>
-    <td>
-      <img src="https://img.shields.io/badge/feature-ATS--Scorer-green" width="125" align="right"/>
-      <details open>
-        <summary>🛡️ Integrated ATS Simulator & Scorer</summary>
-        
-> Scores your generated PDF against realistic ATS rules (text layer integrity, keyword density, action verbs, contact information, bullet quality, etc.). Also analyses a PDF you already have, and exports the report. The score is the sum of the rules that pass, out of 100. Both lexicons are measured together, so a bilingual CV is never punished for the language of its headings or of its interface.
+Edit raw Markdown or select text on the A4 page preview to format elements directly without breaking document syntax.
+
+<p align="center">
+  <img src="./public/captures/markdown-editor-preview.gif" alt="Bi-directional Markdown Editor Demo" width="800" style="border-radius: 12px" />
+</p>
+
+### 🛡️ Integrated ATS Simulator & Scorer
+
+Scores your generated PDF against realistic ATS rules (text layer integrity, keyword density, action verbs, contact information, bullet quality, etc.). Also analyses a PDF you already have, and exports the report. The score is the sum of the rules that pass, out of 100. Both lexicons are measured together, so a bilingual CV is never punished for the language of its headings or of its interface.
 
 | Rule | Points | What it fails on |
 |---|---:|---|
@@ -83,130 +66,58 @@ Unlike web resume builders that process sensitive personal data on third-party s
 | `stuffing` | 2 | A term repeated four times in one line, or eating 6% of the document |
 
 The panel also groups them into five dimensions (structure, contact, verbs, metrics, keywords), lists what is missing sorted by points lost, and can download the whole report as HTML.
-  <details>
-    <summary>🎥 Demo</summary>
-    <p align="center"> 
-      <img src="./public/captures/ats-simulator-scorer.gif" alt="ATS Simulator & Scorer Demo" align="center" width="800" style="border-radius: 12px"/>
-    </p>
-  </details>
-</details>
-    </td>
-  </tr>
 
-  <!-- Feature 3 -->
-  <tr>
-    <td>
-      <img src="https://img.shields.io/badge/feature-review%20%26%20verify-orange" width="125" align="right"/>
-      <details open>
-        <summary>✅ Contact Review & Verification</summary>
-        
-> Scans your Markdown for every email, phone and link and makes you approve each one explicitly — flagging missing domain extensions, numbers without a country code, links written without `https://`, and URLs hidden behind link text that the ATS parser never reads. Export stays blocked until every item is verified or dismissed.
-        
-  <details>
-    <summary>🎥 Demo</summary>
-    <p align="center"> 
-      <img src="./public/captures/contact-review-and-verify.gif" alt="Contact Review and Verify Demo" align="center" width="800" style="border-radius: 12px"/>
-    </p>
-  </details>
-</details>
-    </td>
-  </tr>
+<p align="center">
+  <img src="./public/captures/ats-simulator-scorer.gif" alt="ATS Simulator & Scorer Demo" width="800" style="border-radius: 12px" />
+</p>
 
-  <!-- Feature 4 -->
-  <tr>
-    <td>
-      <img src="https://img.shields.io/badge/feature-cv%20versions-teal" width="125" align="right"/>
-      <details open>
-        <summary>🗂️ CV Versions per Job Offer</summary>
-        
-> Keep one tailored CV per position instead of overwriting a single document. Name each version after the offer (<code>Acme · Frontend Engineer</code>), then open, rename, duplicate or delete them independently — each one shows the keywords it adds or removes versus the CV on screen, and can be linked to a real <code>.md</code> file on disk.
-        
-  <details>
-    <summary>🎥 Demo</summary>
-    <p align="center"> 
-      <img src="./public/captures/cv-versions-per-job.gif" alt="CV Versions per Job Offer Demo" align="center" width="800" style="border-radius: 12px"/>
-    </p>
-  </details>
-</details>
-    </td>
-  </tr>
+### ✅ Contact Review & Verification
 
-  <!-- Feature 5 -->
-  <tr>
-    <td>
-      <img src="https://img.shields.io/badge/feature-local%20AI%20with%20Ollama-8b5cf6" width="125" align="right"/>
-      <details open>
-        <summary>🤖 ATS Rewriting with Local Ollama</summary>
-        
-> Select any paragraph or bullet in the preview and let your own <code>Ollama</code> model rewrite it for ATS parsing — same meaning, stronger action verbs, quantified impact. Point the endpoint to <code>http://localhost:11434/v1/chat/completions</code>, pick a model and test the connection: no data ever leaves your machine.
-        
-  <details>
-    <summary>🎥 Demo</summary>
-    <p align="center"> 
-      <img src="./public/captures/ollama-ats-rewriting.gif" alt="ATS Rewriting with Local Ollama Demo" align="center" width="800" style="border-radius: 12px"/>
-    </p>
-  </details>
-</details>
-    </td>
-  </tr>
+Scans your Markdown for every email, phone and link and makes you approve each one explicitly — flagging missing domain extensions, numbers without a country code, links written without `https://`, and URLs hidden behind link text that the ATS parser never reads. Export stays blocked until every item is verified or dismissed.
 
-  <!-- Feature 6 -->
-  <tr>
-    <td>
-      <img src="https://img.shields.io/badge/feature-cover--letter-brightgreen" width="125" align="right"/>
-      <details open>
-        <summary>📄 Cover Letter Generator</summary>
-        
-> Automatically drafts a tailored, professional cover letter derived from your resume's key achievements and contact information.
-        
-  <details>
-    <summary>🎥 Demo</summary>
-    <p align="center"> 
-      <img src="./public/captures/cover-letter-generator.gif" alt="Cover Letter Generator Demo" align="center" width="800" style="border-radius: 12px"/>
-    </p>
-  </details>
-</details>
-    </td>
-  </tr>
+<p align="center">
+  <img src="./public/captures/contact-review-and-verify.gif" alt="Contact Review and Verify Demo" width="800" style="border-radius: 12px" />
+</p>
 
-  <!-- Feature 7 -->
-  <tr>
-    <td>
-      <img src="https://img.shields.io/badge/feature-export-informational" width="125" align="right"/>
-      <details open>
-        <summary>📤 Multi-Format Export</summary>
-        
-> Export to native vector PDF (via jsPDF), Microsoft Word (<code>.docx</code> via OOXML), or Rich Text Format (<code>.rtf</code>).
-        
-  <details>
-    <summary>🎥 Demo</summary>
-    <p align="center"> 
-      <img src="./public/captures/multi-format-export.gif" alt="Multi-Format Export Demo" align="center" width="800" style="border-radius: 12px"/>
-    </p>
-  </details>
-</details>
-    </td>
-  </tr>
+### 🗂️ CV Versions per Job Offer
 
-  <!-- Feature 8 -->
-  <tr>
-    <td>
-      <img src="https://img.shields.io/badge/feature-importer-yellowgreen" width="125" align="right"/>
-      <details open>
-        <summary>📥 Universal Resume Importer</summary>
-        
-> Import existing resumes from <code>.pdf</code>, <code>.docx</code>, <code>.txt</code>, <code>.md</code>, or raw text into clean, structured Markdown.
-        
-  <details>
-    <summary>🎥 Demo</summary>
-    <p align="center"> 
-      <img src="./public/captures/resume-importer.gif" alt="Universal Resume Importer Demo" align="center" width="800" style="border-radius: 12px"/>
-    </p>
-  </details>
-</details>
-    </td>
-  </tr>
-</table>
+Keep one tailored CV per position instead of overwriting a single document. Name each version after the offer (`Acme · Frontend Engineer`), then open, rename, duplicate or delete them independently — each one shows the keywords it adds or removes versus the CV on screen, and can be linked to a real `.md` file on disk.
+
+<p align="center">
+  <img src="./public/captures/cv-versions-per-job.gif" alt="CV Versions per Job Offer Demo" width="800" style="border-radius: 12px" />
+</p>
+
+### 🤖 ATS Rewriting with Local Ollama
+
+Select any paragraph or bullet in the preview and let your own `Ollama` model rewrite it for ATS parsing — same meaning, stronger action verbs, quantified impact. Point the endpoint to `http://localhost:11434/v1/chat/completions`, pick a model and test the connection: no data ever leaves your machine.
+
+<p align="center">
+  <img src="./public/captures/ollama-ats-rewriting.gif" alt="ATS Rewriting with Local Ollama Demo" width="800" style="border-radius: 12px" />
+</p>
+
+### 📄 Cover Letter Generator
+
+Automatically drafts a tailored, professional cover letter derived from your resume's key achievements and contact information.
+
+<p align="center">
+  <img src="./public/captures/cover-letter-generator.gif" alt="Cover Letter Generator Demo" width="800" style="border-radius: 12px" />
+</p>
+
+### 📤 Multi-Format Export
+
+Export to native vector PDF (via jsPDF), Microsoft Word (`.docx` via OOXML), or Rich Text Format (`.rtf`).
+
+<p align="center">
+  <img src="./public/captures/multi-format-export.gif" alt="Multi-Format Export Demo" width="800" style="border-radius: 12px" />
+</p>
+
+### 📥 Universal Resume Importer
+
+Import existing resumes from `.pdf`, `.docx`, `.txt`, `.md`, or raw text into clean, structured Markdown.
+
+<p align="center">
+  <img src="./public/captures/resume-importer.gif" alt="Universal Resume Importer Demo" width="800" style="border-radius: 12px" />
+</p>
 
 ---
 
