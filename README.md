@@ -12,7 +12,8 @@
   <a href="#license"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License MIT"></a>
   <a href="https://reactjs.org/"><img src="https://img.shields.io/badge/React-18.3-61dafb.svg?logo=react" alt="React 18"></a>
   <a href="https://vitejs.dev/"><img src="https://img.shields.io/badge/Vite-6.0-646cff.svg?logo=vite" alt="Vite 6"></a>
-  <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind_CSS-3.4-38bdf8.svg?logo=tailwindcss" alt="Tailwind CSS"></a>
+  <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind_CSS-4.0-38bdf8.svg?logo=tailwindcss" alt="Tailwind CSS"></a>
+  <a href="https://eslint.org/"><img src="https://img.shields.io/badge/ESLint-10.0-4b32c3.svg?logo=eslint" alt="ESLint"></a>
   <a href="https://vitest.dev/"><img src="https://img.shields.io/badge/Tested_with-Vitest-729b1b.svg?logo=vitest" alt="Vitest"></a>
   <a href="#privacy"><img src="https://img.shields.io/badge/Privacy-100%25_Local_--_No_Server-emerald.svg" alt="100% Local"></a>
 </p>
@@ -214,7 +215,7 @@ The panel also groups them into five dimensions (structure, contact, verbs, metr
 | Layer | Technology | Purpose |
 |---|---|---|
 | **Frontend Framework** | React 18 & Vite 6 | Fast SPA rendering & modern build pipeline |
-| **Styling & UI** | Tailwind CSS 3 + Lucide Icons | Responsive layout, dark mode, CSS custom properties |
+| **Styling & UI** | Tailwind CSS 4 + Lucide Icons | Responsive layout, dark mode, CSS custom properties |
 | **Markdown Processing** | Marked.js (Custom Renderer) | AST block tagging & bi-directional source mapping |
 | **PDF Generation** | jsPDF | Native vector text streams (WinAnsi fallback, standard A4 layout) |
 | **ATS Text Extraction** | PDF.js (`pdfjs-dist`) | Worker-based text layer parsing mimicking Workday/Taleo |

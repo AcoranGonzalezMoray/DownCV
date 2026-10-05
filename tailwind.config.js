@@ -1,18 +1,3 @@
-
-export default {
-  darkMode: 'class',
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
-  theme: {
-    extend: {
-      fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        serif: ['Merriweather', 'serif'],
-        mono: ['JetBrains Mono', 'monospace'],
-      },
-    },
-  },
-  plugins: [],
-}
+// Tailwind v4: configuration has moved to src/index.css via @theme {}
+// This file is kept for tooling compatibility but is no longer used by Tailwind.
+export default {};
