@@ -48,5 +48,9 @@
   "overrides": {
     "braces": "^3.0.3",
     "micromatch": "^4.0.8"
+  },
+  "allowScripts": {
+    "core-js@3.50.0": true,
+    "esbuild@0.25.12": true
   }
 }
