@@ -27,7 +27,6 @@
 
 Unlike web resume builders that process sensitive personal data on third-party servers, **DownCV runs 100% client-side in your browser**. It includes an isolated **Applicant Tracking System (ATS) evaluation engine** that generates real vector PDFs, reads back the text layer using `pdf.js` (exactly as real ATS parsers do), scores the resume across 12 critical dimensions, and provides **one-click automatic Markdown fixes**.
 
----
 
 ## ✨ Key Features
 
@@ -36,8 +35,9 @@ Unlike web resume builders that process sensitive personal data on third-party s
 Edit raw Markdown or select text on the A4 page preview to format elements directly without breaking document syntax.
 
 <p align="center">
-  <img src="./public/captures/markdown-editor-preview.gif" alt="Bi-directional Markdown Editor Demo" width="800" style="border-radius: 12px" />
+  <img src="https://github.com/user-attachments/assets/0b66cdbf-fbd1-4343-92c0-12ca76c21f9e" alt="Bi-directional Markdown Editor Demo" width="800" style="border-radius: 12px" />
 </p>
+
 
 ### 🛡️ Integrated ATS Simulator & Scorer
 
@@ -68,7 +68,7 @@ Scores your generated PDF against realistic ATS rules (text layer integrity, key
 The panel also groups them into five dimensions (structure, contact, verbs, metrics, keywords), lists what is missing sorted by points lost, and can download the whole report as HTML.
 
 <p align="center">
-  <img src="./public/captures/ats-simulator-scorer.gif" alt="ATS Simulator & Scorer Demo" width="800" style="border-radius: 12px" />
+  <img src="https://github.com/user-attachments/assets/ba69470c-031a-46fe-8080-7322b9347b9f" alt="ATS Simulator & Scorer Demo" width="800" style="border-radius: 12px" />
 </p>
 
 ### ✅ Contact Review & Verification
@@ -76,7 +76,7 @@ The panel also groups them into five dimensions (structure, contact, verbs, metr
 Scans your Markdown for every email, phone and link and makes you approve each one explicitly — flagging missing domain extensions, numbers without a country code, links written without `https://`, and URLs hidden behind link text that the ATS parser never reads. Export stays blocked until every item is verified or dismissed.
 
 <p align="center">
-  <img src="./public/captures/contact-review-and-verify.gif" alt="Contact Review and Verify Demo" width="800" style="border-radius: 12px" />
+  <img src="https://github.com/user-attachments/assets/d52c0967-7bf6-46ca-b83d-55009b0fb490" alt="Contact Review and Verify Demo" width="800" style="border-radius: 12px" />
 </p>
 
 ### 🗂️ CV Versions per Job Offer
@@ -84,7 +84,7 @@ Scans your Markdown for every email, phone and link and makes you approve each o
 Keep one tailored CV per position instead of overwriting a single document. Name each version after the offer (`Acme · Frontend Engineer`), then open, rename, duplicate or delete them independently — each one shows the keywords it adds or removes versus the CV on screen, and can be linked to a real `.md` file on disk.
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/9ac71e4a-4fce-429b-bd9d-ddf379cf43ff" alt="CV Versions per Job Offer Demo" width="800" style="border-radius: 12px" />
+  <img src="https://github.com/user-attachments/assets/cf3a709b-1571-4af7-aff8-a1da863f4229" alt="CV Versions per Job Offer Demo" width="800" style="border-radius: 12px" />
 </p>
 
 ### 🤖 ATS Rewriting with Local Ollama
@@ -92,7 +92,7 @@ Keep one tailored CV per position instead of overwriting a single document. Name
 Select any paragraph or bullet in the preview and let your own `Ollama` model rewrite it for ATS parsing — same meaning, stronger action verbs, quantified impact. Point the endpoint to `http://localhost:11434/v1/chat/completions`, pick a model and test the connection: no data ever leaves your machine.
 
 <p align="center">
-  <img src="./public/captures/ollama-ats-rewriting.gif" alt="ATS Rewriting with Local Ollama Demo" width="800" style="border-radius: 12px" />
+  <img src="https://github.com/user-attachments/assets/4c2e1c39-3a41-489f-a403-704fbbe2d67a" alt="ATS Rewriting with Local Ollama Demo" width="800" style="border-radius: 12px" />
 </p>
 
 ### 📄 Cover Letter Generator
@@ -100,7 +100,7 @@ Select any paragraph or bullet in the preview and let your own `Ollama` model re
 Automatically drafts a tailored, professional cover letter derived from your resume's key achievements and contact information.
 
 <p align="center">
-  <img src="./public/captures/cover-letter-generator.gif" alt="Cover Letter Generator Demo" width="800" style="border-radius: 12px" />
+  <img src="https://github.com/user-attachments/assets/db4a8a82-caa3-4df6-a632-6176c1751804" alt="Cover Letter Generator Demo" width="800" style="border-radius: 12px" />
 </p>
 
 ### 📤 Multi-Format Export
@@ -108,7 +108,7 @@ Automatically drafts a tailored, professional cover letter derived from your res
 Export to native vector PDF (via jsPDF), Microsoft Word (`.docx` via OOXML), or Rich Text Format (`.rtf`).
 
 <p align="center">
-  <img src="./public/captures/multi-format-export.gif" alt="Multi-Format Export Demo" width="800" style="border-radius: 12px" />
+  <img src="https://github.com/user-attachments/assets/dd5c4ff6-d0ae-4b23-bd5c-67880cf6db82" alt="Multi-Format Export Demo" width="800" style="border-radius: 12px" />
 </p>
 
 ### 📥 Universal Resume Importer
@@ -116,7 +116,7 @@ Export to native vector PDF (via jsPDF), Microsoft Word (`.docx` via OOXML), or 
 Import existing resumes from `.pdf`, `.docx`, `.txt`, `.md`, or raw text into clean, structured Markdown.
 
 <p align="center">
-  <img src="./public/captures/resume-importer.gif" alt="Universal Resume Importer Demo" width="800" style="border-radius: 12px" />
+  <img src="https://github.com/user-attachments/assets/2c1ec74a-4fdb-490e-90b5-0cbd59144a4b" alt="Universal Resume Importer Demo" width="800" style="border-radius: 12px" />
 </p>
 
 ---
