@@ -989,7 +989,9 @@ export default function CVPreview({
 
             {groups.map((group, index) => (
               <React.Fragment key={index}>
-                {index > 0 && <span className="w-px h-4 bg-[var(--ui-border-primary)] mx-1 shrink-0" />}
+                {index > 0 && (
+                  <span className="w-px h-4 bg-[var(--ui-border-primary)] mx-1 shrink-0" />
+                )}
                 <div className="flex items-center gap-0.5">
                   {group.map(({ type, icon: Icon, label }) => {
                     const isActive =
@@ -1109,7 +1111,9 @@ export default function CVPreview({
               }`}
             >
               <GripVertical className="w-3.5 h-3.5" />
-              <span className="hidden min-[1700px]:inline">{reorderMode ? t.reorderDone : t.reorderStart}</span>
+              <span className="hidden min-[1700px]:inline">
+                {reorderMode ? t.reorderDone : t.reorderStart}
+              </span>
             </button>
           </div>
         </div>
