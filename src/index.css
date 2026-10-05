@@ -442,6 +442,8 @@ body {
   padding-left: 6px;
   margin-left: -6px;
   color: var(--ui-accent);
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .cv-paper h3.cv-section-handle:hover {

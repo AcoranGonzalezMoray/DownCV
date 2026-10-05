@@ -491,7 +491,7 @@ export default function CVPreview({
     [sections],
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = pagesRef.current;
     if (!root) {
       return;
@@ -517,7 +517,7 @@ export default function CVPreview({
         title.classList.remove('cv-dragging');
       }
     }
-  }, [reorderMode, formattedHtml, sections, hoverSection, draggedSection, t.reorderHint]);
+  }, [reorderMode, formattedHtml, pages, sections, hoverSection, draggedSection, t.reorderHint]);
 
   const handleDragStart = (event) => {
     if (!reorderMode) {
@@ -557,11 +557,13 @@ export default function CVPreview({
     }
     setDraggedSection(null);
     setHoverSection(null);
+    window.getSelection()?.removeAllRanges();
   };
 
   const handleDragEnd = () => {
     setDraggedSection(null);
     setHoverSection(null);
+    window.getSelection()?.removeAllRanges();
   };
 
   const handleSectionKeyDown = (event) => {
@@ -608,19 +610,20 @@ export default function CVPreview({
       frame = requestAnimationFrame(() => {
         const domSelection = window.getSelection();
         if (!domSelection || domSelection.rangeCount === 0) {
+          setSelection(null);
           return;
         }
         const range = domSelection.getRangeAt(0);
         const insidePaper = pagesRef.current?.contains(range.commonAncestorContainer);
+        const insideToolbar = toolbarRef.current?.contains(range.commonAncestorContainer);
         if (range.collapsed) {
-          const insideToolbar = toolbarRef.current?.contains(range.commonAncestorContainer);
-          if (!insidePaper && !insideToolbar) {
-            setSelection(null);
-          }
+          setSelection(null);
           return;
         }
         if (insidePaper) {
           setSelection(resolveSelection(pagesRef.current, range, markdownRef.current));
+        } else if (!insideToolbar) {
+          setSelection(null);
         }
       });
     };
@@ -957,153 +960,162 @@ export default function CVPreview({
             event.preventDefault();
           }
         }}
-        className="flex items-center gap-1 px-2 py-1.5 bg-[var(--ui-bg-secondary)] border-b border-[var(--ui-border-primary)] text-[11px] no-print shrink-0"
+        className="flex flex-col gap-1 px-2 py-1.5 bg-[var(--ui-bg-secondary)] border-b border-[var(--ui-border-primary)] text-[11px] no-print shrink-0 max-w-full min-w-0"
       >
-        <div className="flex items-center gap-0.5">
-          <button
-            onClick={undo}
-            disabled={!canUndo}
-            title={t.undo}
-            aria-label={t.undo}
-            className="p-1.5 rounded text-[var(--ui-text-tertiary)] hover:text-[var(--ui-accent)] hover:bg-[var(--ui-accent-muted)] transition disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-[var(--ui-text-tertiary)] disabled:hover:bg-transparent"
-          >
-            <Undo2 className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={redo}
-            disabled={!canRedo}
-            title={t.redo}
-            aria-label={t.redo}
-            className="p-1.5 rounded text-[var(--ui-text-tertiary)] hover:text-[var(--ui-accent)] hover:bg-[var(--ui-accent-muted)] transition disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-[var(--ui-text-tertiary)] disabled:hover:bg-transparent"
-          >
-            <Redo2 className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        <span className="w-px h-4 bg-[var(--ui-border-primary)] mx-1 shrink-0" />
-
-        {groups.map((group, index) => (
-          <React.Fragment key={index}>
-            {index > 0 && <span className="w-px h-4 bg-[var(--ui-border-primary)] mx-1 shrink-0" />}
+        <div className="flex flex-wrap items-center justify-between gap-1 w-full min-w-0">
+          <div className="flex flex-wrap items-center gap-1 min-w-0">
             <div className="flex items-center gap-0.5">
-              {group.map(({ type, icon: Icon, label }) => {
-                const isActive =
-                  Boolean(active[type]) ||
-                  (type.startsWith('h') && active.heading === Number(type.slice(1)));
-                return (
-                  <button
-                    key={type}
-                    onClick={() => applyFormat(type)}
-                    disabled={!selection}
-                    title={label}
-                    aria-label={label}
-                    aria-pressed={isActive}
-                    className={`p-1.5 rounded transition disabled:opacity-30 disabled:cursor-not-allowed ${
-                      isActive
-                        ? 'bg-[var(--ui-accent-muted)] text-[var(--ui-accent)] ring-1 ring-[var(--ui-accent-border)]'
-                        : 'text-[var(--ui-text-tertiary)] hover:text-[var(--ui-accent)] hover:bg-[var(--ui-accent-muted)]'
-                    }`}
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                  </button>
-                );
-              })}
+              <button
+                onClick={undo}
+                disabled={!canUndo}
+                title={t.undo}
+                aria-label={t.undo}
+                className="p-1.5 rounded text-[var(--ui-text-tertiary)] hover:text-[var(--ui-accent)] hover:bg-[var(--ui-accent-muted)] transition disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-[var(--ui-text-tertiary)] disabled:hover:bg-transparent"
+              >
+                <Undo2 className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={redo}
+                disabled={!canRedo}
+                title={t.redo}
+                aria-label={t.redo}
+                className="p-1.5 rounded text-[var(--ui-text-tertiary)] hover:text-[var(--ui-accent)] hover:bg-[var(--ui-accent-muted)] transition disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-[var(--ui-text-tertiary)] disabled:hover:bg-transparent"
+              >
+                <Redo2 className="w-3.5 h-3.5" />
+              </button>
             </div>
-          </React.Fragment>
-        ))}
 
-        <span className="w-px h-4 bg-[var(--ui-border-primary)] mx-1 shrink-0" />
+            <span className="w-px h-4 bg-[var(--ui-border-primary)] mx-1 shrink-0" />
 
-        {linkDraft === null ? (
-          <button
-            onClick={() => applyFormat('link')}
-            disabled={!selection}
-            title={t.fmtLink}
-            aria-label={t.fmtLink}
-            aria-pressed={false}
-            className={`p-1.5 rounded transition disabled:opacity-30 disabled:cursor-not-allowed ${
-              selection
-                ? 'text-[var(--ui-text-tertiary)] hover:text-[var(--ui-accent)] hover:bg-[var(--ui-accent-muted)]'
-                : 'text-[var(--ui-text-tertiary)]'
-            }`}
-          >
-            <Link className="w-3.5 h-3.5" />
-          </button>
-        ) : (
-          <div className="flex items-center gap-1">
-            <input
-              type="text"
-              value={linkDraft}
-              onChange={(event) => setLinkDraft(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  applyFormat('link');
-                } else if (event.key === 'Escape') {
-                  setLinkDraft(null);
-                }
-              }}
-              placeholder={t.fmtLinkPlaceholder}
-              className="app-input w-40 text-[11px] p-1 rounded border border-[var(--ui-border-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--ui-accent)]"
-              autoFocus
-            />
+            {groups.map((group, index) => (
+              <React.Fragment key={index}>
+                {index > 0 && <span className="w-px h-4 bg-[var(--ui-border-primary)] mx-1 shrink-0" />}
+                <div className="flex items-center gap-0.5">
+                  {group.map(({ type, icon: Icon, label }) => {
+                    const isActive =
+                      Boolean(active[type]) ||
+                      (type.startsWith('h') && active.heading === Number(type.slice(1)));
+                    return (
+                      <button
+                        key={type}
+                        onClick={() => applyFormat(type)}
+                        disabled={!selection}
+                        title={label}
+                        aria-label={label}
+                        aria-pressed={isActive}
+                        className={`p-1.5 rounded transition disabled:opacity-30 disabled:cursor-not-allowed ${
+                          isActive
+                            ? 'bg-[var(--ui-accent-muted)] text-[var(--ui-accent)] ring-1 ring-[var(--ui-accent-border)]'
+                            : 'text-[var(--ui-text-tertiary)] hover:text-[var(--ui-accent)] hover:bg-[var(--ui-accent-muted)]'
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </React.Fragment>
+            ))}
+
+            <span className="w-px h-4 bg-[var(--ui-border-primary)] mx-1 shrink-0" />
+
+            {linkDraft === null ? (
+              <button
+                onClick={() => applyFormat('link')}
+                disabled={!selection}
+                title={t.fmtLink}
+                aria-label={t.fmtLink}
+                aria-pressed={false}
+                className={`p-1.5 rounded transition disabled:opacity-30 disabled:cursor-not-allowed ${
+                  selection
+                    ? 'text-[var(--ui-text-tertiary)] hover:text-[var(--ui-accent)] hover:bg-[var(--ui-accent-muted)]'
+                    : 'text-[var(--ui-text-tertiary)]'
+                }`}
+              >
+                <Link className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <div className="flex items-center gap-1">
+                <input
+                  type="text"
+                  value={linkDraft}
+                  onChange={(event) => setLinkDraft(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      applyFormat('link');
+                    } else if (event.key === 'Escape') {
+                      setLinkDraft(null);
+                    }
+                  }}
+                  placeholder={t.fmtLinkPlaceholder}
+                  className="app-input w-32 sm:w-40 text-[11px] p-1 rounded border border-[var(--ui-border-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--ui-accent)]"
+                  autoFocus
+                />
+                <button
+                  onClick={() => applyFormat('link')}
+                  title={t.fmtLinkApply}
+                  className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[var(--ui-accent)] text-[var(--ui-text-inverse)] transition"
+                >
+                  {t.save}
+                </button>
+                <button
+                  onClick={() => setLinkDraft(null)}
+                  title={t.cancel}
+                  className="p-1 text-[var(--ui-text-muted)] hover:text-[var(--ui-text-primary)] transition"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+
+            <span className="w-px h-4 bg-[var(--ui-border-primary)] mx-1 shrink-0" />
+
             <button
-              onClick={() => applyFormat('link')}
-              title={t.fmtLinkApply}
-              className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[var(--ui-accent)] text-[var(--ui-text-inverse)] transition"
+              onClick={() => applyFormat('clear')}
+              disabled={!selection}
+              title={t.fmtClear}
+              aria-label={t.fmtClear}
+              className="p-1.5 rounded text-rose-400 hover:bg-rose-900/20 transition disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              {t.save}
-            </button>
-            <button
-              onClick={() => setLinkDraft(null)}
-              title={t.cancel}
-              className="p-1 text-[var(--ui-text-muted)] hover:text-[var(--ui-text-primary)] transition"
-            >
-              <X className="w-3 h-3" />
+              <Eraser className="w-3.5 h-3.5" />
             </button>
           </div>
-        )}
 
-        <span className="w-px h-4 bg-[var(--ui-border-primary)] mx-1 shrink-0" />
-
-        <button
-          onClick={() => applyFormat('clear')}
-          disabled={!selection}
-          title={t.fmtClear}
-          aria-label={t.fmtClear}
-          className="p-1.5 rounded text-rose-400 hover:bg-rose-900/20 transition disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          <Eraser className="w-3.5 h-3.5" />
-        </button>
-
-        <div className="ml-auto flex items-center gap-2 pl-2 min-w-0">
-          {aiEnabled && (
+          <div className="flex items-center gap-1.5 ml-auto min-w-0 shrink-0">
+            {aiEnabled && (
+              <button
+                onClick={openAiRewrite}
+                disabled={!selection}
+                title={t.aiRewriteHint}
+                aria-label={t.aiRewrite}
+                className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-semibold border whitespace-nowrap transition disabled:opacity-40 disabled:cursor-not-allowed ${
+                  selection
+                    ? 'border-[var(--ui-accent)]/40 text-[var(--ui-accent)] hover:bg-[var(--ui-accent)]/10'
+                    : 'text-[var(--ui-text-tertiary)] border-[var(--ui-border-primary)]'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span className="hidden min-[1700px]:inline">{t.aiRewrite}</span>
+              </button>
+            )}
             <button
-              onClick={openAiRewrite}
-              disabled={!selection}
-              title={t.aiRewriteHint}
-              aria-label={t.aiRewrite}
-              className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-semibold border whitespace-nowrap transition disabled:opacity-40 disabled:cursor-not-allowed ${
-                selection
-                  ? 'border-[var(--ui-accent)]/40 text-[var(--ui-accent)] hover:bg-[var(--ui-accent)]/10'
-                  : 'text-[var(--ui-text-tertiary)] border-[var(--ui-border-primary)]'
+              onClick={() => setReorderMode((value) => !value)}
+              aria-pressed={reorderMode}
+              title={reorderMode ? t.reorderDone : t.reorderStart}
+              className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-semibold border whitespace-nowrap transition ${
+                reorderMode
+                  ? 'bg-[var(--ui-accent)] text-[var(--ui-text-inverse)] border-[var(--ui-accent)]'
+                  : 'text-[var(--ui-text-tertiary)] border-[var(--ui-border-primary)] hover:text-[var(--ui-text-primary)]'
               }`}
             >
-              <Sparkles className="w-3 h-3" /> {t.aiRewrite}
+              <GripVertical className="w-3.5 h-3.5" />
+              <span className="hidden min-[1700px]:inline">{reorderMode ? t.reorderDone : t.reorderStart}</span>
             </button>
-          )}
-          <button
-            onClick={() => setReorderMode((value) => !value)}
-            aria-pressed={reorderMode}
-            title={reorderMode ? t.reorderDone : t.reorderStart}
-            className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-semibold border whitespace-nowrap transition ${
-              reorderMode
-                ? 'bg-[var(--ui-accent)] text-[var(--ui-text-inverse)] border-[var(--ui-accent)]'
-                : 'text-[var(--ui-text-tertiary)] border-[var(--ui-border-primary)] hover:text-[var(--ui-text-primary)]'
-            }`}
-          >
-            <GripVertical className="w-3 h-3" /> {reorderMode ? t.reorderDone : t.reorderStart}
-          </button>
-          <span className="truncate text-[10px] text-[var(--ui-text-muted)]">
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-1 text-[10px] text-[var(--ui-text-muted)] w-full pt-0.5 border-t border-[var(--ui-border-primary)]/40">
+          <span className="truncate">
             {selection
               ? `${t.fmtSelected}: ${selection.text.trim().length} ${t.fmtChars}`
               : t.fmtHint}
@@ -1116,7 +1128,7 @@ export default function CVPreview({
               }}
               title={t.fmtClearSelection}
               aria-label={t.fmtClearSelection}
-              className="p-1 rounded text-[var(--ui-text-muted)] hover:text-[var(--ui-text-primary)] transition"
+              className="p-0.5 rounded text-[var(--ui-text-muted)] hover:text-[var(--ui-text-primary)] transition shrink-0"
             >
               <X className="w-3 h-3" />
             </button>
