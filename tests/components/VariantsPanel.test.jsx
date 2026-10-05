@@ -1,6 +1,5 @@
 ﻿import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
-import React from 'react';
 import VariantsPanel from '../../src/components/VariantsPanel';
 import { translations } from '../../src/data/translations';
 

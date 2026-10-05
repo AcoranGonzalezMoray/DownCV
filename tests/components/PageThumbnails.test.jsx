@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
-import React from 'react';
 import PageThumbnails from '../../src/components/PageThumbnails';
 
 const label = 'Pages of the CV';

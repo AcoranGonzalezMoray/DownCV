@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent, act, within } from '@testing-library/react';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import MarkdownEditor from '../../src/components/MarkdownEditor';
 import { translations } from '../../src/data/translations';
 import { samplesFor } from '../../src/data/sampleCVs';

@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import React from 'react';
 import useLocalFile, { fileSystemAccessSupported } from '../../src/hooks/useLocalFile';
 
 const writable = { write: vi.fn(), close: vi.fn() };

@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent, act } from '@testing-library/react';
-import React from 'react';
 import App from '../src/App';
 
 beforeEach(() => {
@@ -24,8 +23,9 @@ const editor = () => screen.getByRole('textbox', { name: 'Markdown Editor' });
 const search = () => screen.getByRole('textbox', { name: 'Search for a command' });
 
 describe('App', () => {
-  it('mounts with the editor, the preview and the styles panel on screen', () => {
+  it('mounts with the editor, the preview and the styles panel on screen', async () => {
     render(<App />);
+    await act(async () => {});
     expect(editor()).toBeTruthy();
     expect(document.querySelector('.cv-page')).toBeTruthy();
     expect(tab('Styles')).toBeTruthy();
@@ -210,8 +210,9 @@ describe('App', () => {
     expect(document.querySelector('.cv-cursor-line')).toBe(null);
   });
 
-  it('keeps the view switch in the flow until measured, so it never lands on the tabs', () => {
+  it('keeps the view switch in the flow until measured, so it never lands on the tabs', async () => {
     render(<App />);
+    await act(async () => {});
     const switchBox = screen.getByTitle(/split view/i).closest('div.grid');
     expect(switchBox.className).toMatch(/topbar-switch/);
     expect(switchBox.className).not.toMatch(/topbar-switch-centered/);

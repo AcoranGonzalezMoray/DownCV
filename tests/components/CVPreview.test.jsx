@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, act, fireEvent } from '@testing-library/react';
-import React from 'react';
 import CVPreview from '../../src/components/CVPreview';
 import { scanContacts } from '../../src/utils/contactScan';
 import { translations } from '../../src/data/translations';
@@ -346,6 +345,24 @@ describe('CVPreview reordering sections', () => {
     expect(setMarkdown).toHaveBeenCalledTimes(1);
     const next = setMarkdown.mock.calls[0][0];
     expect(next.indexOf('## EDUCACIÓN')).toBeLessThan(next.indexOf('## EXPERIENCIA'));
+  });
+
+  it('allows reordering multiple sections sequentially until Done is clicked', () => {
+    const THREE_SECTIONS = `# Ana Gomez\n\n## EXPERIENCIA\n\nExp content\n\n## EDUCACIÓN\n\nEdu content\n\n## PROYECTOS\n\nProj content\n`;
+    const setMarkdown = renderWithSetter(THREE_SECTIONS);
+    fireEvent.click(screen.getByRole('button', { name: /reorder sections/i }));
+
+    const [experience, education, projects] = document.querySelectorAll('.cv-pages h3.cv-section-title');
+    drag(experience, education);
+    expect(setMarkdown).toHaveBeenCalledTimes(1);
+
+    drag(projects, experience);
+    expect(setMarkdown).toHaveBeenCalledTimes(2);
+
+    // Section handles should remain active and draggable
+    const updatedTitles = document.querySelectorAll('.cv-pages h3.cv-section-title');
+    expect(updatedTitles[0].draggable).toBe(true);
+    expect(updatedTitles[0].classList.contains('cv-section-handle')).toBe(true);
   });
 
   it('ignores the arrows when the mode is off', () => {

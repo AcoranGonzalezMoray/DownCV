@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent, waitFor, act } from '@testing-library/react';
-import React from 'react';
 import CoverLetterModal from '../../src/components/CoverLetterModal';
 import { translations } from '../../src/data/translations';
 

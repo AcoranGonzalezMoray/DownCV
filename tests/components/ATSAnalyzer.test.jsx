@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
 import { render, screen, cleanup, fireEvent, waitFor, within } from '@testing-library/react';
-import React from 'react';
 import ATSAnalyzer from '../../src/components/ATSAnalyzer';
 import { evaluatePdf } from '../../src/utils/atsPdfEvaluation';
 import { fitToPages } from '../../src/utils/pdfBuilder';

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { X, ArrowLeft, ArrowRight, MapPinned } from 'lucide-react';
 import { placePopover } from '../utils/popoverPlacement';
 
