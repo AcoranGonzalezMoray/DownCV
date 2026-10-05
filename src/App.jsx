@@ -619,7 +619,7 @@ export default function App() {
                 </span>
               ) : (
                 <span className="shrink-0 rounded bg-[var(--ui-bg-badge)] px-1.5 font-mono text-[10px] text-[var(--ui-text-tertiary)]">
-                  PDF
+                  ATS
                 </span>
               )}
             </button>
