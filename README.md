@@ -240,14 +240,14 @@ DownCV can be easily containerized and served using Nginx.
 ### Using Docker Compose
 
 ```bash
-docker compose up -d --build
+npm run docker:up
 ```
 Access DownCV in your browser at `http://localhost:8080`.
 
 ### Manual Docker Build
 
 ```bash
-docker build -t down-cv .
+docker build -t down-cv --build-arg VITE_APP_COMMIT=$(git rev-parse HEAD) .
 docker run -d -p 8080:80 down-cv
 ```
 

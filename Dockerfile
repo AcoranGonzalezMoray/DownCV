@@ -6,6 +6,8 @@ COPY package*.json ./
 RUN npm ci --include=dev --no-audit --no-fund
 
 COPY . .
+ARG VITE_APP_COMMIT=""
+ENV VITE_APP_COMMIT=$VITE_APP_COMMIT
 RUN npm run build
 
 FROM nginx:alpine
