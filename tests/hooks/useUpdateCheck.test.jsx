@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { BEHIND, CURRENT, DISMISS_KEY, UNKNOWN } from '../../src/data/versionInfo';
+import { translations } from '../../src/data/translations';
 
 const behindResult = {
   status: BEHIND,
@@ -174,13 +175,13 @@ describe('useUpdateCheck', () => {
     });
     const useCheck = await loadHook();
 
-    const { result } = renderHook(() => useCheck());
+    const { result } = renderHook(() => useCheck({ t: translations.en }));
     await waitFor(() => expect(result.current.isOpen).toBe(true));
 
     await act(async () => {
       await result.current.update();
     });
-    expect(result.current.updateError).toBe('uncommitted changes');
+    expect(result.current.updateError).toBe(translations.en.updateErrorDirty);
     expect(reload).not.toHaveBeenCalled();
   });
 
@@ -206,6 +207,41 @@ describe('useUpdateCheck', () => {
       await result.current.update();
     });
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('explains that a feature branch cannot be updated in place', async () => {
+    const reload = vi.fn();
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, reload },
+      writable: true,
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: false,
+        json: async () => ({ ok: false, error: 'not_main', branch: 'mi-rama' }),
+      })),
+    );
+
+    vi.doMock('../../src/utils/versionCheck', async (importOriginal) => {
+      const actual = await importOriginal();
+      return {
+        ...actual,
+        runningSha: () => 'aaa1111',
+        runningInDev: () => true,
+        checkForUpdates: vi.fn(async () => behindResult),
+      };
+    });
+    const useCheck = await loadHook();
+
+    const { result } = renderHook(() => useCheck({ t: translations.en }));
+    await waitFor(() => expect(result.current.isOpen).toBe(true));
+
+    await act(async () => {
+      await result.current.update();
+    });
+    expect(result.current.updateError).toContain('mi-rama');
+    expect(reload).not.toHaveBeenCalled();
   });
 
   it('never reaches the network when the build carries no commit', async () => {

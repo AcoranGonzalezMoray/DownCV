@@ -143,6 +143,21 @@ export function updateAvailable(result) {
   return result?.status === BEHIND && result.aheadBy > 0;
 }
 
+export function pullErrorMessage(payload, t) {
+  switch (payload?.error) {
+    case 'not_main':
+      return t.updateErrorNotMain.replace('{branch}', payload.branch || '');
+    case 'dirty':
+      return t.updateErrorDirty;
+    case 'no_remote_main':
+      return t.updateErrorNoRemoteMain;
+    case 'not_a_repo':
+      return t.updateErrorNotARepo;
+    default:
+      return payload?.message || t.updateErrorGeneric;
+  }
+}
+
 export async function fetchCompare(
   sha,
   { fetchImpl = globalThis.fetch, timeoutMs = REQUEST_TIMEOUT_MS } = {},

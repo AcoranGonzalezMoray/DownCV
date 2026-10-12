@@ -5,6 +5,7 @@ import {
   compareUrlFor,
   markDismissed,
   parseCompare,
+  pullErrorMessage,
   readCache,
   readPending,
   runningCommitDate,
@@ -25,6 +26,7 @@ import {
   UNKNOWN,
   UPDATE_COMMAND,
 } from '../../src/data/versionInfo';
+import { translations } from '../../src/data/translations';
 
 const okResponse = (body) => ({ ok: true, status: 200, json: async () => body });
 
@@ -123,7 +125,25 @@ describe('versionCheck', () => {
     expect(JSON.stringify(options.headers)).not.toMatch(/cookie|authorization|token/i);
   });
 
-  it('gives up quietly when there is no embedded commit', async () => {
+  it('explains a refused update in the reader language', () => {
+  expect(pullErrorMessage({ error: 'not_main', branch: 'mi-rama' }, translations.en)).toContain(
+    'mi-rama',
+  );
+  expect(pullErrorMessage({ error: 'dirty' }, translations.en)).toBe(translations.en.updateErrorDirty);
+  expect(pullErrorMessage({ error: 'no_remote_main' }, translations.en)).toBe(
+    translations.en.updateErrorNoRemoteMain,
+  );
+  expect(pullErrorMessage({ error: 'not_a_repo' }, translations.en)).toBe(
+    translations.en.updateErrorNotARepo,
+  );
+  expect(pullErrorMessage({ error: 'weird', message: 'fatal: nope' }, translations.en)).toBe(
+    'fatal: nope',
+  );
+  expect(pullErrorMessage({}, translations.en)).toBe(translations.en.updateErrorGeneric);
+  expect(pullErrorMessage({ error: 'not_main', branch: 'x' }, translations.es)).toContain('«x»');
+});
+
+it('gives up quietly when there is no embedded commit', async () => {
     const fetchImpl = vi.fn();
     const result = await checkForUpdates({ force: true, fetchImpl });
     expect(result).toEqual({ status: UNKNOWN, reason: 'no-version' });

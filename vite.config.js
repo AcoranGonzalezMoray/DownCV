@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { resolve } from 'path';
 import { execSync } from 'child_process';
+import { guardPull, runPull } from './src/utils/devGitPull';
 
 function getGitCommit() {
   if (process.env.VITE_APP_COMMIT) {
@@ -39,47 +40,22 @@ function gitUpdatePlugin() {
           return;
         }
 
-        try {
-          const status = execSync('git status --porcelain', {
-            stdio: ['pipe', 'pipe', 'pipe'],
-          }).toString().trim();
+        const send = (status, payload) => {
+          res.statusCode = status;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ ok: false, ...payload }));
+        };
 
-          if (status.length > 0) {
-            res.statusCode = 409;
-            res.setHeader('Content-Type', 'application/json');
-            res.end(
-              JSON.stringify({
-                ok: false,
-                error: 'dirty',
-                message:
-                  'Hay cambios locales sin commitear en Git. Guarda o haz stash antes de actualizar.',
-              }),
-            );
+        try {
+          const blocked = guardPull();
+          if (blocked) {
+            send(blocked.status, { error: blocked.error, branch: blocked.branch });
             return;
           }
 
-          const pullOutput = execSync('git pull origin main', {
-            stdio: ['pipe', 'pipe', 'pipe'],
-          }).toString().trim();
-
-          res.statusCode = 200;
-          res.setHeader('Content-Type', 'application/json');
-          res.end(
-            JSON.stringify({
-              ok: true,
-              message: pullOutput || 'Actualizado correctamente a la última versión.',
-            }),
-          );
+          send(200, { ok: true, message: runPull() });
         } catch (err) {
-          res.statusCode = 500;
-          res.setHeader('Content-Type', 'application/json');
-          res.end(
-            JSON.stringify({
-              ok: false,
-              error: 'pull_failed',
-              message: err.message || 'Error al ejecutar git pull',
-            }),
-          );
+          send(500, { error: 'pull_failed', message: err.message || 'Error al ejecutar git pull' });
         }
       });
     },

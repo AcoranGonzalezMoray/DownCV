@@ -8,9 +8,10 @@ import {
   updateAvailable,
   wasDismissed,
   writePending,
+  pullErrorMessage,
 } from '../utils/versionCheck';
 
-export default function useUpdateCheck() {
+export default function useUpdateCheck({ t } = {}) {
   const sha = runningSha();
   const [updateInfo, setUpdateInfo] = useState(() => (sha ? readPending(sha) : null));
   const [isOpen, setIsOpen] = useState(false);
@@ -94,13 +95,13 @@ export default function useUpdateCheck() {
       const response = await fetch('/api/git-pull', { method: 'POST' });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) {
-        throw new Error(payload.message || payload.error || 'Update failed');
+        throw new Error(pullErrorMessage(payload, t));
       }
       window.location.reload();
       return { ok: true, message: payload.message };
     } catch (error) {
       if (mounted.current) {
-        setUpdateError(error?.message || 'Update failed');
+        setUpdateError(error?.message || pullErrorMessage({}, t));
       }
       return { ok: false, message: error?.message };
     } finally {
@@ -108,7 +109,7 @@ export default function useUpdateCheck() {
         setIsUpdating(false);
       }
     }
-  }, []);
+  }, [t]);
 
   return {
     isOpen,

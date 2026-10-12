@@ -436,7 +436,7 @@ export default function App() {
     setLetterOpen(true);
   }, []);
 
-  const updateCheck = useUpdateCheck();
+  const updateCheck = useUpdateCheck({ t });
   const checkUpdates = updateCheck.checkNow;
 
   const paletteActions = useMemo(

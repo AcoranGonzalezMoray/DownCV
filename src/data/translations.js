@@ -516,6 +516,13 @@ export const translations = {
       'DownCV runs from your own machine, so the browser cannot rebuild it for you. Run this in the folder where you cloned the project. It needs Node and Docker installed:',
     updateCopyCommand: 'Copy the update command',
     updateCommitsPending: 'new commits on main. Click to review them.',
+    updateErrorNotMain:
+      'You are on "{branch}", not main, so updating here would merge main into your branch. Switch to main and pull, then come back to your branch.',
+    updateErrorDirty: 'You have uncommitted changes. Commit or stash them before updating.',
+    updateErrorNoRemoteMain:
+      'This clone has no main branch on the remote, so there is nothing to update from.',
+    updateErrorNotARepo: 'This folder is not a Git repository, so the update cannot run.',
+    updateErrorGeneric: 'The update could not be completed.',
     updateResolvedTitle: 'DownCV is up to date',
     updateResolvedHad: 'You had',
     updateResolvedCommits: 'pending from main.',
@@ -1057,6 +1064,15 @@ export const translations = {
       'DownCV se ejecuta en tu propia máquina, así que el navegador no puede reconstruirlo por ti. Ejecuta esto en la carpeta donde clonaste el proyecto. Necesitas Node y Docker instalados:',
     updateCopyCommand: 'Copiar el comando de actualización',
     updateCommitsPending: 'commits nuevos en main. Pulsa para verlos.',
+    updateErrorNotMain:
+      'Estás en «{branch}», no en main, así que actualizar aquí mezclaría main en tu rama. Cambia a main, haz pull y vuelve a tu rama.',
+    updateErrorDirty:
+      'Tienes cambios sin commitear. Confírmalos o guárdalos en stash antes de actualizar.',
+    updateErrorNoRemoteMain:
+      'Este clon no tiene la rama main en el remoto, así que no hay nada de donde actualizar.',
+    updateErrorNotARepo:
+      'Esta carpeta no es un repositorio de Git, así que la actualización no puede ejecutarse.',
+    updateErrorGeneric: 'No se pudo completar la actualización.',
     updateResolvedTitle: 'DownCV está al día',
     updateResolvedHad: 'Tenías',
     updateResolvedCommits: 'pendientes de main.',
