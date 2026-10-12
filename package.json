@@ -15,7 +15,8 @@
     "format:check": "prettier --check \"src/**/*.{js,jsx,css}\"",
     "preview": "vite preview",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "docker:up": "node scripts/docker-up.mjs"
   },
   "dependencies": {
     "docx": "^9.7.2",

@@ -2,12 +2,76 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { resolve } from 'path';
+import { execSync } from 'child_process';
+import { guardPull, runPull } from './src/utils/devGitPull';
 
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
+function getGitCommit() {
+  if (process.env.VITE_APP_COMMIT) {
+    return process.env.VITE_APP_COMMIT.trim();
+  }
+  try {
+    return execSync('git rev-parse HEAD', { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
+  } catch {
+    console.warn(
+      '[downcv] No git commit found. Pass it explicitly, e.g. ' +
+        'docker compose build --build-arg VITE_APP_COMMIT=$(git rev-parse HEAD)',
+    );
+    return '';
+  }
+}
+
+function getGitDate() {
+  try {
+    return execSync('git log -1 --format=%cI', { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
+  } catch {
+    return new Date().toISOString();
+  }
+}
+
+function gitUpdatePlugin() {
+  return {
+    name: 'git-update-plugin',
+    configureServer(server) {
+      server.middlewares.use('/api/git-pull', (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ ok: false, error: 'Method not allowed' }));
+          return;
+        }
+
+        const send = (status, payload) => {
+          res.statusCode = status;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ ok: false, ...payload }));
+        };
+
+        try {
+          const blocked = guardPull();
+          if (blocked) {
+            send(blocked.status, { error: blocked.error, branch: blocked.branch });
+            return;
+          }
+
+          send(200, { ok: true, message: runPull() });
+        } catch (err) {
+          send(500, { error: 'pull_failed', message: err.message || 'Error al ejecutar git pull' });
+        }
+      });
+    },
+  };
+}
+
+export default defineConfig(({ command }) => ({
+  plugins: [react(), tailwindcss(), gitUpdatePlugin()],
   server: {
     port: 3000,
-    open: true
+    open: true,
+  },
+  define: {
+    __APP_COMMIT_SHA__: JSON.stringify(getGitCommit()),
+    __APP_COMMIT_DATE__: JSON.stringify(getGitDate()),
+    __IS_DEV__: JSON.stringify(command === 'serve'),
   },
   test: {
     globals: true,
@@ -19,4 +83,4 @@ export default defineConfig({
       '@': resolve(__dirname, './src'),
     },
   },
-});
+}));

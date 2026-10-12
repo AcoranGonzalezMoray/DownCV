@@ -5,6 +5,7 @@ import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 import useMarkdownHistory from './hooks/useMarkdownHistory';
 import useContactVerification from './hooks/useContactVerification';
 import useLocalFile from './hooks/useLocalFile';
+import useUpdateCheck from './hooks/useUpdateCheck';
 import MarkdownEditor from './components/MarkdownEditor';
 import CVPreview from './components/CVPreview';
 import StyleControls from './components/StyleControls';
@@ -19,6 +20,7 @@ import AppTour from './components/AppTour';
 import ExportMenu from './components/ExportMenu';
 import ThemeToggle from './components/ThemeToggle';
 import CommandPalette from './components/CommandPalette';
+import UpdateModal from './components/UpdateModal';
 import { sampleCVs, samplesFor, defaultSample } from './data/sampleCVs';
 import { translations } from './data/translations';
 import { applyTemplate } from './data/templates';
@@ -37,6 +39,7 @@ import {
   Sparkles,
   Command,
   GitBranch,
+  Bell,
 } from 'lucide-react';
 
 const DEFAULT_STYLES = {
@@ -433,10 +436,14 @@ export default function App() {
     setLetterOpen(true);
   }, []);
 
+  const updateCheck = useUpdateCheck({ t });
+  const checkUpdates = updateCheck.checkNow;
+
   const paletteActions = useMemo(
     () => ({
       theme,
       lang,
+      checkUpdates,
       templateName: (id) => t[TEMPLATE_LABEL_KEYS[id]] || id,
       exportPdf: handlePrint,
       exportDocx,
@@ -474,6 +481,7 @@ export default function App() {
       exportPortfolio,
       localFile,
       currentDraftName,
+      checkUpdates,
     ],
   );
 
@@ -709,6 +717,21 @@ export default function App() {
           </div>
 
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+
+          {updateCheck.isOutdated && (
+            <button
+              data-update-badge
+              onClick={() => updateCheck.reveal()}
+              title={`${updateCheck.updateInfo.aheadBy} ${t.updateCommitsPending}`}
+              aria-label={`${updateCheck.updateInfo.aheadBy} ${t.updateCommitsPending}`}
+              className="update-badge-pulse flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] px-2 py-1.5 text-xs font-medium text-[var(--ui-accent)] transition hover:border-[var(--ui-accent)] hover:bg-[var(--ui-accent-muted)]"
+            >
+              <Bell className="h-3.5 w-3.5 shrink-0" />
+              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--ui-accent)] px-1 text-[10px] font-semibold leading-none text-[var(--ui-text-inverse)]">
+                {updateCheck.updateInfo.aheadBy}
+              </span>
+            </button>
+          )}
         </div>
       </header>
 
@@ -862,6 +885,20 @@ export default function App() {
           setHeldExport(null);
         }}
         onCancel={() => setHeldExport(null)}
+      />
+
+      <UpdateModal
+        open={updateCheck.isOpen}
+        onDismiss={updateCheck.dismiss}
+        onUpdate={updateCheck.update}
+        info={updateCheck.updateInfo}
+        currentSha={updateCheck.currentSha}
+        isDev={updateCheck.isDev}
+        isUpdating={updateCheck.isUpdating}
+        isChecking={updateCheck.isChecking}
+        error={updateCheck.updateError}
+        resolved={updateCheck.resolved}
+        t={t}
       />
     </div>
   );

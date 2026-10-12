@@ -184,6 +184,28 @@ body {
   width: var(--app-sidebar-width);
 }
 
+.update-badge-pulse {
+  animation: update-badge-blink 1.6s ease-in-out infinite;
+}
+
+@keyframes update-badge-blink {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 var(--ui-accent-muted);
+  }
+  50% {
+    opacity: 0.55;
+    box-shadow: 0 0 0 3px var(--ui-accent-muted);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .update-badge-pulse {
+    animation: none;
+  }
+}
+
 .topbar-switch-centered {
   position: absolute;
   left: calc(50% - var(--app-sidebar-width) / 2);

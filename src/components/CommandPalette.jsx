@@ -26,6 +26,7 @@ import {
   FileSignature,
   BookOpen,
   Compass,
+  RefreshCw,
 } from 'lucide-react';
 import { LAYOUT_TEMPLATES } from '../data/templates';
 
@@ -165,6 +166,13 @@ export default function CommandPalette({ open, onClose, actions, t }) {
       category: t.cmdTools,
       icon: BookOpen,
       action: actions.saveDraft,
+    },
+    {
+      id: 'check-updates',
+      title: t.cmdCheckUpdates,
+      category: t.cmdSettings,
+      icon: RefreshCw,
+      action: actions.checkUpdates,
     },
     {
       id: 'tour',
