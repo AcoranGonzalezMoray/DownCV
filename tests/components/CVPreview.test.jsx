@@ -22,7 +22,7 @@ const styles = {
 const MD =
   '# Ana Gomez\n\n[linkedin.com/in/ana](https://linkedin.com) and [my site](https://ana.dev)';
 
-const noop = () => {};
+const noop = () => { };
 const renderPreview = (markdown = MD) =>
   render(
     <CVPreview
@@ -44,7 +44,7 @@ const stubLayout = ({
   paperWidth = 794,
   paperLeft = 0,
   paperTop = 0,
-  
+
   blockStep = 0,
 } = {}) => {
   const box = (left, top, width, height) => ({
@@ -197,7 +197,7 @@ describe('CVPreview verified link markers', () => {
     verifyItem(MD, 'link', 'linkedin.com/in/ana');
     cleanup();
     vi.restoreAllMocks();
-    
+
     stubLayout({ anchorWidth: 120, anchorLeft: 40, anchorTop: 100, paperLeft: 24, paperTop: 16 });
     renderPreview();
 
@@ -216,7 +216,7 @@ describe('CVPreview verified link markers', () => {
     verifyItem(markdown, 'link', 'linkedin.com/in/ana');
     cleanup();
     vi.restoreAllMocks();
-    
+
     stubLayout({ anchorWidth: 120, anchorLeft: 40, anchorTop: 100, blockStep: 380 });
     renderPreview(markdown);
 
@@ -232,7 +232,7 @@ describe('CVPreview verified link markers', () => {
     verifyItem(MD, 'link', 'linkedin.com/in/ana');
     cleanup();
     vi.restoreAllMocks();
-    
+
     stubLayout({ anchorWidth: 120, anchorLeft: 40, anchorTop: 4000 });
     renderPreview();
 
@@ -359,7 +359,6 @@ describe('CVPreview reordering sections', () => {
     drag(projects, experience);
     expect(setMarkdown).toHaveBeenCalledTimes(2);
 
-    // Section handles should remain active and draggable
     const updatedTitles = document.querySelectorAll('.cv-pages h3.cv-section-title');
     expect(updatedTitles[0].draggable).toBe(true);
     expect(updatedTitles[0].classList.contains('cv-section-handle')).toBe(true);
@@ -374,7 +373,7 @@ describe('CVPreview reordering sections', () => {
 });
 
 describe('CVPreview fits the sheet to the space it is given', () => {
-  
+
   const stubPane = (width) => {
     vi.spyOn(Element.prototype, 'clientWidth', 'get').mockImplementation(function getWidth() {
       return this.classList?.contains('cv-paper-container') ? width : 0;
@@ -417,7 +416,7 @@ describe('CVPreview fits the sheet to the space it is given', () => {
 });
 
 describe('CVPreview zoom of the page', () => {
-  
+
   const stubPane = (width) => {
     vi.spyOn(Element.prototype, 'clientWidth', 'get').mockImplementation(function getWidth() {
       return this.classList?.contains('cv-paper-container') ? width : 0;
@@ -558,7 +557,7 @@ describe('CVPreview spacer measurement', () => {
 });
 
 describe('CVPreview page navigation', () => {
-  
+
   const LONG_CV = `# Ana Gomez\n\n${Array.from(
     { length: 30 },
     (_, i) => `### Empresa ${i}\n\n- Logro ${i} con una cifra del ${i}0%\n`,
@@ -599,7 +598,7 @@ describe('CVPreview page navigation', () => {
       }
       const frame = this.closest?.('.cv-page');
       if (frame) {
-        
+
         const container = document.querySelector('.cv-paper-container');
         return box((Number(frame.dataset.page) - 1) * (SHEET + DESK) - (container?.scrollTop || 0));
       }
@@ -653,7 +652,7 @@ describe('CVPreview page navigation', () => {
   });
 
   it('still lands on the right sheet when the pane is already scrolled', async () => {
-    
+
     await renderStacked();
     const { container, sheet } = stubPane();
     container.scrollTop = 1000;
@@ -707,7 +706,7 @@ describe('CVPreview the gesture follows the size of the page', () => {
   });
 
   it('opens selecting text on an ordinary screen, page taller than the pane', () => {
-    
+
     stubRealScreen();
     renderPreview();
 
@@ -812,7 +811,7 @@ describe('CVPreview the magnifiers stay pinned while reading', () => {
 });
 
 describe('CVPreview drag of the page', () => {
-  
+
   const stubPane = (width, overflow = {}) => {
     const sizes = {
       scrollWidth: width,
@@ -850,7 +849,7 @@ describe('CVPreview drag of the page', () => {
     stubLayout();
 
     window.PointerEvent = window.MouseEvent;
-    
+
     capture = vi.fn();
     Element.prototype.setPointerCapture = capture;
     p = { pointerType: 'mouse' };
@@ -865,7 +864,7 @@ describe('CVPreview drag of the page', () => {
   it('moves the page with the pointer once it is bigger than the pane', () => {
     stubPane(500, { scrollWidth: 2000, scrollHeight: 400 });
     renderPreview();
-    
+
     fireEvent.click(screen.getByRole('button', { name: /zoom in/i }));
     const paper = document.querySelector('.cv-page .cv-paper');
 
@@ -877,7 +876,7 @@ describe('CVPreview drag of the page', () => {
   });
 
   it('does not move a page that has not been zoomed, because the drag is a selection', () => {
-    
+
     stubPane(500, { scrollWidth: 2000, scrollHeight: 400 });
     renderPreview();
 
@@ -891,7 +890,7 @@ describe('CVPreview drag of the page', () => {
     stubPane(500, { scrollWidth: 2000, scrollHeight: 400 });
     renderPreview();
     fireEvent.click(screen.getByRole('button', { name: /zoom in/i }));
-    
+
     fireEvent.click(screen.getByRole('button', { name: /select text/i }));
 
     const words = document.querySelector('.cv-page .cv-paper p');
@@ -921,7 +920,7 @@ describe('CVPreview drag of the page', () => {
     cleanup();
     stubPane(500, { scrollWidth: 2000 });
     renderPreview();
-    
+
     expect(document.querySelector('.cv-page .cv-paper').className).not.toMatch(/cursor-grab/);
     fireEvent.click(screen.getByRole('button', { name: /zoom in/i }));
     expect(document.querySelector('.cv-page .cv-paper').className).toMatch(/cursor-grab/);
