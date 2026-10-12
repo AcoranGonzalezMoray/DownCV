@@ -3,8 +3,6 @@ export const REPO_NAME = 'DownCV';
 export const REPO_BRANCH = 'main';
 export const REPO_URL = `https://github.com/${REPO_OWNER}/${REPO_NAME}`;
 
-// The only string a user pastes into a terminal. Deliberately free of shell
-// substitution like $(...) so it behaves the same in bash and PowerShell.
 export const UPDATE_COMMAND = 'git pull && npm run docker:up';
 
 export const CACHE_KEY = 'downcv_update_check';

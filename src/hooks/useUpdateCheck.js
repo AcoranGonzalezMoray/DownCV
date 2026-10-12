@@ -46,8 +46,6 @@ export default function useUpdateCheck() {
   const sha = runningSha();
 
   useEffect(() => {
-    // Without an embedded commit there is no version to compare against, so
-    // there is nothing to check and no network call to make.
     if (!sha || wasDismissed()) {
       return;
     }

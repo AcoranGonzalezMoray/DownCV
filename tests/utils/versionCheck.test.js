@@ -84,8 +84,6 @@ describe('versionCheck', () => {
   });
 
   it('stays silent for a branch that runs ahead of main', () => {
-    // A developer branch reports status "behind" with a positive behind_by:
-    // main is its ancestor. That is the opposite of needing an update.
     const parsed = parseCompare({ status: 'behind', ahead_by: 0, behind_by: 1, commits: [{}] });
     expect(parsed.status).toBe(CURRENT);
     expect(parsed.aheadBy).toBe(0);

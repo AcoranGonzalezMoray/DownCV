@@ -91,7 +91,7 @@ describe('UpdateModal', () => {
     expect(screen.getByText(UPDATE_COMMAND)).toBeTruthy();
 
     const copy = screen.getByRole('button', { name: t.updateCopyCommand });
-    const writeText = vi.fn(async () => {});
+    const writeText = vi.fn(async () => { });
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
     fireEvent.click(copy);
     expect(writeText).toHaveBeenCalledWith(UPDATE_COMMAND);

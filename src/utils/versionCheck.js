@@ -81,10 +81,6 @@ export function parseCompare(payload) {
     date: commit?.commit?.author?.date || '',
   }));
 
-  // GitHub counts in both directions: ahead_by is how far main runs ahead of
-  // us, behind_by how far we run ahead of main. A branch built on top of main
-  // reports behind, so reading that flag alone would nag developers about
-  // their own commits. Only a positive ahead_by means there is work to pull.
   const aheadBy = countOr(payload?.ahead_by, 0);
   const behindBy = countOr(payload?.behind_by, 0);
   const outdated = aheadBy > 0;
