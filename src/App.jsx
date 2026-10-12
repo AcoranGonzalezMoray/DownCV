@@ -39,6 +39,7 @@ import {
   Sparkles,
   Command,
   GitBranch,
+  Bell,
 } from 'lucide-react';
 
 const DEFAULT_STYLES = {
@@ -716,6 +717,21 @@ export default function App() {
           </div>
 
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+
+          {updateCheck.isOutdated && (
+            <button
+              data-update-badge
+              onClick={() => updateCheck.reveal()}
+              title={`${updateCheck.updateInfo.aheadBy} ${t.updateCommitsPending}`}
+              aria-label={`${updateCheck.updateInfo.aheadBy} ${t.updateCommitsPending}`}
+              className="update-badge-pulse flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] px-2 py-1.5 text-xs font-medium text-[var(--ui-accent)] transition hover:border-[var(--ui-accent)] hover:bg-[var(--ui-accent-muted)]"
+            >
+              <Bell className="h-3.5 w-3.5 shrink-0" />
+              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--ui-accent)] px-1 text-[10px] font-semibold leading-none text-[var(--ui-text-inverse)]">
+                {updateCheck.updateInfo.aheadBy}
+              </span>
+            </button>
+          )}
         </div>
       </header>
 
@@ -881,6 +897,7 @@ export default function App() {
         isUpdating={updateCheck.isUpdating}
         isChecking={updateCheck.isChecking}
         error={updateCheck.updateError}
+        resolved={updateCheck.resolved}
         t={t}
       />
     </div>

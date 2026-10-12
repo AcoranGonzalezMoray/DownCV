@@ -61,6 +61,28 @@ describe('UpdateModal', () => {
     expect(screen.getByText('main')).toBeTruthy();
   });
 
+  it('confirms the update once there is nothing left to pull', () => {
+    const { onDismiss } = renderModal({
+      info: { status: 'current', aheadBy: 0, behindBy: 0, commits: [] },
+      resolved: { previousCount: 2 },
+    });
+    expect(screen.getByText(t.updateResolvedTitle)).toBeTruthy();
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.textContent).toContain(
+      `You had 2 pending from main. ${t.updateResolvedNow}`,
+    );
+    expect(screen.queryByText(t.updateBadge)).toBe(null);
+    expect(screen.queryByText(t.updateNow)).toBe(null);
+
+    fireEvent.click(screen.getAllByRole('button', { name: t.updateResolvedClose })[0]);
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('drops the pending count when there was never one', () => {
+    renderModal({ info: { status: 'current', aheadBy: 0, behindBy: 0, commits: [] }, resolved: { previousCount: 0 } });
+    expect(screen.getByText(t.updateResolvedNow)).toBeTruthy();
+  });
+
   it('closes on skip, on the close button and on Escape', () => {
     const { onDismiss } = renderModal();
     const buttons = screen.getAllByRole('button', { name: t.updateDismiss });
@@ -86,9 +108,11 @@ describe('UpdateModal', () => {
     expect(link.href).toBe('https://github.com/AcoranGonzalezMoray/DownCV/compare/aaa1111...main');
   });
 
-  it('gives Docker users a copyable command instead of a one-click update', () => {
+  it('gives Docker users a copyable command and no misleading update button', () => {
     renderModal();
     expect(screen.getByText(UPDATE_COMMAND)).toBeTruthy();
+    expect(screen.queryByText(t.updateNow)).toBe(null);
+    expect(screen.getAllByRole('link').every((a) => a.href === info.compareUrl)).toBe(true);
 
     const copy = screen.getByRole('button', { name: t.updateCopyCommand });
     const writeText = vi.fn(async () => { });

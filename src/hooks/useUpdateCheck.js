@@ -2,16 +2,21 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   checkForUpdates,
   markDismissed,
+  readPending,
   runningInDev,
   runningSha,
   updateAvailable,
   wasDismissed,
+  writePending,
 } from '../utils/versionCheck';
 
 export default function useUpdateCheck() {
+  const sha = runningSha();
+  const [updateInfo, setUpdateInfo] = useState(() => (sha ? readPending(sha) : null));
   const [isOpen, setIsOpen] = useState(false);
+  const [resolved, setResolved] = useState(null);
+  const pendingCount = useRef(0);
   const [isChecking, setIsChecking] = useState(false);
-  const [updateInfo, setUpdateInfo] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState('');
   const mounted = useRef(true);
@@ -23,27 +28,32 @@ export default function useUpdateCheck() {
     };
   }, []);
 
-  const checkNow = useCallback(async (force = true) => {
-    setIsChecking(true);
-    setUpdateError('');
-    try {
-      const result = await checkForUpdates({ force });
-      if (!mounted.current) {
-        return null;
+  const checkNow = useCallback(
+    async (force = true) => {
+      setIsChecking(true);
+      setUpdateError('');
+      try {
+        const result = await checkForUpdates({ force });
+        if (!mounted.current) {
+          return null;
+        }
+        setUpdateInfo(result);
+        writePending(sha, result);
+        if (updateAvailable(result)) {
+          pendingCount.current = result.aheadBy;
+        }
+        if (updateAvailable(result)) {
+          setIsOpen(true);
+        }
+        return result;
+      } finally {
+        if (mounted.current) {
+          setIsChecking(false);
+        }
       }
-      setUpdateInfo(result);
-      if (updateAvailable(result)) {
-        setIsOpen(true);
-      }
-      return result;
-    } finally {
-      if (mounted.current) {
-        setIsChecking(false);
-      }
-    }
-  }, []);
-
-  const sha = runningSha();
+    },
+    [sha],
+  );
 
   useEffect(() => {
     if (!sha || wasDismissed()) {
@@ -54,12 +64,24 @@ export default function useUpdateCheck() {
 
   const dismiss = useCallback(() => {
     markDismissed();
+    setResolved(null);
     setIsOpen(false);
   }, []);
 
-  const reveal = useCallback(() => {
-    setIsOpen(true);
-  }, []);
+  const reveal = useCallback(async () => {
+    const result = await checkNow(true);
+    if (!result) {
+      return null;
+    }
+    if (updateAvailable(result)) {
+      setResolved(null);
+      setIsOpen(true);
+    } else {
+      setResolved({ previousCount: pendingCount.current });
+      setIsOpen(true);
+    }
+    return result;
+  }, [checkNow]);
 
   const update = useCallback(async () => {
     if (!runningInDev()) {
@@ -96,6 +118,8 @@ export default function useUpdateCheck() {
     updateError,
     currentSha: sha,
     isDev: runningInDev(),
+    isOutdated: updateAvailable(updateInfo),
+    resolved,
     dismiss,
     reveal,
     update,

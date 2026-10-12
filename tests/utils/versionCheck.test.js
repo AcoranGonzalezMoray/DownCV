@@ -6,12 +6,14 @@ import {
   markDismissed,
   parseCompare,
   readCache,
+  readPending,
   runningCommitDate,
   runningInDev,
   runningSha,
   updateAvailable,
   wasDismissed,
   writeCache,
+  writePending,
 } from '../../src/utils/versionCheck';
 import {
   BEHIND,
@@ -19,6 +21,7 @@ import {
   CHECK_INTERVAL_MS,
   CURRENT,
   DISMISS_KEY,
+  PENDING_KEY,
   UNKNOWN,
   UPDATE_COMMAND,
 } from '../../src/data/versionInfo';
@@ -190,6 +193,21 @@ describe('versionCheck', () => {
   it('hands out a command that runs the same on Windows, macOS and Linux', () => {
     expect(UPDATE_COMMAND).toBe('git pull && npm run docker:up');
     expect(UPDATE_COMMAND).not.toMatch(/\$\(/);
+  });
+
+  it('remembers the pending update across a reload', () => {
+    writePending('aaa', parseCompare(behindPayload));
+    expect(readPending('aaa')).toMatchObject({ aheadBy: 2, sha: 'aaa' });
+    expect(updateAvailable(readPending('aaa'))).toBe(true);
+    expect(readPending('bbb')).toBe(null);
+
+    writePending('aaa', parseCompare({ status: 'identical' }));
+    expect(readPending('aaa')).toBe(null);
+  });
+
+  it('survives a corrupted pending record', () => {
+    window.sessionStorage.setItem(PENDING_KEY, 'not json');
+    expect(readPending('aaa')).toBe(null);
   });
 
   it('remembers a skip for the rest of the session', () => {

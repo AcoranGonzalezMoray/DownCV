@@ -228,6 +228,116 @@ describe('useUpdateCheck', () => {
     expect(result.current.currentSha).toBe('');
   });
 
+  it('keeps the badge lit after the dialog was skipped', async () => {
+    const check = vi.fn(async () => behindResult);
+    vi.doMock('../../src/utils/versionCheck', async (importOriginal) => {
+      const actual = await importOriginal();
+      return {
+        ...actual,
+        runningSha: () => 'aaa1111',
+        runningInDev: () => false,
+        checkForUpdates: check,
+      };
+    });
+    const useCheck = await loadHook();
+
+    const { result } = renderHook(() => useCheck());
+    await waitFor(() => expect(result.current.isOpen).toBe(true));
+    expect(result.current.isOutdated).toBe(true);
+
+    act(() => result.current.dismiss());
+    expect(result.current.isOpen).toBe(false);
+    expect(result.current.isOutdated).toBe(true);
+  });
+
+  it('asks GitHub again when the badge is clicked', async () => {
+    const check = vi.fn(async () => behindResult);
+    vi.doMock('../../src/utils/versionCheck', async (importOriginal) => {
+      const actual = await importOriginal();
+      return {
+        ...actual,
+        runningSha: () => 'aaa1111',
+        runningInDev: () => false,
+        checkForUpdates: check,
+      };
+    });
+    const useCheck = await loadHook();
+
+    const { result } = renderHook(() => useCheck());
+    await waitFor(() => expect(result.current.isOpen).toBe(true));
+    act(() => result.current.dismiss());
+    check.mockClear();
+
+    await act(async () => {
+      await result.current.reveal();
+    });
+    expect(check).toHaveBeenCalledWith(expect.objectContaining({ force: true }));
+    expect(result.current.isOpen).toBe(true);
+  });
+
+  it('confirms the update once main has caught up, instead of vanishing', async () => {
+    const check = vi
+      .fn()
+      .mockResolvedValueOnce(behindResult)
+      .mockResolvedValue({ status: CURRENT, aheadBy: 0, behindBy: 0, commits: [] });
+    vi.doMock('../../src/utils/versionCheck', async (importOriginal) => {
+      const actual = await importOriginal();
+      return {
+        ...actual,
+        runningSha: () => 'aaa1111',
+        runningInDev: () => false,
+        checkForUpdates: check,
+      };
+    });
+    const useCheck = await loadHook();
+
+    const { result } = renderHook(() => useCheck());
+    await waitFor(() => expect(result.current.isOutdated).toBe(true));
+    act(() => result.current.dismiss());
+
+    await act(async () => {
+      await result.current.reveal();
+    });
+    expect(result.current.isOutdated).toBe(false);
+    expect(result.current.isOpen).toBe(true);
+    expect(result.current.resolved).toEqual({ previousCount: 2 });
+
+    act(() => result.current.dismiss());
+    expect(result.current.resolved).toBe(null);
+    expect(result.current.isOpen).toBe(false);
+  });
+
+  it('brings the badge back after a reload, even when the dialog was skipped', async () => {
+    const check = vi.fn(async () => behindResult);
+    const mockVersion = async () => {
+      const actual = await vi.importActual('../../src/utils/versionCheck');
+      return {
+        ...actual,
+        runningSha: () => 'aaa1111',
+        runningInDev: () => false,
+        checkForUpdates: check,
+      };
+    };
+
+    vi.doMock('../../src/utils/versionCheck', mockVersion);
+    const useCheck = await loadHook();
+    const first = renderHook(() => useCheck());
+    await waitFor(() => expect(first.result.current.isOpen).toBe(true));
+    act(() => first.result.current.dismiss());
+    first.unmount();
+
+    vi.resetModules();
+    check.mockClear();
+    vi.doMock('../../src/utils/versionCheck', mockVersion);
+    const useReloaded = await loadHook();
+
+    const second = renderHook(() => useReloaded());
+    expect(second.result.current.isOutdated).toBe(true);
+    expect(second.result.current.updateInfo.aheadBy).toBe(2);
+    expect(second.result.current.isOpen).toBe(false);
+    expect(check).not.toHaveBeenCalled();
+  });
+
   it('reopens on a manual check even after the user skipped', async () => {
     const check = vi.fn(async () => behindResult);
     vi.doMock('../../src/utils/versionCheck', async (importOriginal) => {

@@ -7,6 +7,7 @@ export const UPDATE_COMMAND = 'git pull && npm run docker:up';
 
 export const CACHE_KEY = 'downcv_update_check';
 export const DISMISS_KEY = 'downcv_update_dismissed';
+export const PENDING_KEY = 'downcv_update_pending';
 
 export const CHECK_INTERVAL_MS = 30 * 60 * 1000;
 export const REQUEST_TIMEOUT_MS = 8000;

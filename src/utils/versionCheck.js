@@ -4,6 +4,7 @@ import {
   CHECK_INTERVAL_MS,
   CURRENT,
   DISMISS_KEY,
+  PENDING_KEY,
   REPO_BRANCH,
   REPO_NAME,
   REPO_OWNER,
@@ -61,6 +62,27 @@ export function wasDismissed() {
 
 export function markDismissed() {
   writeSession(DISMISS_KEY, 'true');
+}
+
+export function readPending(sha) {
+  const raw = readSession(PENDING_KEY);
+  if (!raw) {
+    return null;
+  }
+  try {
+    const stored = JSON.parse(raw);
+    return stored?.sha === sha ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+export function writePending(sha, result) {
+  if (updateAvailable(result)) {
+    writeSession(PENDING_KEY, JSON.stringify({ ...result, sha }));
+  } else {
+    clearSession(PENDING_KEY);
+  }
 }
 
 function commitLine(message) {
