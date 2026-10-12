@@ -199,6 +199,7 @@ export default function UpdateModal({
             href={compareUrl}
             target="_blank"
             rel="noreferrer"
+            referrerPolicy="no-referrer"
             className="flex items-center gap-1.5 text-[11px] text-[var(--ui-text-link)] transition hover:text-[var(--ui-text-link-hover)]"
           >
             <ExternalLink className="h-3 w-3" />

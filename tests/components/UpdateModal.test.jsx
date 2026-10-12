@@ -96,10 +96,14 @@ describe('UpdateModal', () => {
     expect(onDismiss).toHaveBeenCalledTimes(3);
   });
 
-  it('links to the compare view on GitHub', () => {
+  it('links to the compare view on GitHub without leaking the instance URL', () => {
     renderModal();
     const links = screen.getAllByRole('link').filter((a) => a.href === info.compareUrl);
     expect(links.length).toBeGreaterThan(0);
+    for (const link of links) {
+      expect(link.rel).toContain('noreferrer');
+      expect(link.getAttribute('referrerpolicy')).toBe('no-referrer');
+    }
   });
 
   it('falls back to a compare URL built from the running commit', () => {

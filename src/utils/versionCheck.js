@@ -154,6 +154,7 @@ export async function fetchCompare(
   try {
     const response = await fetchImpl(url, {
       headers: { Accept: 'application/vnd.github+json' },
+      referrerPolicy: 'no-referrer',
       signal: controller?.signal,
     });
 

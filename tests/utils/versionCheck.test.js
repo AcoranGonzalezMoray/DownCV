@@ -114,6 +114,15 @@ describe('versionCheck', () => {
     expect(result.aheadBy).toBe(2);
   });
 
+  it('never lets the instance URL leak to GitHub as a Referer', async () => {
+    const fetchImpl = vi.fn(async () => okResponse(behindPayload));
+    await checkForUpdates({ sha: 'aaa', force: true, fetchImpl });
+
+    const options = fetchImpl.mock.calls[0][1];
+    expect(options.referrerPolicy).toBe('no-referrer');
+    expect(JSON.stringify(options.headers)).not.toMatch(/cookie|authorization|token/i);
+  });
+
   it('gives up quietly when there is no embedded commit', async () => {
     const fetchImpl = vi.fn();
     const result = await checkForUpdates({ force: true, fetchImpl });
