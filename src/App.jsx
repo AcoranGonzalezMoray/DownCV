@@ -886,6 +886,7 @@ export default function App() {
         onClose={() => setPaletteOpen(false)}
         actions={paletteActions}
         t={t}
+        isDemo={updateCheck.isDemo}
       />
 
       <ConfirmDialog

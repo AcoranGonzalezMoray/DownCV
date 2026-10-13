@@ -66,9 +66,6 @@ export default function AboutModal({
                 >
                   DownCV
                 </h2>
-                <span className="rounded-full bg-[var(--ui-accent-muted)] border border-[var(--ui-accent-border)] px-2 py-0.5 text-[10px] font-semibold text-[var(--ui-accent)]">
-                  v2.0.0
-                </span>
                 {sha && (
                   <span className="hidden sm:inline font-mono text-[10px] text-[var(--ui-text-tertiary)]">
                     ({sha.slice(0, 7)})

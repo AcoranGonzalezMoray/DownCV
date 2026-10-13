@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   checkForUpdates,
+  isDemoEnvironment,
   markDismissed,
   readPending,
   runningInDev,
@@ -12,7 +13,8 @@ import {
 } from '../utils/versionCheck';
 
 export default function useUpdateCheck({ t } = {}) {
-  const sha = runningSha();
+  const isDemo = isDemoEnvironment();
+  const sha = isDemo ? '' : runningSha();
   const [updateInfo, setUpdateInfo] = useState(() => (sha ? readPending(sha) : null));
   const [isOpen, setIsOpen] = useState(false);
   const [resolved, setResolved] = useState(null);
@@ -31,6 +33,9 @@ export default function useUpdateCheck({ t } = {}) {
 
   const checkNow = useCallback(
     async (force = true) => {
+      if (isDemo) {
+        return null;
+      }
       setIsChecking(true);
       setUpdateError('');
       try {
@@ -53,15 +58,15 @@ export default function useUpdateCheck({ t } = {}) {
         }
       }
     },
-    [sha],
+    [sha, isDemo],
   );
 
   useEffect(() => {
-    if (!sha || wasDismissed()) {
+    if (isDemo || !sha || wasDismissed()) {
       return;
     }
     checkNow(false);
-  }, [checkNow, sha]);
+  }, [checkNow, sha, isDemo]);
 
   const dismiss = useCallback(() => {
     markDismissed();
@@ -70,6 +75,9 @@ export default function useUpdateCheck({ t } = {}) {
   }, []);
 
   const reveal = useCallback(async () => {
+    if (isDemo) {
+      return null;
+    }
     const result = await checkNow(true);
     if (!result) {
       return null;
@@ -82,10 +90,10 @@ export default function useUpdateCheck({ t } = {}) {
       setIsOpen(true);
     }
     return result;
-  }, [checkNow]);
+  }, [checkNow, isDemo]);
 
   const update = useCallback(async () => {
-    if (!runningInDev()) {
+    if (isDemo || !runningInDev()) {
       return { ok: false, reason: 'manual' };
     }
 
@@ -109,7 +117,7 @@ export default function useUpdateCheck({ t } = {}) {
         setIsUpdating(false);
       }
     }
-  }, [t]);
+  }, [t, isDemo]);
 
   return {
     isOpen,
@@ -118,6 +126,7 @@ export default function useUpdateCheck({ t } = {}) {
     isUpdating,
     updateError,
     currentSha: sha,
+    isDemo,
     isDev: runningInDev(),
     isOutdated: updateAvailable(updateInfo),
     resolved,

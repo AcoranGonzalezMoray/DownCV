@@ -397,4 +397,35 @@ describe('useUpdateCheck', () => {
     expect(check).toHaveBeenCalledTimes(2);
     expect(result.current.isOpen).toBe(true);
   });
+
+  it('never checks for updates in the public demo, which is always on main', async () => {
+    const check = vi.fn(async () => behindResult);
+    vi.doMock('../../src/utils/versionCheck', async (importOriginal) => {
+      const actual = await importOriginal();
+      return {
+        ...actual,
+        isDemoEnvironment: () => true,
+        runningSha: () => 'aaa1111',
+        runningInDev: () => false,
+        checkForUpdates: check,
+      };
+    });
+    const useCheck = await loadHook();
+
+    const { result } = renderHook(() => useCheck());
+    await waitFor(() => expect(result.current.isChecking).toBe(false));
+    expect(check).not.toHaveBeenCalled();
+    expect(result.current.isDemo).toBe(true);
+    expect(result.current.isOpen).toBe(false);
+    expect(result.current.isOutdated).toBe(false);
+
+    await act(async () => {
+      await result.current.checkNow(true);
+    });
+    await act(async () => {
+      await result.current.reveal();
+    });
+    expect(check).not.toHaveBeenCalled();
+    expect(result.current.isOpen).toBe(false);
+  });
 });
