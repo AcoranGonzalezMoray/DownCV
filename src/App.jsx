@@ -541,7 +541,7 @@ export default function App() {
       >
         <div ref={brandRef} className="flex min-w-0 flex-1 items-center gap-3">
           <div className="app-brand-icon flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl shadow-sm">
-            <img src="/icon.jpg" alt="DownCV" className="h-full w-full object-cover" />
+            <img src={`${import.meta.env.BASE_URL}icon.jpg`} alt="DownCV" className="h-full w-full object-cover" />
           </div>
           <div ref={brandTextRef} className="min-w-0">
             <h1 className="truncate whitespace-nowrap text-base font-bold tracking-tight text-[var(--ui-text-primary)]">
