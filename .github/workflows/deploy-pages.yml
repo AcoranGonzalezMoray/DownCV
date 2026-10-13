@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - demo-page
   workflow_dispatch:
 
 permissions:
