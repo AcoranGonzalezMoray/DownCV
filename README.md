@@ -322,14 +322,7 @@ We have an active product roadmap! Check out our planned features and technical 
 
 ## 🤝 Contributing
 
-Contributions are warmly welcomed! Whether you want to fix a bug, add a new ATS scoring rule, translate to a new language, or suggest a feature:
-
-1. Fork the project.
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4. Ensure tests and linting pass (`npm run lint && npm run test:run`).
-5. Push to the branch (`git push origin feature/AmazingFeature`).
-6. Open a Pull Request.
+Contributions are warmly welcomed! See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the workflow, the pull request checklist and where to put your change.
 
 ---
 
