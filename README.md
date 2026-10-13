@@ -18,6 +18,9 @@
   <a href="#privacy"><img src="https://img.shields.io/badge/Privacy-100%25_Local_--_No_Server-emerald.svg" alt="100% Local"></a>
 </p>
 
+<p align="center">
+  <a href="https://acorangonzalezmoray.github.io/DownCV/"><img src="https://img.shields.io/badge/🚀_Live_Demo-Try_it_now-6366f1?style=for-the-badge" alt="Live Demo"></a>
+</p>
 
 <img src="./public/captures/DownCV.png" alt="DownCV application screenshot" style="border-radius: 12px">
 
