@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./public/icon.jpg" width="128" height="128" alt="DownCV Logo" style="border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);" />
+  <img src="./public/icon.jpg" width="128" height="128" alt="DownCV Logo" />
 </p>
 
 <h1 align="center">DownCV</h1>
