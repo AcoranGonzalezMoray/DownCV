@@ -60,6 +60,7 @@ export default function MarkdownEditor({
   const fileInputRef = React.useRef(null);
   const textareaRef = React.useRef(null);
   const searchInputRef = React.useRef(null);
+  const backdropRef = React.useRef(null);
   const pendingSelection = useRef(null);
   const [copied, setCopied] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
@@ -69,7 +70,30 @@ export default function MarkdownEditor({
   const [matches, setMatches] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [suggestionIndex, setSuggestionIndex] = useState(0);
+  const [scrollbarWidth, setScrollbarWidth] = useState(0);
   const syncPausedUntil = useRef(0);
+
+  useEffect(() => {
+    const updateScrollbarWidth = () => {
+      const textarea = textareaRef.current;
+      if (textarea) {
+        const diff = textarea.offsetWidth - textarea.clientWidth;
+        setScrollbarWidth(diff > 0 ? diff : 0);
+      }
+    };
+    updateScrollbarWidth();
+    window.addEventListener('resize', updateScrollbarWidth);
+    return () => window.removeEventListener('resize', updateScrollbarWidth);
+  }, [markdown]);
+
+  useEffect(() => {
+    if (searchOpen) {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      }, 30);
+    }
+  }, [searchOpen]);
 
   useEffect(() => {
     const pending = pendingSelection.current;
@@ -85,6 +109,52 @@ export default function MarkdownEditor({
     textarea.setSelectionRange(pending.start, pending.end);
   }, [markdown]);
 
+  const scrollToMatch = useCallback(
+    (offset, length) => {
+      const textarea = textareaRef.current;
+      if (!textarea) {
+        return;
+      }
+      textarea.setSelectionRange(offset, offset + length);
+      const ratio = ratioAtOffset(markdown, offset);
+      const scrollable = textarea.scrollHeight - textarea.clientHeight;
+      if (scrollable > 0) {
+        const targetScroll = Math.round(ratio * scrollable);
+        const currentScroll = textarea.scrollTop;
+        const viewHeight = textarea.clientHeight;
+        if (targetScroll < currentScroll || targetScroll > currentScroll + viewHeight - 60) {
+          textarea.scrollTop = Math.max(0, targetScroll - Math.round(viewHeight / 3));
+        }
+      }
+      if (backdropRef.current) {
+        backdropRef.current.scrollTop = textarea.scrollTop;
+        backdropRef.current.scrollLeft = textarea.scrollLeft;
+      }
+    },
+    [markdown],
+  );
+
+  const goToMatch = useCallback(
+    (index) => {
+      if (matches.length === 0) {
+        return;
+      }
+      const newIndex = (index + matches.length) % matches.length;
+      setCurrentMatchIndex(newIndex);
+      const matchOffset = matches[newIndex];
+      scrollToMatch(matchOffset, searchQuery.length);
+    },
+    [matches, searchQuery.length, scrollToMatch],
+  );
+
+  const goToNextMatch = useCallback(() => {
+    goToMatch(currentMatchIndex + 1);
+  }, [goToMatch, currentMatchIndex]);
+
+  const goToPrevMatch = useCallback(() => {
+    goToMatch(currentMatchIndex - 1);
+  }, [goToMatch, currentMatchIndex]);
+
   useEffect(() => {
     if (!searchQuery.trim()) {
       setMatches([]);
@@ -97,11 +167,54 @@ export default function MarkdownEditor({
     let pos = text.indexOf(query);
     while (pos !== -1) {
       foundIndices.push(pos);
-      pos = text.indexOf(query, pos + 1);
+      pos = text.indexOf(query, pos + query.length);
     }
     setMatches(foundIndices);
     setCurrentMatchIndex(0);
-  }, [searchQuery, markdown]);
+    if (foundIndices.length > 0) {
+      scrollToMatch(foundIndices[0], query.length);
+    }
+  }, [searchQuery, markdown, scrollToMatch]);
+
+  const renderHighlights = () => {
+    if (!searchOpen || !searchQuery.trim() || matches.length === 0) {
+      return null;
+    }
+    const queryLen = searchQuery.length;
+    const nodes = [];
+    let lastIndex = 0;
+
+    matches.forEach((matchIndex, i) => {
+      if (matchIndex > lastIndex) {
+        nodes.push(markdown.slice(lastIndex, matchIndex));
+      }
+      const isCurrent = i === currentMatchIndex;
+      const matchText = markdown.slice(matchIndex, matchIndex + queryLen);
+      nodes.push(
+        <mark
+          key={`match-${matchIndex}-${i}`}
+          data-match-current={isCurrent ? 'true' : undefined}
+          className={
+            isCurrent
+              ? 'rounded-xs bg-amber-400 text-transparent dark:bg-amber-400/90 ring-2 ring-amber-500 dark:ring-amber-400 font-semibold'
+              : 'rounded-xs bg-amber-300/70 text-transparent dark:bg-amber-400/35'
+          }
+        >
+          {matchText}
+        </mark>,
+      );
+      lastIndex = matchIndex + queryLen;
+    });
+
+    if (lastIndex < markdown.length) {
+      nodes.push(markdown.slice(lastIndex));
+    }
+    if (markdown.endsWith('\n')) {
+      nodes.push('\n ');
+    }
+
+    return nodes;
+  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(markdown);
@@ -268,6 +381,9 @@ export default function MarkdownEditor({
     if (scrollable > 0) {
       syncPausedUntil.current = Date.now() + 400;
       textarea.scrollTop = Math.round(ratio * scrollable);
+      if (backdropRef.current) {
+        backdropRef.current.scrollTop = textarea.scrollTop;
+      }
     }
   }, [syncRequest, markdown]);
 
@@ -527,6 +643,21 @@ export default function MarkdownEditor({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  if (e.shiftKey) {
+                    goToPrevMatch();
+                  } else {
+                    goToNextMatch();
+                  }
+                } else if (e.key === 'Escape') {
+                  e.preventDefault();
+                  setSearchOpen(false);
+                  setSearchQuery('');
+                  textareaRef.current?.focus();
+                }
+              }}
               placeholder={t.searchPlaceholder}
               className="app-input text-xs px-2.5 py-1 rounded border border-[var(--ui-border-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--ui-accent)] w-full max-w-xs"
               autoFocus
@@ -539,28 +670,33 @@ export default function MarkdownEditor({
           </div>
           <div className="flex items-center gap-1">
             <button
-              onClick={() => {
-                setCurrentMatchIndex((prev) => (prev - 1 + matches.length) % matches.length);
-              }}
+              type="button"
+              onClick={goToPrevMatch}
               disabled={matches.length === 0}
+              aria-label="Previous match"
+              title="Previous match (Shift+Enter)"
               className="p-1 text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)] disabled:opacity-30 bg-[var(--ui-bg-card)] rounded border border-[var(--ui-border-primary)]"
             >
               <ChevronUp className="w-3.5 h-3.5" />
             </button>
             <button
-              onClick={() => {
-                setCurrentMatchIndex((prev) => (prev + 1) % matches.length);
-              }}
+              type="button"
+              onClick={goToNextMatch}
               disabled={matches.length === 0}
+              aria-label="Next match"
+              title="Next match (Enter)"
               className="p-1 text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)] disabled:opacity-30 bg-[var(--ui-bg-card)] rounded border border-[var(--ui-border-primary)]"
             >
               <ChevronDown className="w-3.5 h-3.5" />
             </button>
             <button
+              type="button"
               onClick={() => {
                 setSearchOpen(false);
                 setSearchQuery('');
+                textareaRef.current?.focus();
               }}
+              aria-label="Close search"
               className="p-1 text-[var(--ui-text-muted)] hover:text-[var(--ui-text-primary)]"
             >
               <X className="w-3.5 h-3.5" />
@@ -589,7 +725,22 @@ export default function MarkdownEditor({
         })}
       </div>
 
-      <div className="flex-1 relative">
+      <div className="flex-1 relative overflow-hidden bg-[var(--ui-bg-primary)]">
+        {searchOpen && searchQuery.trim() && matches.length > 0 && (
+          <div
+            ref={backdropRef}
+            aria-hidden="true"
+            data-testid="editor-search-backdrop"
+            className="editor-backdrop pointer-events-none absolute inset-0 overflow-hidden p-4 font-mono text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words select-none text-transparent z-0"
+            style={{
+              paddingRight: `${16 + scrollbarWidth}px`,
+              wordBreak: 'break-word',
+              overflowWrap: 'break-word',
+            }}
+          >
+            {renderHighlights()}
+          </div>
+        )}
         <textarea
           ref={textareaRef}
           aria-label={t.markdownEditor}
@@ -601,7 +752,13 @@ export default function MarkdownEditor({
           }}
           onKeyDown={handleKeyDown}
           onKeyUp={(e) => reportCursor(e.target.selectionStart)}
-          onScroll={reportScroll}
+          onScroll={(e) => {
+            reportScroll();
+            if (backdropRef.current) {
+              backdropRef.current.scrollTop = e.target.scrollTop;
+              backdropRef.current.scrollLeft = e.target.scrollLeft;
+            }
+          }}
           onBlur={() => {
             cancelAnimationFrame(cursorFrame.current);
             if (onCursorOffset) {
@@ -613,8 +770,12 @@ export default function MarkdownEditor({
             reportCursor(e.target.selectionStart);
           }}
           placeholder="# Name\n**Professional Title**\n\nemail@example.com | +1 555 000 000 | City, Country..."
-          className="editor-textarea w-full h-full p-4 bg-[var(--ui-bg-primary)] text-[var(--ui-text-primary)] font-mono text-xs sm:text-sm leading-relaxed resize-none focus:outline-none selection:bg-[var(--ui-selection-bg)] selection:text-[var(--ui-selection-text)]"
+          className="editor-textarea relative z-10 w-full h-full p-4 bg-transparent text-[var(--ui-text-primary)] font-mono text-xs sm:text-sm leading-relaxed resize-none focus:outline-none selection:bg-[var(--ui-selection-bg)] selection:text-[var(--ui-selection-text)]"
           spellCheck="false"
+          style={{
+            wordBreak: 'break-word',
+            overflowWrap: 'break-word',
+          }}
         />
 
         {suggestions.length > 0 && (
