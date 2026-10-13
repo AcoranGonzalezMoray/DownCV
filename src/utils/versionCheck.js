@@ -25,6 +25,16 @@ export function runningInDev() {
   return typeof __IS_DEV__ !== 'undefined' && __IS_DEV__ === true;
 }
 
+export function isDemoEnvironment() {
+  if (typeof window !== 'undefined' && window.location?.hostname?.endsWith('github.io')) {
+    return true;
+  }
+  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_IS_DEMO === 'true') {
+    return true;
+  }
+  return false;
+}
+
 export function compareUrlFor(sha = '') {
   if (!sha) {
     return `${REPO_URL}/commits/${REPO_BRANCH}`;

@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { LAYOUT_TEMPLATES } from '../data/templates';
 
-export default function CommandPalette({ open, onClose, actions, t }) {
+export default function CommandPalette({ open, onClose, actions, t, isDemo = false }) {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef(null);
@@ -173,6 +173,7 @@ export default function CommandPalette({ open, onClose, actions, t }) {
       category: t.cmdSettings,
       icon: RefreshCw,
       action: actions.checkUpdates,
+      hidden: isDemo,
     },
     {
       id: 'tour',
@@ -219,7 +220,7 @@ export default function CommandPalette({ open, onClose, actions, t }) {
       icon: Palette,
       action: () => actions.applyPreset(template.id),
     })),
-  ].filter((item) => typeof item.action === 'function');
+  ].filter((item) => typeof item.action === 'function' && !item.hidden);
 
   const filtered = items.filter((item) => {
     const q = query.toLowerCase().trim();

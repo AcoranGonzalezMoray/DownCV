@@ -31,9 +31,9 @@ const allActions = () => ({
   applyPreset: vi.fn(),
 });
 
-const open = (actions = allActions()) => {
+const open = (actions = allActions(), props = {}) => {
   const onClose = vi.fn();
-  const view = render(<CommandPalette open onClose={onClose} actions={actions} t={t} />);
+  const view = render(<CommandPalette open onClose={onClose} actions={actions} t={t} {...props} />);
   return { actions, onClose, view };
 };
 
@@ -142,5 +142,14 @@ describe('CommandPalette', () => {
     expect(options()).toHaveLength(1);
     fireEvent.click(screen.getByRole('button', { name: /guided tour/i }));
     expect(actions.retakeTour).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides the update check in the public demo, where it means nothing', () => {
+    open({ ...allActions(), checkUpdates: vi.fn() });
+    expect(screen.getByRole('button', { name: /Check for updates/i })).toBeTruthy();
+
+    cleanup();
+    open({ ...allActions(), checkUpdates: vi.fn() }, { isDemo: true });
+    expect(screen.queryByRole('button', { name: /Check for updates/i })).toBe(null);
   });
 });

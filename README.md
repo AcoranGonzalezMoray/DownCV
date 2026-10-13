@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./public/icon.jpg" width="128" height="128" alt="DownCV Logo" style="border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);" />
+  <img src="./public/icon.jpg" width="128" height="128" alt="DownCV Logo" />
 </p>
 
 <h1 align="center">DownCV</h1>
@@ -18,6 +18,9 @@
   <a href="#privacy"><img src="https://img.shields.io/badge/Privacy-100%25_Local_--_No_Server-emerald.svg" alt="100% Local"></a>
 </p>
 
+<p align="center">
+  <a href="https://acorangonzalezmoray.github.io/DownCV/"><img src="https://img.shields.io/badge/🚀_Live_Demo-Try_it_now-6366f1?style=for-the-badge" alt="Live Demo"></a>
+</p>
 
 <img src="./public/captures/DownCV.png" alt="DownCV application screenshot" style="border-radius: 12px">
 
@@ -322,14 +325,7 @@ We have an active product roadmap! Check out our planned features and technical 
 
 ## 🤝 Contributing
 
-Contributions are warmly welcomed! Whether you want to fix a bug, add a new ATS scoring rule, translate to a new language, or suggest a feature:
-
-1. Fork the project.
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4. Ensure tests and linting pass (`npm run lint && npm run test:run`).
-5. Push to the branch (`git push origin feature/AmazingFeature`).
-6. Open a Pull Request.
+Contributions are warmly welcomed! See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the workflow, the pull request checklist and where to put your change.
 
 ---
 

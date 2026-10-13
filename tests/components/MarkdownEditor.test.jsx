@@ -549,3 +549,92 @@ describe('MarkdownEditor cursor reporting', () => {
     expect(onCursorOffset).not.toHaveBeenCalled();
   });
 });
+
+describe('MarkdownEditor search highlighting and navigation', () => {
+  afterEach(() => cleanup());
+
+  const renderSearchEditor = (markdown = CV) => {
+    let current = markdown;
+    const setMarkdown = vi.fn((next) => {
+      current = next;
+    });
+    const setSearchOpen = vi.fn();
+    const view = render(
+      <MarkdownEditor
+        markdown={current}
+        setMarkdown={setMarkdown}
+        sampleCVs={samplesFor('en')}
+        lang="en"
+        onSelectSample={vi.fn()}
+        wordCount={42}
+        savedDrafts={[]}
+        onSaveDraft={vi.fn()}
+        currentDraftName=""
+        t={translations.en}
+        searchOpen={true}
+        setSearchOpen={setSearchOpen}
+      />,
+    );
+    return { setMarkdown, setSearchOpen, view };
+  };
+
+  it('renders highlights in the backdrop when matching query is typed', () => {
+    renderSearchEditor('# Test\nEngineer at Acme\nSenior Engineer');
+    const searchInput = screen.getByPlaceholderText(translations.en.searchPlaceholder);
+
+    fireEvent.change(searchInput, { target: { value: 'Engineer' } });
+
+    const backdrop = screen.getByTestId('editor-search-backdrop');
+    expect(backdrop).not.toBeNull();
+    const marks = backdrop.querySelectorAll('mark');
+    expect(marks).toHaveLength(2);
+    expect(marks[0].textContent).toBe('Engineer');
+    expect(marks[0].getAttribute('data-match-current')).toBe('true');
+    expect(marks[1].getAttribute('data-match-current')).toBeNull();
+  });
+
+  it('navigates through matches and updates the current active highlight', () => {
+    renderSearchEditor('# Test\nEngineer at Acme\nSenior Engineer');
+    const searchInput = screen.getByPlaceholderText(translations.en.searchPlaceholder);
+    fireEvent.change(searchInput, { target: { value: 'Engineer' } });
+
+    const nextBtn = screen.getByRole('button', { name: /Next match/i });
+    fireEvent.click(nextBtn);
+
+    const backdrop = screen.getByTestId('editor-search-backdrop');
+    const marks = backdrop.querySelectorAll('mark');
+    expect(marks[1].getAttribute('data-match-current')).toBe('true');
+    expect(marks[0].getAttribute('data-match-current')).toBeNull();
+
+    const prevBtn = screen.getByRole('button', { name: /Previous match/i });
+    fireEvent.click(prevBtn);
+    expect(marks[0].getAttribute('data-match-current')).toBe('true');
+  });
+
+  it('navigates with Enter and Shift+Enter in the search input', () => {
+    renderSearchEditor('# Test\nEngineer at Acme\nSenior Engineer');
+    const searchInput = screen.getByPlaceholderText(translations.en.searchPlaceholder);
+    fireEvent.change(searchInput, { target: { value: 'Engineer' } });
+
+    fireEvent.keyDown(searchInput, { key: 'Enter' });
+    const backdrop = screen.getByTestId('editor-search-backdrop');
+    let marks = backdrop.querySelectorAll('mark');
+    expect(marks[1].getAttribute('data-match-current')).toBe('true');
+
+    fireEvent.keyDown(searchInput, { key: 'Enter', shiftKey: true });
+    marks = backdrop.querySelectorAll('mark');
+    expect(marks[0].getAttribute('data-match-current')).toBe('true');
+  });
+
+  it('closes search when Escape is pressed or close button is clicked', () => {
+    const { setSearchOpen } = renderSearchEditor('Some content');
+    const searchInput = screen.getByPlaceholderText(translations.en.searchPlaceholder);
+
+    fireEvent.keyDown(searchInput, { key: 'Escape' });
+    expect(setSearchOpen).toHaveBeenCalledWith(false);
+
+    const closeBtn = screen.getByRole('button', { name: /Close search/i });
+    fireEvent.click(closeBtn);
+    expect(setSearchOpen).toHaveBeenCalledWith(false);
+  });
+});

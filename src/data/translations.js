@@ -532,6 +532,34 @@ export const translations = {
     tourNext: 'Next',
     tourSkip: 'Skip tour',
     tourFinish: 'Start writing',
+    aboutTitle: 'About & Privacy',
+    aboutTab: 'About DownCV',
+    privacyTab: 'Privacy & Architecture',
+    aboutSubtitle: 'Markdown CV Editor & ATS Optimization Engine',
+    aboutDesc:
+      'A fast, distraction-free resume builder that converts Markdown into print-perfect vector PDFs, formatted Word documents, and modern portfolios, backed by real-time ATS scoring.',
+    aboutFeaturesTitle: 'Core Capabilities',
+    aboutFeature1Title: 'Live Vector Preview',
+    aboutFeature1Desc: 'Real-time rendering with ATS pagination and page fit controls.',
+    aboutFeature2Title: 'ATS Scoring Engine',
+    aboutFeature2Desc: 'Instant compliance analysis based on actual recruiter parser heuristics.',
+    aboutFeature3Title: 'Multi-format Export',
+    aboutFeature3Desc: 'Vector PDF, DOCX, JSON Resume, plain text, and web portfolio.',
+    aboutOpenSource: 'Open Source',
+    aboutRepoButton: 'View Source on GitHub',
+    aboutLicense: 'MIT Licensed. Contributions and stars are welcome.',
+    privacyClientTitle: '100% Client-Side Privacy',
+    privacyClientSubtitle: 'Zero server storage. Zero data collection.',
+    privacyHowItWorks: 'How Your Data is Handled',
+    privacyStorageDesc:
+      'Local Storage: Your CV drafts, versions, and template settings reside exclusively in your browser localStorage.',
+    privacyProcessingDesc:
+      'In-Browser Processing: Markdown parsing, ATS heuristics, and PDF/DOCX builds execute directly on your device CPU.',
+    privacyNetworkDesc:
+      'No Remote Database: No personal details or resume content are ever transmitted to any backend server.',
+    privacyDemoTitle: 'Demonstration Notice',
+    privacyDemoDesc:
+      'This hosted web instance is published for demonstration and evaluation purposes. It is not intended as a commercial product with SLA or cloud backups. For regular or enterprise workflows, clone and run DownCV locally or via Docker.',
   },
   es: {
     appTitle: 'DownCV',
@@ -1082,5 +1110,34 @@ export const translations = {
     tourNext: 'Siguiente',
     tourSkip: 'Saltar tour',
     tourFinish: 'Empezar a escribir',
+    aboutTitle: 'Acerca de y Privacidad',
+    aboutTab: 'Acerca de DownCV',
+    privacyTab: 'Privacidad y Arquitectura',
+    aboutSubtitle: 'Editor de CV en Markdown y Motor de Optimización ATS',
+    aboutDesc:
+      'Un creador de currículums rápido y sin distracciones que transforma Markdown en PDFs vectoriales perfectos, documentos Word y portafolios web, con evaluación ATS en tiempo real.',
+    aboutFeaturesTitle: 'Capacidades Principales',
+    aboutFeature1Title: 'Vista Previa Vectorial',
+    aboutFeature1Desc:
+      'Renderizado en tiempo real con control de paginación y ajuste a una página.',
+    aboutFeature2Title: 'Motor de Puntuación ATS',
+    aboutFeature2Desc: 'Análisis de compatibilidad basado en heurísticas reales de selección.',
+    aboutFeature3Title: 'Exportación Multiformato',
+    aboutFeature3Desc: 'PDF vectorial, DOCX, JSON Resume, texto plano y portafolio web.',
+    aboutOpenSource: 'Código Abierto',
+    aboutRepoButton: 'Ver código en GitHub',
+    aboutLicense: 'Licencia MIT. Contribuciones y estrellas son bienvenidas.',
+    privacyClientTitle: 'Privacidad 100% en el Cliente',
+    privacyClientSubtitle: 'Cero almacenamiento en servidor. Cero recopilación de datos.',
+    privacyHowItWorks: 'Cómo se gestionan tus datos',
+    privacyStorageDesc:
+      'Almacenamiento Local: Tus borradores, versiones y ajustes se guardan exclusivamente en el localStorage de tu navegador.',
+    privacyProcessingDesc:
+      'Procesamiento en el Navegador: La lectura de Markdown, el análisis ATS y la generación de PDF/DOCX se ejecutan en la CPU de tu dispositivo.',
+    privacyNetworkDesc:
+      'Sin Servidores Remotos: Ningún dato personal ni contenido de currículum se envía jamás a servidores externos.',
+    privacyDemoTitle: 'Aviso de Demostración',
+    privacyDemoDesc:
+      'Esta instancia web está publicada exclusivamente con fines de demostración y prueba. No está pensada como producto comercial con SLA ni copias en la nube. Para un uso habitual o corporativo, clona y ejecuta DownCV en local o mediante Docker.',
   },
 };

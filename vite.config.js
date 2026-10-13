@@ -63,6 +63,7 @@ function gitUpdatePlugin() {
 }
 
 export default defineConfig(({ command }) => ({
+  base: process.env.BASE_PATH || './',
   plugins: [react(), tailwindcss(), gitUpdatePlugin()],
   server: {
     port: 3000,

@@ -13,7 +13,7 @@ export default function ThemeToggle({ theme, toggleTheme }) {
       ) : (
         <Moon className="w-4 h-4 text-indigo-400 shrink-0" />
       )}
-      <span className="hidden min-[1700px]:inline">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+      <span className="hidden laptop:inline">{theme === 'dark' ? 'Light' : 'Dark'}</span>
     </button>
   );
 }

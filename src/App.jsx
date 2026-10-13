@@ -21,6 +21,7 @@ import ExportMenu from './components/ExportMenu';
 import ThemeToggle from './components/ThemeToggle';
 import CommandPalette from './components/CommandPalette';
 import UpdateModal from './components/UpdateModal';
+import AboutModal from './components/AboutModal';
 import { sampleCVs, samplesFor, defaultSample } from './data/sampleCVs';
 import { translations } from './data/translations';
 import { applyTemplate } from './data/templates';
@@ -40,6 +41,7 @@ import {
   Command,
   GitBranch,
   Bell,
+  Info,
 } from 'lucide-react';
 
 const DEFAULT_STYLES = {
@@ -91,6 +93,7 @@ export default function App() {
   const [importOpen, setImportOpen] = useState(false);
   const [letterOpen, setLetterOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const [tourDone, setTourDone] = useLocalStorage('tour_done', false);
   const [tourOpen, setTourOpen] = useState(false);
 
@@ -541,7 +544,11 @@ export default function App() {
       >
         <div ref={brandRef} className="flex min-w-0 flex-1 items-center gap-3">
           <div className="app-brand-icon flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl shadow-sm">
-            <img src="/icon.jpg" alt="DownCV" className="h-full w-full object-cover" />
+            <img
+              src={`${import.meta.env.BASE_URL}icon.jpg`}
+              alt="DownCV"
+              className="h-full w-full object-cover"
+            />
           </div>
           <div ref={brandTextRef} className="min-w-0">
             <h1 className="truncate whitespace-nowrap text-base font-bold tracking-tight text-[var(--ui-text-primary)]">
@@ -570,8 +577,7 @@ export default function App() {
                     : 'text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)]'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5 shrink-0" />{' '}
-                <span className="hidden lg:inline">{v.label}</span>
+                <Icon className="w-3.5 h-3.5 shrink-0" /> <span className="inline">{v.label}</span>
               </button>
             );
           })}
@@ -585,7 +591,7 @@ export default function App() {
             className="flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] px-2.5 py-1.5 text-xs font-medium text-[var(--ui-text-tertiary)] transition hover:border-[var(--ui-accent)] hover:text-[var(--ui-accent)]"
           >
             <Command className="w-3.5 h-3.5 shrink-0" />
-            <span className="hidden min-[1700px]:inline">{t.cmdTitle}</span>
+            <span className="hidden laptop:inline">{t.cmdTitle}</span>
             <kbd className="rounded border border-[var(--ui-border-primary)] bg-[var(--ui-bg-primary)] px-1 font-mono text-[10px]">
               K
             </kbd>
@@ -602,7 +608,7 @@ export default function App() {
               }`}
             >
               <Palette className="w-3.5 h-3.5 shrink-0" />{' '}
-              <span className="hidden min-[1700px]:inline">{t.stylesTab}</span>
+              <span className="hidden laptop:inline">{t.stylesTab}</span>
             </button>
             <button
               onClick={() => setActiveSidebar('ats')}
@@ -614,7 +620,7 @@ export default function App() {
               }`}
             >
               <ShieldCheck className="w-3.5 h-3.5 shrink-0" />{' '}
-              <span className="hidden min-[1700px]:inline">{t.atsScoreTab}</span>
+              <span className="hidden laptop:inline">{t.atsScoreTab}</span>
               {latestAts ? (
                 <span
                   className={`shrink-0 rounded px-1.5 font-mono text-[10px] ${
@@ -641,7 +647,7 @@ export default function App() {
               }`}
             >
               <GitBranch className="w-3.5 h-3.5 shrink-0" />{' '}
-              <span className="hidden min-[1700px]:inline">{t.variantsTab}</span>
+              <span className="hidden laptop:inline">{t.variantsTab}</span>
               {variantIsDirty && (
                 <span
                   className="shrink-0 rounded bg-amber-950 px-1.5 font-mono text-[10px] text-amber-400"
@@ -661,7 +667,7 @@ export default function App() {
               className="flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg border border-[var(--ui-accent)]/30 bg-[var(--ui-accent-muted)] px-2.5 py-1.5 text-xs font-semibold text-[var(--ui-accent)] transition hover:bg-[var(--ui-accent)] hover:text-[var(--ui-text-inverse)]"
             >
               <Sparkles className="w-3.5 h-3.5 shrink-0" />{' '}
-              <span className="hidden min-[1700px]:inline">{t.aiAssistantTitle}</span>
+              <span className="hidden laptop:inline">{t.aiAssistantTitle}</span>
             </button>
             <button
               onClick={() => setImportOpen(true)}
@@ -669,7 +675,7 @@ export default function App() {
               className="flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] px-2.5 py-1.5 text-xs font-medium text-[var(--ui-text-tertiary)] transition hover:border-[var(--ui-accent-border)] hover:text-[var(--ui-accent)]"
             >
               <FileUp className="w-3.5 h-3.5 shrink-0" />{' '}
-              <span className="hidden min-[1700px]:inline">{t.importTitle}</span>
+              <span className="hidden laptop:inline">{t.importTitle}</span>
             </button>
             <button
               onClick={() => {
@@ -680,7 +686,7 @@ export default function App() {
               className="flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] px-2.5 py-1.5 text-xs font-medium text-[var(--ui-text-tertiary)] transition hover:border-[var(--ui-accent-border)] hover:text-[var(--ui-accent)]"
             >
               <FileText className="w-3.5 h-3.5 shrink-0" />{' '}
-              <span className="hidden min-[1700px]:inline">{t.letterTitle}</span>
+              <span className="hidden laptop:inline">{t.letterTitle}</span>
             </button>
           </div>
 
@@ -717,6 +723,15 @@ export default function App() {
           </div>
 
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+
+          <button
+            onClick={() => setAboutOpen(true)}
+            title={t.aboutTitle}
+            aria-label={t.aboutTitle}
+            className="p-1.5 text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)] bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-card-hover)] rounded border border-[var(--ui-border-primary)] transition flex items-center justify-center text-xs whitespace-nowrap shrink-0"
+          >
+            <Info className="w-4 h-4 shrink-0" />
+          </button>
 
           {updateCheck.isOutdated && (
             <button
@@ -871,6 +886,7 @@ export default function App() {
         onClose={() => setPaletteOpen(false)}
         actions={paletteActions}
         t={t}
+        isDemo={updateCheck.isDemo}
       />
 
       <ConfirmDialog
@@ -900,6 +916,8 @@ export default function App() {
         resolved={updateCheck.resolved}
         t={t}
       />
+
+      <AboutModal open={aboutOpen} onClose={() => setAboutOpen(false)} t={t} />
     </div>
   );
 }

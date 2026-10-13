@@ -11,6 +11,7 @@ import {
   runningCommitDate,
   runningInDev,
   runningSha,
+  isDemoEnvironment,
   updateAvailable,
   wasDismissed,
   writeCache,
@@ -57,6 +58,20 @@ describe('versionCheck', () => {
     expect(runningSha()).toBe('');
     expect(runningCommitDate()).toBe('');
     expect(runningInDev()).toBe(false);
+  });
+
+  it('detects demo environment only on github.io or with VITE_IS_DEMO', () => {
+    expect(isDemoEnvironment()).toBe(false);
+
+    const originalLocation = window.location;
+    delete window.location;
+    window.location = { hostname: 'acorangonzalezmoray.github.io' };
+    expect(isDemoEnvironment()).toBe(true);
+
+    window.location = { hostname: 'localhost' };
+    expect(isDemoEnvironment()).toBe(false);
+
+    window.location = originalLocation;
   });
 
   it('builds the compare URL with and without a commit', () => {
