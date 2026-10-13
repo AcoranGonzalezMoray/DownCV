@@ -570,8 +570,7 @@ export default function App() {
                     : 'text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)]'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5 shrink-0" />{' '}
-                <span className="hidden lg:inline">{v.label}</span>
+                <Icon className="w-3.5 h-3.5 shrink-0" /> <span className="inline">{v.label}</span>
               </button>
             );
           })}
@@ -585,7 +584,7 @@ export default function App() {
             className="flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] px-2.5 py-1.5 text-xs font-medium text-[var(--ui-text-tertiary)] transition hover:border-[var(--ui-accent)] hover:text-[var(--ui-accent)]"
           >
             <Command className="w-3.5 h-3.5 shrink-0" />
-            <span className="hidden min-[1700px]:inline">{t.cmdTitle}</span>
+            <span className="hidden laptop:inline">{t.cmdTitle}</span>
             <kbd className="rounded border border-[var(--ui-border-primary)] bg-[var(--ui-bg-primary)] px-1 font-mono text-[10px]">
               K
             </kbd>
@@ -602,7 +601,7 @@ export default function App() {
               }`}
             >
               <Palette className="w-3.5 h-3.5 shrink-0" />{' '}
-              <span className="hidden min-[1700px]:inline">{t.stylesTab}</span>
+              <span className="hidden laptop:inline">{t.stylesTab}</span>
             </button>
             <button
               onClick={() => setActiveSidebar('ats')}
@@ -614,7 +613,7 @@ export default function App() {
               }`}
             >
               <ShieldCheck className="w-3.5 h-3.5 shrink-0" />{' '}
-              <span className="hidden min-[1700px]:inline">{t.atsScoreTab}</span>
+              <span className="hidden laptop:inline">{t.atsScoreTab}</span>
               {latestAts ? (
                 <span
                   className={`shrink-0 rounded px-1.5 font-mono text-[10px] ${
@@ -641,7 +640,7 @@ export default function App() {
               }`}
             >
               <GitBranch className="w-3.5 h-3.5 shrink-0" />{' '}
-              <span className="hidden min-[1700px]:inline">{t.variantsTab}</span>
+              <span className="hidden laptop:inline">{t.variantsTab}</span>
               {variantIsDirty && (
                 <span
                   className="shrink-0 rounded bg-amber-950 px-1.5 font-mono text-[10px] text-amber-400"
@@ -661,7 +660,7 @@ export default function App() {
               className="flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg border border-[var(--ui-accent)]/30 bg-[var(--ui-accent-muted)] px-2.5 py-1.5 text-xs font-semibold text-[var(--ui-accent)] transition hover:bg-[var(--ui-accent)] hover:text-[var(--ui-text-inverse)]"
             >
               <Sparkles className="w-3.5 h-3.5 shrink-0" />{' '}
-              <span className="hidden min-[1700px]:inline">{t.aiAssistantTitle}</span>
+              <span className="hidden laptop:inline">{t.aiAssistantTitle}</span>
             </button>
             <button
               onClick={() => setImportOpen(true)}
@@ -669,7 +668,7 @@ export default function App() {
               className="flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] px-2.5 py-1.5 text-xs font-medium text-[var(--ui-text-tertiary)] transition hover:border-[var(--ui-accent-border)] hover:text-[var(--ui-accent)]"
             >
               <FileUp className="w-3.5 h-3.5 shrink-0" />{' '}
-              <span className="hidden min-[1700px]:inline">{t.importTitle}</span>
+              <span className="hidden laptop:inline">{t.importTitle}</span>
             </button>
             <button
               onClick={() => {
@@ -680,7 +679,7 @@ export default function App() {
               className="flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] px-2.5 py-1.5 text-xs font-medium text-[var(--ui-text-tertiary)] transition hover:border-[var(--ui-accent-border)] hover:text-[var(--ui-accent)]"
             >
               <FileText className="w-3.5 h-3.5 shrink-0" />{' '}
-              <span className="hidden min-[1700px]:inline">{t.letterTitle}</span>
+              <span className="hidden laptop:inline">{t.letterTitle}</span>
             </button>
           </div>
 

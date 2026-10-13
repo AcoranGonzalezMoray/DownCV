@@ -1097,7 +1097,7 @@ export default function CVPreview({
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                <span className="hidden min-[1700px]:inline">{t.aiRewrite}</span>
+                <span className="hidden laptop:inline">{t.aiRewrite}</span>
               </button>
             )}
             <button
@@ -1111,7 +1111,7 @@ export default function CVPreview({
               }`}
             >
               <GripVertical className="w-3.5 h-3.5" />
-              <span className="hidden min-[1700px]:inline">
+              <span className="hidden laptop:inline">
                 {reorderMode ? t.reorderDone : t.reorderStart}
               </span>
             </button>

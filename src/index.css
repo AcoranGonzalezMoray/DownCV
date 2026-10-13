@@ -4,6 +4,7 @@
   --font-sans: 'Inter', sans-serif;
   --font-serif: 'Merriweather', serif;
   --font-mono: 'JetBrains Mono', monospace;
+  --breakpoint-laptop: 1750px;
 }
 
 [data-theme='dark'] {
@@ -212,16 +213,6 @@ body {
   top: 50%;
   transform: translate(-50%, -50%);
   z-index: 10;
-}
-
-@media (min-width: 1700px) {
-  .topbar-switch {
-    position: absolute;
-    left: calc(50% - var(--app-sidebar-width) / 2);
-    top: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 10;
-  }
 }
 
 .topbar-switch.topbar-switch-flow {

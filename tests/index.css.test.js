@@ -100,9 +100,8 @@ describe('the bar of actions', () => {
   });
 
   it('drops the text of the quietest controls before it drops the controls', () => {
-    
-    expect(app).toMatch(/className="hidden min-\[1700px\]:inline">\{t\.stylesTab\}/);
-    expect(app).toMatch(/className="hidden min-\[1700px\]:inline">\{t\.importTitle\}/);
+    expect(app).toMatch(/className="hidden laptop:inline">\{t\.stylesTab\}/);
+    expect(app).toMatch(/className="hidden laptop:inline">\{t\.importTitle\}/);
   });
 
   it('keeps the switch in the flow, so it can never land on the tabs', () => {
@@ -142,12 +141,25 @@ describe('the bar of actions', () => {
     expect(rule).toMatch(/transform:\s*translate\(-50%, -50%\)/);
   });
 
-  it('centres the switch like before past laptop widths', () => {
-    const at = css.indexOf('@media (min-width: 1700px)');
-    expect(at, 'missing the big-screen media query').toBeGreaterThan(-1);
-    const block = css.slice(at, at + 600);
-    expect(block).toContain('.topbar-switch');
-    expect(block).toMatch(/position:\s*absolute/);
-    expect(block).toMatch(/left:\s*calc\(50% - var\(--app-sidebar-width\) \/ 2\)/);
+  it('declares the laptop range once, in the theme, with no hard-coded width left', () => {
+    const theme = css.slice(css.indexOf('@theme'), css.indexOf('}', css.indexOf('@theme')));
+    expect(theme, 'the theme must own the laptop breakpoint').toMatch(
+      /--breakpoint-laptop:\s*\d+px/,
+    );
+    expect(theme).not.toMatch(/1700px/);
+    expect(css, 'the hard-coded big-screen media query must be gone').not.toMatch(
+      /min-width:\s*1700px/,
+    );
+    expect(css, 'only the measured class may position the switch').not.toMatch(
+      /\.topbar-switch\s*\{[^}]*position:\s*absolute/,
+    );
+    expect(app, 'every quiet label must use the shared breakpoint').not.toMatch(/min-\[\d+px\]/);
+    expect(preview).not.toMatch(/min-\[\d+px\]/);
+  });
+
+  it('always names the three views, since the switch is the primary navigation', () => {
+    const header = app.slice(app.indexOf('<header'), app.indexOf('</header>'));
+    expect(header).toMatch(/<span className="inline">\{v\.label\}<\/span>/);
+    expect(header).not.toMatch(/hidden laptop:inline">\{v\.label\}/);
   });
 });
