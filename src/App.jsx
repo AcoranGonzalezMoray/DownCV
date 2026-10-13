@@ -21,6 +21,7 @@ import ExportMenu from './components/ExportMenu';
 import ThemeToggle from './components/ThemeToggle';
 import CommandPalette from './components/CommandPalette';
 import UpdateModal from './components/UpdateModal';
+import AboutModal from './components/AboutModal';
 import { sampleCVs, samplesFor, defaultSample } from './data/sampleCVs';
 import { translations } from './data/translations';
 import { applyTemplate } from './data/templates';
@@ -40,6 +41,7 @@ import {
   Command,
   GitBranch,
   Bell,
+  Info,
 } from 'lucide-react';
 
 const DEFAULT_STYLES = {
@@ -91,6 +93,7 @@ export default function App() {
   const [importOpen, setImportOpen] = useState(false);
   const [letterOpen, setLetterOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const [tourDone, setTourDone] = useLocalStorage('tour_done', false);
   const [tourOpen, setTourOpen] = useState(false);
 
@@ -721,6 +724,15 @@ export default function App() {
 
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
 
+          <button
+            onClick={() => setAboutOpen(true)}
+            title={t.aboutTitle}
+            aria-label={t.aboutTitle}
+            className="p-1.5 text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)] bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-card-hover)] rounded border border-[var(--ui-border-primary)] transition flex items-center justify-center text-xs whitespace-nowrap shrink-0"
+          >
+            <Info className="w-4 h-4 shrink-0" />
+          </button>
+
           {updateCheck.isOutdated && (
             <button
               data-update-badge
@@ -903,6 +915,8 @@ export default function App() {
         resolved={updateCheck.resolved}
         t={t}
       />
+
+      <AboutModal open={aboutOpen} onClose={() => setAboutOpen(false)} t={t} />
     </div>
   );
 }

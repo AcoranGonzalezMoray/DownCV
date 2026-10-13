@@ -42,6 +42,7 @@ jobs:
         run: npm run build
         env:
           BASE_PATH: ${{ steps.pages.outputs.base_path }}/
+          VITE_IS_DEMO: 'true'
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

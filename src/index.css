@@ -55,6 +55,18 @@
 
   --ui-selection-bg: var(--ui-accent);
   --ui-selection-text: #ffffff;
+
+  --ui-privacy-bg: rgba(6, 78, 59, 0.28);
+  --ui-privacy-border: rgba(16, 185, 129, 0.3);
+  --ui-privacy-title: #34d399;
+  --ui-privacy-text: #a7f3d0;
+  --ui-privacy-icon: #34d399;
+
+  --ui-demo-bg: rgba(120, 53, 15, 0.35);
+  --ui-demo-border: rgba(245, 158, 11, 0.35);
+  --ui-demo-title: #fcd34d;
+  --ui-demo-text: #fde68a;
+  --ui-demo-icon: #fbbf24;
 }
 
 [data-theme='light'] {
@@ -113,6 +125,18 @@
 
   --ui-selection-bg: var(--ui-accent);
   --ui-selection-text: #ffffff;
+
+  --ui-privacy-bg: #ecfdf5;
+  --ui-privacy-border: #a7f3d0;
+  --ui-privacy-title: #065f46;
+  --ui-privacy-text: #064e3b;
+  --ui-privacy-icon: #059669;
+
+  --ui-demo-bg: #fffbeb;
+  --ui-demo-border: #fde68a;
+  --ui-demo-title: #92400e;
+  --ui-demo-text: #78350f;
+  --ui-demo-icon: #d97706;
 }
 
 :root {
