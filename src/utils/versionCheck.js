@@ -54,7 +54,6 @@ export function writeSession(key, value) {
   try {
     window.sessionStorage.setItem(key, value);
   } catch {
-    /* private mode or blocked storage: the check simply runs again next time */
   }
 }
 
@@ -62,7 +61,6 @@ export function clearSession(key) {
   try {
     window.sessionStorage.removeItem(key);
   } catch {
-    /* nothing to clean up */
   }
 }
 

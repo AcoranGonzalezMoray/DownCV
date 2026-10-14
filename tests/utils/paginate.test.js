@@ -61,7 +61,6 @@ describe('planPages', () => {
   });
 
   it('puts a heading at the top of a sheet instead of the bottom of the previous one', () => {
-    
     expect(planPages(advances, { contentHeight: 700, keepWithNext: [false, false, true] })).toEqual(
       [
         [0, 1],
@@ -71,7 +70,6 @@ describe('planPages', () => {
   });
 
   it('never empties a sheet to satisfy the keep together rule', () => {
-    
     expect(planPages(advances, { contentHeight: 320, keepWithNext: [true] })).toEqual([
       [0],
       [1],

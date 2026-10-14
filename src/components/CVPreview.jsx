@@ -217,30 +217,41 @@ export default function CVPreview({
   const measurePagination = useCallback(() => {
     const node = measureRef.current;
     const children = node ? Array.from(node.children) : [];
-    const blocks = children.filter((child) => child.tagName !== 'BR');
-    if (blocks.length === 0) {
+    const groups = [];
+    let pending = [];
+    for (const child of children) {
+      if (child.tagName === 'BR') {
+        pending.push(child);
+        continue;
+      }
+      groups.push({ block: child, spacers: pending });
+      pending = [];
+    }
+    if (groups.length === 0) {
       setPagePlan((previous) => (samePagePlan(previous, [[]]) ? previous : [[]]));
       return;
     }
+    groups[groups.length - 1].spacers = [...groups[groups.length - 1].spacers, ...pending];
 
-    const last = blocks[blocks.length - 1];
-    const trailingBreaks = children.length - 1 - children.indexOf(last);
     const trailingHeight =
-      trailingBreaks * (parseFloat(window.getComputedStyle(node).lineHeight) || 0);
-    const advances = blocks.map((block, index) => {
-      const next = blocks[index + 1];
+      pending.length * (parseFloat(window.getComputedStyle(node).lineHeight) || 0);
+    const advances = groups.map((group, index) => {
+      const next = groups[index + 1];
       if (next) {
-        return Math.max(0, next.offsetTop - block.offsetTop);
+        return Math.max(0, next.block.offsetTop - group.block.offsetTop);
       }
-      const style = window.getComputedStyle(block);
-      return block.offsetHeight + (parseFloat(style.marginBottom) || 0) + trailingHeight;
+      const style = window.getComputedStyle(group.block);
+      return group.block.offsetHeight + (parseFloat(style.marginBottom) || 0) + trailingHeight;
     });
 
-    const positions = blocks.map((block) => children.indexOf(block));
+    const positions = groups.map((group) => [
+      ...group.spacers.map((spacer) => children.indexOf(spacer)),
+      children.indexOf(group.block),
+    ]);
     const plan = planPages(advances, {
       contentHeight: contentHeightFor(styles.marginY),
-      keepWithNext: blocks.map((block) => keepsWithNext(block.innerHTML)),
-    }).map((page) => page.map((position) => positions[position]));
+      keepWithNext: groups.map((group) => keepsWithNext(group.block.innerHTML)),
+    }).map((page) => page.flatMap((position) => positions[position]));
     setPagePlan((previous) => (samePagePlan(previous, plan) ? previous : plan));
   }, [styles.marginY]);
 

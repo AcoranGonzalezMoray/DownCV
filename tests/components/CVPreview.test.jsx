@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { readFileSync } from 'fs';
 import { render, screen, cleanup, act, fireEvent } from '@testing-library/react';
 import CVPreview from '../../src/components/CVPreview';
 import { scanContacts } from '../../src/utils/contactScan';
@@ -1034,5 +1035,48 @@ describe('CVPreview cursor line', () => {
       />,
     );
     expect(document.querySelectorAll('.cv-cursor-line')).toHaveLength(1);
+  });
+});
+
+describe('CVPreview keeps every section when entries wrap their blocks', () => {
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+  });
+
+  const REAL_CV = readFileSync('tests/components/fixtures/real-cv.md', 'utf8');
+
+  it('still draws the sections that follow the page break', async () => {
+    vi.spyOn(HTMLElement.prototype, 'offsetTop', 'get').mockImplementation(function getTop() {
+      const parent = this.parentElement;
+      if (this.tagName === 'BR' || !parent?.classList?.contains('cv-paper-measure')) {
+        return 0;
+      }
+      return Array.prototype.indexOf.call(parent.children, this) * 120;
+    });
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function getHeight() {
+      return this.tagName === 'BR' ? 0 : 120;
+    });
+
+    renderPreview(REAL_CV);
+    await act(async () => {
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    });
+
+const drawn = Array.from(document.querySelectorAll('.cv-pages .cv-page'))
+      .map((page) => page.textContent)
+      .join(' ');
+
+    for (const heading of [
+      'EXPERIENCIA LABORAL',
+      'EDUCACIÓN',
+      'HABILIDADES TÉCNICAS',
+      'CERTIFICACIONES Y IDIOMAS',
+    ]) {
+      expect(drawn).toContain(heading);
+    }
+    expect(drawn).toContain('Universidad Politécnica de Madrid');
+    expect(drawn).toContain('Scrum Master Certified');
+expect(document.querySelectorAll('.cv-pages .cv-page').length).toBeGreaterThan(1);
   });
 });
