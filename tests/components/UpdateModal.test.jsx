@@ -122,7 +122,6 @@ describe('UpdateModal', () => {
     const writeText = vi.fn(async () => { });
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
 
-    // Copying awaits the clipboard, so the tick that shows the check lands after the click.
     await act(async () => {
       fireEvent.click(copy);
     });
