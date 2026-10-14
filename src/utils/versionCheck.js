@@ -53,15 +53,13 @@ export function readSession(key) {
 export function writeSession(key, value) {
   try {
     window.sessionStorage.setItem(key, value);
-  } catch {
-  }
+  } catch {}
 }
 
 export function clearSession(key) {
   try {
     window.sessionStorage.removeItem(key);
-  } catch {
-  }
+  } catch {}
 }
 
 export function wasDismissed() {
