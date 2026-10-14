@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent, act } from '@testing-library/react';
 import UpdateModal from '../../src/components/UpdateModal';
 import { translations } from '../../src/data/translations';
 import { UPDATE_COMMAND } from '../../src/data/versionInfo';
@@ -112,7 +112,7 @@ describe('UpdateModal', () => {
     expect(link.href).toBe('https://github.com/AcoranGonzalezMoray/DownCV/compare/aaa1111...main');
   });
 
-  it('gives Docker users a copyable command and no misleading update button', () => {
+  it('gives Docker users a copyable command and no misleading update button', async () => {
     renderModal();
     expect(screen.getByText(UPDATE_COMMAND)).toBeTruthy();
     expect(screen.queryByText(t.updateNow)).toBe(null);
@@ -121,8 +121,32 @@ describe('UpdateModal', () => {
     const copy = screen.getByRole('button', { name: t.updateCopyCommand });
     const writeText = vi.fn(async () => { });
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
-    fireEvent.click(copy);
+
+    await act(async () => {
+      fireEvent.click(copy);
+    });
+
     expect(writeText).toHaveBeenCalledWith(UPDATE_COMMAND);
+    expect(copy.querySelector('.lucide-check')).toBeTruthy();
+  });
+
+  it('leaves the copy button alone when the clipboard refuses', async () => {
+    renderModal();
+    const copy = screen.getByRole('button', { name: t.updateCopyCommand });
+    Object.defineProperty(navigator, 'clipboard', {
+      value: {
+        writeText: vi.fn(async () => {
+          throw new Error('denied');
+        }),
+      },
+      configurable: true,
+    });
+
+    await act(async () => {
+      fireEvent.click(copy);
+    });
+
+    expect(copy.querySelector('.lucide-check')).toBe(null);
   });
 
   it('runs the pull through the dev server when running locally', () => {

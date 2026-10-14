@@ -251,7 +251,7 @@ Access DownCV in your browser at `http://localhost:8080`.
 
 ```bash
 docker build -t down-cv --build-arg VITE_APP_COMMIT=$(git rev-parse HEAD) .
-docker run -d -p 8080:80 down-cv
+docker run -d --name DownCV -p 8080:80 down-cv
 ```
 
 ---

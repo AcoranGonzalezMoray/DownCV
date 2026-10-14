@@ -20,6 +20,9 @@ import {
   BarChart3,
   Target,
   Building2,
+  FilePlus2,
+  AlertTriangle,
+  Trash2,
 } from 'lucide-react';
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts';
 import { applyInlineFormat } from '../utils/markdownFormat';
@@ -48,7 +51,10 @@ export default function MarkdownEditor({
   wordCount,
   savedDrafts,
   onSaveDraft,
+  onDeleteDraft = () => {},
+  currentDraftId = null,
   currentDraftName,
+  isUnsaved = false,
   t,
   searchOpen,
   setSearchOpen,
@@ -65,6 +71,19 @@ export default function MarkdownEditor({
   const [copied, setCopied] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [draftNameInput, setDraftNameInput] = useState('');
+  const [saveAsNew, setSaveAsNew] = useState(false);
+  const [nameError, setNameError] = useState('');
+  const isNameTaken = useCallback(
+    (name) =>
+      savedDrafts.some(
+        (draft) =>
+          draft.id !== (saveAsNew ? null : currentDraftId) &&
+          String(draft.name ?? '')
+            .trim()
+            .toLocaleLowerCase() === name.toLocaleLowerCase(),
+      ),
+    [savedDrafts, currentDraftId, saveAsNew],
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
   const [matches, setMatches] = useState([]);
@@ -240,15 +259,34 @@ export default function MarkdownEditor({
     reader.readAsText(file);
   };
   const openSaveModal = () => {
+    if (!currentDraftId) {
+      setDraftNameInput(currentDraftName || 'My ATS CV');
+      setSaveAsNew(false);
+      setNameError('');
+      setShowSaveModal(true);
+      return;
+    }
+    onSaveDraft(currentDraftName);
+  };
+  const openSaveAsModal = () => {
     setDraftNameInput(currentDraftName || 'My ATS CV');
+    setSaveAsNew(true);
+    setNameError('');
     setShowSaveModal(true);
   };
   const handleConfirmSave = (e) => {
     e.preventDefault();
-    if (!draftNameInput.trim()) {
+    const name = draftNameInput.trim();
+    if (!name) {
+      setNameError(t.saveNameRequired);
       return;
     }
-    onSaveDraft(draftNameInput.trim());
+    if (isNameTaken(name)) {
+      setNameError(t.saveNameTaken);
+      return;
+    }
+    setNameError('');
+    onSaveDraft(name, saveAsNew);
     setShowSaveModal(false);
   };
   const insertSnippet = (id) => {
@@ -275,6 +313,7 @@ export default function MarkdownEditor({
   ];
 
   const [libraryOpen, setLibraryOpen] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const libraryRef = useRef(null);
   const libraryButtonRef = useRef(null);
 
@@ -285,6 +324,8 @@ export default function MarkdownEditor({
       hint: t.saved,
       icon: FileText,
       group: t.savedDraftsGroup,
+      draftId: draft.id,
+      isCurrent: draft.id === currentDraftId,
     })),
     ...sampleCVs.map((sample) => ({
       key: `sample:${sample.id}`,
@@ -297,6 +338,12 @@ export default function MarkdownEditor({
 
   useEffect(() => {
     if (!libraryOpen) {
+      setConfirmDeleteId(null);
+    }
+  }, [libraryOpen]);
+
+  useEffect(() => {
+    if (!libraryOpen) {
       return undefined;
     }
     const onPointerDown = (event) => {
@@ -306,6 +353,10 @@ export default function MarkdownEditor({
     };
     const onKeyDown = (event) => {
       if (event.key === 'Escape') {
+        if (confirmDeleteId) {
+          setConfirmDeleteId(null);
+          return;
+        }
         setLibraryOpen(false);
         libraryButtonRef.current?.focus();
       }
@@ -316,12 +367,24 @@ export default function MarkdownEditor({
       document.removeEventListener('mousedown', onPointerDown);
       document.removeEventListener('keydown', onKeyDown);
     };
-  }, [libraryOpen]);
+  }, [libraryOpen, confirmDeleteId]);
 
   const pickFromLibrary = (key) => {
     setLibraryOpen(false);
     libraryButtonRef.current?.focus();
     onSelectSample(key);
+  };
+
+  const requestDeleteDraft = (draftId) => {
+    setConfirmDeleteId(draftId);
+  };
+  const cancelDeleteDraft = () => {
+    setConfirmDeleteId(null);
+  };
+  const confirmDeleteDraft = (draftId) => {
+    setConfirmDeleteId(null);
+    libraryButtonRef.current?.focus();
+    onDeleteDraft(draftId);
   };
 
   const onLibraryKeyDown = (event) => {
@@ -476,7 +539,12 @@ export default function MarkdownEditor({
   return (
     <div className="flex flex-col h-full bg-[var(--ui-bg-primary)] border-r border-[var(--ui-border-primary)] relative">
       {showSaveModal && (
-        <div className="fixed inset-0 z-50 bg-[var(--ui-bg-overlay)] backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={t.saveModalTitle}
+          className="fixed inset-0 z-50 bg-[var(--ui-bg-overlay)] backdrop-blur-sm flex items-center justify-center p-4"
+        >
           <div className="bg-[var(--ui-bg-card)] border border-[var(--ui-border-primary)] rounded-xl p-5 max-w-sm w-full shadow-2xl space-y-4">
             <h3 className="font-bold text-[var(--ui-text-primary)] text-sm flex items-center gap-2">
               <Save className="w-4 h-4 text-[var(--ui-accent)]" /> {t.saveModalTitle}
@@ -489,11 +557,29 @@ export default function MarkdownEditor({
                 <input
                   type="text"
                   value={draftNameInput}
-                  onChange={(e) => setDraftNameInput(e.target.value)}
+                  onChange={(e) => {
+                    setDraftNameInput(e.target.value);
+                    if (nameError) {
+                      setNameError('');
+                    }
+                  }}
+                  aria-invalid={nameError ? 'true' : undefined}
+                  aria-describedby={nameError ? 'draft-name-error' : undefined}
                   placeholder="e.g. Senior Software Engineer CV"
-                  className="app-input w-full text-xs p-2.5 rounded"
+                  className={`app-input w-full text-xs p-2.5 rounded ${
+                    nameError ? 'border-amber-500' : ''
+                  }`}
                   autoFocus
                 />
+                {nameError && (
+                  <p
+                    id="draft-name-error"
+                    role="alert"
+                    className="mt-1.5 text-xs text-amber-500 flex items-center gap-1"
+                  >
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" /> {nameError}
+                  </p>
+                )}
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button
@@ -569,26 +655,73 @@ export default function MarkdownEditor({
                         .filter((item) => item.group === group)
                         .map((item) => {
                           const Icon = item.icon;
+                          const isConfirming = confirmDeleteId === item.draftId;
                           return (
-                            <button
-                              key={item.key}
-                              type="button"
-                              role="menuitem"
-                              data-key={item.key}
-                              onKeyDown={onLibraryKeyDown}
-                              onClick={() => pickFromLibrary(item.key)}
-                              className="w-full flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition hover:bg-[var(--ui-accent-muted)] focus:outline-none focus:bg-[var(--ui-accent-muted)]"
-                            >
-                              <Icon className="w-3.5 h-3.5 shrink-0 text-[var(--ui-accent)]" />
-                              <span className="min-w-0">
-                                <span className="block truncate text-xs font-medium text-[var(--ui-text-primary)]">
-                                  {item.label}
-                                </span>
-                                <span className="block truncate text-[10px] text-[var(--ui-text-tertiary)]">
-                                  {item.hint}
-                                </span>
-                              </span>
-                            </button>
+                            <div key={item.key}>
+                              {isConfirming ? (
+                                <div className="rounded-lg bg-amber-500/10 border border-amber-500/40 px-2.5 py-2 space-y-2">
+                                  <p className="text-[11px] leading-snug text-[var(--ui-text-primary)] flex items-start gap-1.5">
+                                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-px text-amber-500" />
+                                    <span>{t.confirmDeleteDraft}</span>
+                                  </p>
+                                  <p className="text-[11px] truncate text-amber-500 font-medium pl-5">
+                                    {item.label}
+                                  </p>
+                                  <div className="flex justify-end gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={cancelDeleteDraft}
+                                      className="px-2 py-1 text-[11px] text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)] bg-[var(--ui-bg-tertiary)] hover:bg-[var(--ui-bg-card)] rounded transition"
+                                    >
+                                      {t.cancel}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      autoFocus
+                                      onClick={() => confirmDeleteDraft(item.draftId)}
+                                      className="px-2 py-1 text-[11px] font-semibold text-white bg-amber-500 hover:bg-amber-400 rounded transition"
+                                    >
+                                      {t.deleteDraft}
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="relative">
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    data-key={item.key}
+                                    onKeyDown={onLibraryKeyDown}
+                                    onClick={() => pickFromLibrary(item.key)}
+                                    className="w-full flex items-center gap-2 rounded-lg px-2.5 py-1.5 pr-9 text-left transition hover:bg-[var(--ui-accent-muted)] focus:outline-none focus:bg-[var(--ui-accent-muted)]"
+                                  >
+                                    <Icon className="w-3.5 h-3.5 shrink-0 text-[var(--ui-accent)]" />
+                                    <span className="min-w-0">
+                                      <span className="block truncate text-xs font-medium text-[var(--ui-text-primary)]">
+                                        {item.label}
+                                      </span>
+                                      <span className="block truncate text-[10px] text-[var(--ui-text-tertiary)]">
+                                        {item.isCurrent ? t.openDraft : item.hint}
+                                      </span>
+                                    </span>
+                                  </button>
+                                  {item.draftId && (
+                                    <button
+                                      type="button"
+                                      aria-label={`${t.deleteDraft}: ${item.label}`}
+                                      title={t.deleteDraft}
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        requestDeleteDraft(item.draftId);
+                                      }}
+                                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-[var(--ui-text-muted)] hover:bg-[var(--ui-bg-tertiary)] hover:text-amber-500 transition focus:outline-none"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           );
                         })}
                     </div>
@@ -598,11 +731,30 @@ export default function MarkdownEditor({
           </div>
           <button
             onClick={openSaveModal}
-            className="relative p-1.5 text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)] bg-[var(--ui-bg-badge)] hover:bg-[var(--ui-bg-tertiary)] rounded border border-[var(--ui-border-primary)] transition flex items-center gap-1 text-xs px-2"
+            title={isUnsaved ? t.unsavedTooltip : t.save}
+            aria-label={isUnsaved ? `${t.save} - ${t.unsavedTooltip}` : t.save}
+            className={`relative p-1.5 rounded border transition flex items-center gap-1 text-xs px-2 ${
+              isUnsaved
+                ? 'text-amber-500 bg-amber-500/10 border-amber-500/50 hover:bg-amber-500/20 hover:text-amber-400'
+                : 'text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)] bg-[var(--ui-bg-badge)] hover:bg-[var(--ui-bg-tertiary)] border-[var(--ui-border-primary)]'
+            }`}
           >
-            <Save className="w-4 h-4 text-[var(--ui-accent)]" />{' '}
+            <Save
+              className={`w-4 h-4 ${isUnsaved ? 'text-amber-500' : 'text-[var(--ui-accent)]'}`}
+            />{' '}
             <span className="hidden sm:inline font-medium">{t.save}</span>
+            {isUnsaved && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
           </button>
+          {currentDraftId && (
+            <button
+              onClick={openSaveAsModal}
+              title={t.saveAs}
+              aria-label={t.saveAs}
+              className="p-1.5 text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)] bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-tertiary)] rounded border border-[var(--ui-border-primary)] transition"
+            >
+              <FilePlus2 className="w-4 h-4" />
+            </button>
+          )}
           <button
             onClick={handleCopy}
             className="p-1.5 text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)] bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-tertiary)] rounded border border-[var(--ui-border-primary)] transition"

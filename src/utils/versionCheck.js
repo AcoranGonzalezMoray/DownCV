@@ -53,17 +53,13 @@ export function readSession(key) {
 export function writeSession(key, value) {
   try {
     window.sessionStorage.setItem(key, value);
-  } catch {
-    /* private mode or blocked storage: the check simply runs again next time */
-  }
+  } catch {}
 }
 
 export function clearSession(key) {
   try {
     window.sessionStorage.removeItem(key);
-  } catch {
-    /* nothing to clean up */
-  }
+  } catch {}
 }
 
 export function wasDismissed() {

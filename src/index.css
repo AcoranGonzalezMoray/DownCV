@@ -529,10 +529,12 @@ body {
   padding-left: 8px;
 }
 
-.cv-entry {
-  margin-bottom: var(--cv-item-gap);
-  page-break-inside: avoid;
-  break-inside: avoid;
+.cv-paper div.cv-entry-title {
+  margin-top: var(--cv-item-gap);
+}
+.cv-paper h3.cv-section-title + div.cv-entry-title,
+.cv-paper > div.cv-entry-title:first-child {
+  margin-top: 0;
 }
 
 .cv-entry-header {
@@ -636,8 +638,7 @@ body {
   .no-print {
     display: none !important;
   }
-  /* The app shell is a viewport-sized flexbox with hidden overflow: without this
-     the printer only ever sees the first sheet. */
+
   #root,
   .app-shell,
   .app-main,

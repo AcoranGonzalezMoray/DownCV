@@ -8,8 +8,6 @@ const fullStackEs = `# Carlos DownCV
 ## RESUMEN PROFESIONAL
 Ingeniero de Software Senior con más de 7 años de experiencia diseñando y construyendo aplicaciones web escalables de alto rendimiento. Especializado en arquitectura backend basada en microservicios con **Node.js/Python** y fronends reactivos con **React/TypeScript**. Historial comprobado de optimización de rendimiento del 45% y liderazgo de equipos agiles de hasta 8 desarrolladores.
 
-<br>
-
 ## EXPERIENCIA LABORAL
 
 ### **TechCorp Solutions** | Madrid, España
@@ -29,15 +27,11 @@ Ingeniero de Software Senior con más de 7 años de experiencia diseñando y con
 - Creé paneles de administración interactivos utilizando **React y Redux** para la visualización de datos en tiempo real.
 - Colaboré con el equipo de UX/UI para implementar diseños 100% accesibles cumpliendo normativas WCAG 2.1 AA.
 
-<br>
-
 ## EDUCACIÓN
 
 ### **Universidad Politécnica de Madrid**
 **Grado en Ingeniería Informática** | *2013 – 2017*
 - Especialización en Ingeniería del Software y Sistemas Distribuidos.
-
-<br>
 
 ## HABILIDADES TÉCNICAS
 - **Lenguajes:** JavaScript (ES6+), TypeScript, Python, SQL, HTML5, CSS3.
@@ -45,8 +39,6 @@ Ingeniero de Software Senior con más de 7 años de experiencia diseñando y con
 - **Backend:** Node.js, Express, NestJS, Python (FastAPI, Django), REST APIs, GraphQL.
 - **Bases de Datos & Cloud:** PostgreSQL, MongoDB, Redis, AWS (S3, ECS, Lambda), Docker, Kubernetes.
 - **Herramientas & DevOps:** Git, GitHub Actions, CI/CD, Jest, Cypress, Datadog.
-
-<br>
 
 ## CERTIFICACIONES Y IDIOMAS
 - **AWS Certified Solutions Architect – Associate** (2023)
@@ -63,8 +55,6 @@ const fullStackEn = `# Carlos DownCV
 
 ## PROFESSIONAL SUMMARY
 Senior Software Engineer with 7+ years of experience designing and building scalable, high performance web applications. Specialised in microservice backend architecture with **Node.js/Python** and reactive frontends with **React/TypeScript**. Track record of 45% performance optimisation and of leading agile teams of up to 8 developers.
-
-<br>
 
 ## WORK EXPERIENCE
 
@@ -85,15 +75,11 @@ Senior Software Engineer with 7+ years of experience designing and building scal
 - Built interactive admin dashboards with **React and Redux** for real-time data visualisation.
 - Worked with the UX/UI team to ship 100% accessible designs meeting WCAG 2.1 AA.
 
-<br>
-
 ## EDUCATION
 
 ### **Universidad Politécnica de Madrid**
 **BSc in Computer Engineering** | *2013 – 2017*
 - Specialisation in Software Engineering and Distributed Systems.
-
-<br>
 
 ## TECHNICAL SKILLS
 - **Languages:** JavaScript (ES6+), TypeScript, Python, SQL, HTML5, CSS3.
@@ -101,8 +87,6 @@ Senior Software Engineer with 7+ years of experience designing and building scal
 - **Backend:** Node.js, Express, NestJS, Python (FastAPI, Django), REST APIs, GraphQL.
 - **Databases & Cloud:** PostgreSQL, MongoDB, Redis, AWS (S3, ECS, Lambda), Docker, Kubernetes.
 - **Tools & DevOps:** Git, GitHub Actions, CI/CD, Jest, Cypress, Datadog.
-
-<br>
 
 ## CERTIFICATIONS & LANGUAGES
 - **AWS Certified Solutions Architect – Associate** (2023)
