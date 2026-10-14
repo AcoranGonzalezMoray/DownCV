@@ -154,9 +154,9 @@ export default function App() {
     }
   }, [isUnsaved]);
 
-  const handleSaveDraft = (name) => {
+  const handleSaveDraft = (name, asNew = false) => {
     const now = new Date().toISOString();
-    let draftId = currentDraftId;
+    let draftId = asNew ? null : currentDraftId;
     if (!draftId) {
       draftId = 'draft_' + Date.now();
       setCurrentDraftId(draftId);
@@ -171,6 +171,14 @@ export default function App() {
 
     if (localFile.isLinked) {
       localFile.save(markdown, { silent: true });
+    }
+  };
+
+  const handleDeleteDraft = (draftId) => {
+    setSavedDrafts((prev) => prev.filter((d) => d.id !== draftId));
+    if (currentDraftId === draftId) {
+      setCurrentDraftId(null);
+      setCurrentDraftName('');
     }
   };
 
@@ -779,7 +787,9 @@ export default function App() {
                 wordCount={wordCount}
                 savedDrafts={savedDrafts}
                 onSaveDraft={handleSaveDraft}
+                onDeleteDraft={handleDeleteDraft}
                 isUnsaved={isUnsaved}
+                currentDraftId={currentDraftId}
                 currentDraftName={currentDraftName}
                 t={t}
                 searchOpen={searchOpen}

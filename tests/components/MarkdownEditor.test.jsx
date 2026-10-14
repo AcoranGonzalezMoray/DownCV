@@ -117,7 +117,7 @@ describe('MarkdownEditor insert buttons', () => {
     const { setMarkdown } = renderEditor('es', CV_ES);
     click('Educación');
     const next = setMarkdown.mock.calls.at(-1)[0];
-    
+
     expect(next.startsWith('# Ana Gómez')).toBe(true);
     expect(listSections(next).map((section) => section.title)).toEqual([
       'EXPERIENCIA LABORAL',
@@ -278,7 +278,7 @@ describe('MarkdownEditor technology autocomplete', () => {
   it('writes the full name, with the separator of a list, replacing the fragment', () => {
     render(<StatefulEditor initial={SKILLS_CV} />);
     typeInSkills('Kube');
-    
+
     fireEvent.mouseDown(options().find((option) => option.dataset.skill === 'Kubernetes'));
 
     const next = screen.getByRole('textbox').value;
@@ -347,7 +347,7 @@ describe('MarkdownEditor technology autocomplete', () => {
     typeInSkills('Post');
 
     const panel = screen.getByRole('listbox').closest('div');
-    
+
     expect(panel.className).toMatch(/bg-\[var\(--ui-bg-card\)\]/);
     expect(panel.className).not.toMatch(/\/9[05]|\/8[0-9]/);
     expect(panel.className).not.toMatch(/backdrop-blur/);
@@ -636,5 +636,221 @@ describe('MarkdownEditor search highlighting and navigation', () => {
     const closeBtn = screen.getByRole('button', { name: /Close search/i });
     fireEvent.click(closeBtn);
     expect(setSearchOpen).toHaveBeenCalledWith(false);
+  });
+});
+
+describe('MarkdownEditor save flow', () => {
+  afterEach(() => cleanup());
+
+  const renderWith = (props) =>
+    render(
+      <MarkdownEditor
+        markdown={CV}
+        setMarkdown={vi.fn()}
+        sampleCVs={samplesFor('en')}
+        lang="en"
+        onSelectSample={vi.fn()}
+        savedDrafts={[]}
+        onSaveDraft={vi.fn()}
+        currentDraftName=""
+        t={translations.en}
+        searchOpen={false}
+        setSearchOpen={vi.fn()}
+        {...props}
+      />,
+    );
+
+  it('asks for a name the first time a CV is saved', () => {
+    const onSaveDraft = vi.fn();
+    renderWith({ onSaveDraft, currentDraftId: null });
+    click(translations.en.save);
+    expect(screen.getByRole('dialog')).toBeTruthy();
+    expect(onSaveDraft).not.toHaveBeenCalled();
+  });
+
+  it('saves straight away once the CV already exists', () => {
+    const onSaveDraft = vi.fn();
+    renderWith({ onSaveDraft, currentDraftId: 'draft_1', currentDraftName: 'My CV' });
+    click(translations.en.save);
+    expect(onSaveDraft).toHaveBeenCalledWith('My CV');
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('flags unsaved changes on the save button', () => {
+    const { unmount } = renderWith({ onSaveDraft: vi.fn(), currentDraftId: 'draft_1' });
+    expect(screen.getByRole('button', { name: translations.en.save }).className).not.toMatch(
+      /amber/,
+    );
+    unmount();
+    renderWith({ onSaveDraft: vi.fn(), currentDraftId: 'draft_1', isUnsaved: true });
+    expect(
+      screen.getByRole('button', {
+        name: `${translations.en.save} - ${translations.en.unsavedTooltip}`,
+      }).className,
+    ).toMatch(/amber/);
+  });
+});
+
+describe('MarkdownEditor duplicate draft names', () => {
+  afterEach(() => cleanup());
+
+  const renderWith = (props) =>
+    render(
+      <MarkdownEditor
+        markdown={CV}
+        setMarkdown={vi.fn()}
+        sampleCVs={samplesFor('en')}
+        lang="en"
+        onSelectSample={vi.fn()}
+        savedDrafts={[{ id: 'draft_1', name: 'My CV', markdown: CV, updatedAt: '' }]}
+        onSaveDraft={vi.fn()}
+        currentDraftId={null}
+        currentDraftName=""
+        t={translations.en}
+        searchOpen={false}
+        setSearchOpen={vi.fn()}
+        {...props}
+      />,
+    );
+
+  it('refuses a name that is already taken and says so', () => {
+    const onSaveDraft = vi.fn();
+    renderWith({ onSaveDraft });
+    click(translations.en.save);
+    fireEvent.change(screen.getByRole('dialog').querySelector('input'), {
+      target: { value: 'My CV' },
+    });
+    fireEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: translations.en.save }),
+    );
+    expect(screen.getByRole('alert').textContent).toContain(translations.en.saveNameTaken);
+    expect(screen.getByRole('dialog')).toBeTruthy();
+    expect(onSaveDraft).not.toHaveBeenCalled();
+  });
+
+  it('ignores case and surrounding spaces', () => {
+    const onSaveDraft = vi.fn();
+    renderWith({ onSaveDraft });
+    click(translations.en.save);
+    fireEvent.change(screen.getByRole('dialog').querySelector('input'), {
+      target: { value: '  my cv  ' },
+    });
+    fireEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: translations.en.save }),
+    );
+    expect(onSaveDraft).not.toHaveBeenCalled();
+  });
+
+  it('saves a new CV when the name is free', () => {
+    const onSaveDraft = vi.fn();
+    renderWith({ onSaveDraft });
+    click(translations.en.save);
+    fireEvent.change(screen.getByRole('dialog').querySelector('input'), {
+      target: { value: 'Another CV' },
+    });
+    fireEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: translations.en.save }),
+    );
+    expect(onSaveDraft).toHaveBeenCalledWith('Another CV', false);
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('blocks "save as new CV" when the name is already taken', () => {
+    const onSaveDraft = vi.fn();
+    renderWith({ onSaveDraft, currentDraftId: 'draft_1', currentDraftName: 'My CV' });
+    click(translations.en.saveAs);
+    fireEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: translations.en.save }),
+    );
+    expect(screen.getByRole('alert').textContent).toContain(translations.en.saveNameTaken);
+    expect(onSaveDraft).not.toHaveBeenCalled();
+  });
+
+  it('renames on "save as new CV" with a free name', () => {
+    const onSaveDraft = vi.fn();
+    renderWith({ onSaveDraft, currentDraftId: 'draft_1', currentDraftName: 'My CV' });
+    click(translations.en.saveAs);
+    fireEvent.change(screen.getByRole('dialog').querySelector('input'), {
+      target: { value: 'My CV v2' },
+    });
+    fireEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: translations.en.save }),
+    );
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(onSaveDraft).toHaveBeenCalledWith('My CV v2', true);
+  });
+});
+
+describe('MarkdownEditor delete saved CV', () => {
+  afterEach(() => cleanup());
+
+  const openLibrary = () => fireEvent.click(document.querySelector('[aria-haspopup="menu"]'));
+
+  const renderWith = (props = {}) =>
+    render(
+      <MarkdownEditor
+        markdown={CV}
+        setMarkdown={vi.fn()}
+        sampleCVs={[]}
+        lang="en"
+        onSelectSample={vi.fn()}
+        savedDrafts={[{ id: 'draft_1', name: 'My CV', markdown: CV, updatedAt: '' }]}
+        onSaveDraft={vi.fn()}
+        onDeleteDraft={vi.fn()}
+        currentDraftId={null}
+        currentDraftName=""
+        t={translations.en}
+        searchOpen={false}
+        setSearchOpen={vi.fn()}
+        {...props}
+      />,
+    );
+
+  it('offers a delete button for saved CVs only', () => {
+    renderWith({ sampleCVs: [{ id: 's1', name: 'Blank', category: 'x', markdown: CV }] });
+    openLibrary();
+    expect(screen.getByRole('button', { name: `Delete CV: My CV` })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Delete CV: Blank/ })).toBeNull();
+  });
+
+  it('asks for confirmation inside the dropdown before deleting', () => {
+    const onDeleteDraft = vi.fn();
+    renderWith({ onDeleteDraft });
+    openLibrary();
+    fireEvent.click(screen.getByRole('button', { name: `Delete CV: My CV` }));
+    expect(onDeleteDraft).not.toHaveBeenCalled();
+    expect(screen.getByRole('menu')).toBeTruthy();
+    expect(screen.getByText(translations.en.confirmDeleteDraft)).toBeTruthy();
+    fireEvent.click(
+      within(screen.getByRole('menu')).getByRole('button', { name: translations.en.deleteDraft }),
+    );
+    expect(onDeleteDraft).toHaveBeenCalledWith('draft_1');
+  });
+
+  it('cancels the deletion and keeps the dropdown open', () => {
+    const onDeleteDraft = vi.fn();
+    renderWith({ onDeleteDraft });
+    openLibrary();
+    fireEvent.click(screen.getByRole('button', { name: `Delete CV: My CV` }));
+    fireEvent.click(
+      within(screen.getByRole('menu')).getByRole('button', { name: translations.en.cancel }),
+    );
+    expect(onDeleteDraft).not.toHaveBeenCalled();
+    expect(screen.getByRole('menu')).toBeTruthy();
+    expect(screen.getByRole('button', { name: `Delete CV: My CV` })).toBeTruthy();
+  });
+
+  it('still opens the CV when clicking the row itself', () => {
+    const onSelectSample = vi.fn();
+    renderWith({ onSelectSample });
+    openLibrary();
+    fireEvent.click(screen.getByRole('menuitem', { name: /My CV/ }));
+    expect(onSelectSample).toHaveBeenCalledWith('draft:draft_1');
+  });
+
+  it('marks the draft that is currently open', () => {
+    renderWith({ currentDraftId: 'draft_1', currentDraftName: 'My CV' });
+    openLibrary();
+    expect(screen.getByText(translations.en.openDraft)).toBeTruthy();
   });
 });
