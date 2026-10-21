@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { parseMarkdownToATS } from '../utils/markdownParser';
 import {
   createRangeForSourceRange,
+  expandRangeToWord,
   resolveSelection,
   resolveWordAt,
   resolveFocusOffset,
@@ -77,6 +78,25 @@ const PAPER_CONTROLS = 'button, a, [role="button"], input, textarea, select';
 
 const SITE_ICONS = { 'linkedin.com': Linkedin, 'github.com': Github, 'gitlab.com': Gitlab };
 const siteIcon = (host) => SITE_ICONS[host] || Globe;
+
+const caretRangeAt = (x, y) => {
+  if (typeof document.caretRangeFromPoint === 'function') {
+    const range = document.caretRangeFromPoint(x, y);
+    if (range) {
+      return range;
+    }
+  }
+  if (typeof document.caretPositionFromPoint === 'function') {
+    const position = document.caretPositionFromPoint(x, y);
+    if (position?.offsetNode) {
+      const range = document.createRange();
+      range.setStart(position.offsetNode, position.offset);
+      range.collapse(true);
+      return range;
+    }
+  }
+  return null;
+};
 
 const FLASH_MS = 1400;
 
@@ -614,6 +634,9 @@ export default function CVPreview({
       if (!onPickRange || reorderMode || handMode) {
         return;
       }
+      if (event.detail > 1) {
+        return;
+      }
       if (event.target?.closest?.(PAPER_CONTROLS)) {
         return;
       }
@@ -637,6 +660,35 @@ export default function CVPreview({
       const word = resolveWordAt(root, range, markdownRef.current);
       if (word && word.end > word.start) {
         onPickRange({ start: word.start, end: word.end, focus: focus ?? word.start });
+      }
+    },
+    [onPickRange, reorderMode, handMode],
+  );
+
+  const handlePaperDoubleClick = useCallback(
+    (event) => {
+      event.preventDefault();
+      if (!onPickRange || reorderMode || handMode) {
+        return;
+      }
+      const root = pagesRef.current;
+      const domSelection = window.getSelection();
+      if (!root || !domSelection || domSelection.rangeCount === 0) {
+        return;
+      }
+      const caret = caretRangeAt(event.clientX, event.clientY) ?? domSelection.getRangeAt(0);
+      if (!root.contains(caret.commonAncestorContainer)) {
+        return;
+      }
+      const exact = expandRangeToWord(caret);
+      if (!exact) {
+        return;
+      }
+      domSelection.removeAllRanges();
+      domSelection.addRange(exact);
+      const word = resolveSelection(root, exact, markdownRef.current);
+      if (word && word.end > word.start) {
+        onPickRange({ start: word.start, end: word.end, focus: word.start });
       }
     },
     [onPickRange, reorderMode, handMode],
@@ -1211,6 +1263,7 @@ export default function CVPreview({
           onPointerUp={endPan}
           onPointerCancel={endPan}
           onMouseUp={handlePaperMouseUp}
+          onDoubleClick={handlePaperDoubleClick}
           onScroll={() => {
             if (!aiLoading) {
               setAiPopover(null);

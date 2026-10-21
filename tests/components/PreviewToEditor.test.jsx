@@ -85,8 +85,7 @@ describe('the preview tells the editor what was picked', () => {
     expect(onPickRange).not.toHaveBeenCalled();
   });
 
-  it('tells where the pointer was, when the selection spans several blocks', () => {
-    const onPickRange = vi.fn();
+  it('tells where the pointer was, when the selection spans several blocks', () => {    const onPickRange = vi.fn();
     renderPreview(onPickRange);
 
     const title = document.querySelector('.cv-section-title');
@@ -103,6 +102,28 @@ describe('the preview tells the editor what was picked', () => {
     const picked = onPickRange.mock.calls.at(-1)[0];
     expect(picked.start).toBeLessThan(picked.focus);
     expect(MD.slice(picked.focus, picked.focus + 3)).toBe('Did');
+  });
+
+  it('selects only the word when it is double clicked, without the space behind it', () => {
+    const onPickRange = vi.fn();
+    renderPreview(onPickRange, '# Ana\n\n- Did things here');
+
+    const item = document.querySelector('.cv-paper li');
+    const node = item.firstChild;
+    const range = document.createRange();
+    range.setStart(node, 0);
+    range.setEnd(node, 4);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    expect(selection.toString()).toBe('Did ');
+
+    fireEvent.doubleClick(item);
+
+    expect(selection.toString()).toBe('Did');
+    const picked = onPickRange.mock.calls.at(-1)[0];
+    expect(picked.start).toBe(9);
+    expect(picked.end).toBe(12);
   });
 });
 
