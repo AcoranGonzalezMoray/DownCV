@@ -305,6 +305,23 @@ describe('MarkdownEditor library dropdown', () => {
     expect(trigger().getAttribute('aria-expanded')).toBe('false');
   });
 
+  it('opens inside the screen, even on a narrow phone', () => {
+    const width = window.innerWidth;
+    Object.defineProperty(window, 'innerWidth', { value: 360, configurable: true });
+    try {
+      renderLibrary();
+      fireEvent.click(trigger());
+
+      const menu = screen.getByRole('menu');
+      const left = parseFloat(menu.style.left);
+      const menuWidth = parseFloat(menu.style.width);
+      expect(left).toBeGreaterThanOrEqual(12);
+      expect(left + menuWidth).toBeLessThanOrEqual(360 - 12);
+    } finally {
+      Object.defineProperty(window, 'innerWidth', { value: width, configurable: true });
+    }
+  });
+
   it('lists the drafts and the samples in groups, with an icon each', () => {
     renderLibrary();
     fireEvent.click(trigger());

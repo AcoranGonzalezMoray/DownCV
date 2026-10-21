@@ -492,9 +492,37 @@ export default function MarkdownEditor({
   ];
 
   const [libraryOpen, setLibraryOpen] = useState(false);
+  const [libraryMenuStyle, setLibraryMenuStyle] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const libraryRef = useRef(null);
   const libraryButtonRef = useRef(null);
+
+  const placeLibraryMenu = useCallback(() => {
+    const button = libraryButtonRef.current;
+    if (!button) {
+      return;
+    }
+    const rect = button.getBoundingClientRect();
+    const gutter = 12;
+    const width = Math.min(288, Math.max(180, window.innerWidth - gutter * 2));
+    const left = Math.min(Math.max(gutter, rect.right - width), window.innerWidth - width - gutter);
+    const top = Math.min(rect.bottom + 4, Math.max(gutter, window.innerHeight - 120));
+    setLibraryMenuStyle({ left, top, width });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!libraryOpen) {
+      setLibraryMenuStyle(null);
+      return undefined;
+    }
+    placeLibraryMenu();
+    window.addEventListener('resize', placeLibraryMenu);
+    window.addEventListener('scroll', placeLibraryMenu, true);
+    return () => {
+      window.removeEventListener('resize', placeLibraryMenu);
+      window.removeEventListener('scroll', placeLibraryMenu, true);
+    };
+  }, [libraryOpen, placeLibraryMenu]);
 
   const libraryItems = [
     ...savedDrafts.map((draft) => ({
@@ -823,7 +851,8 @@ export default function MarkdownEditor({
               <div
                 role="menu"
                 aria-label={t.openDraftOrSample}
-                className="absolute right-0 top-full mt-1 z-50 w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] shadow-xl overflow-hidden"
+                style={libraryMenuStyle ?? undefined}
+                className="fixed z-50 rounded-xl border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] shadow-xl overflow-hidden max-h-[min(60vh,26rem)] overflow-y-auto"
               >
                 {[t.savedDraftsGroup, t.sampleTemplatesGroup]
                   .filter((group) => libraryItems.some((item) => item.group === group))

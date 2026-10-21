@@ -104,8 +104,7 @@ describe('the preview tells the editor what was picked', () => {
     expect(MD.slice(picked.focus, picked.focus + 3)).toBe('Did');
   });
 
-  it('selects only the word when it is double clicked, without the space behind it', () => {
-    const onPickRange = vi.fn();
+  it('selects only the word when it is double clicked, without the space behind it', () => {    const onPickRange = vi.fn();
     renderPreview(onPickRange, '# Ana\n\n- Did things here');
 
     const item = document.querySelector('.cv-paper li');
@@ -124,6 +123,35 @@ describe('the preview tells the editor what was picked', () => {
     const picked = onPickRange.mock.calls.at(-1)[0];
     expect(picked.start).toBe(9);
     expect(picked.end).toBe(12);
+  });
+
+  it('takes the selection for the app on a phone, with no native menu', () => {
+    const original = window.matchMedia;
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: query.includes('any-pointer'),
+      media: query,
+      addEventListener() {},
+      removeEventListener() {},
+    }));
+    try {
+      const onPickRange = vi.fn();
+      renderPreview(onPickRange, '# Ana\n\n- Did things here');
+
+      const item = document.querySelector('.cv-paper li');
+      const range = document.createRange();
+      range.setStart(item.firstChild, 0);
+      range.setEnd(item.firstChild, 4);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      fireEvent.mouseUp(document.querySelector('.cv-paper-container'));
+
+      expect(onPickRange).toHaveBeenCalled();
+      expect(selection.toString()).toBe('');
+    } finally {
+      window.matchMedia = original;
+    }
   });
 });
 
