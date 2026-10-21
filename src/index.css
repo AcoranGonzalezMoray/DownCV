@@ -411,6 +411,15 @@ body {
   border-radius: 2px;
 }
 
+/* on a phone the browser offers its own menu when the text is selected,
+   the selection belongs to the app and it is highlighted in the editor */
+@media (any-pointer: coarse) {
+  .cv-paper,
+  .cv-paper-measure {
+    -webkit-touch-callout: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cv-sync-flash {
     animation: none;

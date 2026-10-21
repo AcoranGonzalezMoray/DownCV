@@ -59,9 +59,34 @@ describe('MarkdownEditor insert buttons', () => {
 
   it('names the buttons in the language of the interface', () => {
     renderEditor('es');
-    for (const label of ['Experiencia', 'Educación', 'Habilidades', 'Certificación']) {
+    for (const label of ['Perfil', 'Resumen', 'Experiencia', 'Educación', 'Habilidades', 'Certificación']) {
       expect(screen.getByRole('button', { name: new RegExp(`${label}$`) })).toBeTruthy();
     }
+  });
+
+  it('offers the profile and the summary in English too', () => {
+    renderEditor('en');
+    for (const label of ['Profile', 'Summary']) {
+      expect(screen.getByRole('button', { name: new RegExp(`${label}$`) })).toBeTruthy();
+    }
+  });
+
+  it('writes the profile at the top of the CV', () => {
+    const { setMarkdown } = renderEditor('en', '# Ana Gomez\n\n## WORK EXPERIENCE\n\n- Did things\n');
+    click('Profile');
+    const next = setMarkdown.mock.calls.at(-1)[0];
+    expect(next.startsWith('# Ana Gomez')).toBe(true);
+    expect(next).toContain('**[Your Professional Title]**');
+    expect(next).toContain('[xxxx.xxxx@example.com](mailto:xxxx.xxxx@example.com)');
+  });
+
+  it('writes the summary before the other sections', () => {
+    const { setMarkdown } = renderEditor('en', '# Ana Gomez\n\n## WORK EXPERIENCE\n\n- Did things\n');
+    click('Summary');
+    const next = setMarkdown.mock.calls.at(-1)[0];
+    expect(next.indexOf('## PROFESSIONAL SUMMARY')).toBeLessThan(
+      next.indexOf('## WORK EXPERIENCE'),
+    );
   });
 
   it('adds the section in that language', () => {
@@ -138,6 +163,108 @@ describe('MarkdownEditor insert buttons', () => {
       'EXPERIENCIA LABORAL',
     ]);
   });
+
+  it('keeps the caret when the button takes the focus away from the editor', () => {
+    const { setMarkdown } = renderEditor('es', CV_ES);
+    const textarea = screen.getByRole('textbox');
+    const at = CV_ES.indexOf('## EXPERIENCIA');
+    textarea.focus();
+    textarea.setSelectionRange(at, at);
+    fireEvent.blur(textarea);
+    screen.getByRole('button', { name: /Habilidades/ }).focus();
+    click('Habilidades');
+    const next = setMarkdown.mock.calls.at(-1)[0];
+    expect(listSections(next).map((section) => section.title)).toEqual([
+      'HABILIDADES TÉCNICAS',
+      'EXPERIENCIA LABORAL',
+    ]);
+  });
+
+  it('sends the section to the end of the section being written when the caret is mid line', () => {
+    const twoSections = `# Ana Gómez
+
+## EXPERIENCIA LABORAL
+
+- Mantuvo el servicio de facturación por debajo del minuto.
+
+## EDUCACIÓN
+
+- UPM
+`;
+    const { setMarkdown } = renderEditor('es', twoSections);
+    const textarea = screen.getByRole('textbox');
+    const at = twoSections.indexOf('Mantuvo el servicio');
+    textarea.focus();
+    textarea.setSelectionRange(at, at);
+    fireEvent.blur(textarea);
+    screen.getByRole('button', { name: /Habilidades/ }).focus();
+    click('Habilidades');
+    const next = setMarkdown.mock.calls.at(-1)[0];
+    expect(listSections(next).map((section) => section.title)).toEqual([
+      'EXPERIENCIA LABORAL',
+      'HABILIDADES TÉCNICAS',
+      'EDUCACIÓN',
+    ]);
+  });
+});
+
+describe('MarkdownEditor when a section is added', () => {
+  afterEach(() => cleanup());
+
+  it('leaves the view where the reader was, instead of jumping to the block', async () => {
+    render(<StatefulEditor initial={SKILLS_CV} />);
+    const textarea = screen.getByRole('textbox');
+    Object.defineProperty(textarea, 'scrollHeight', { value: 1000, configurable: true });
+    Object.defineProperty(textarea, 'clientHeight', { value: 200, configurable: true });
+    textarea.scrollTop = 400;
+
+    const setSelectionRange = textarea.setSelectionRange.bind(textarea);
+    textarea.setSelectionRange = (start, end) => {
+      setSelectionRange(start, end);
+      textarea.scrollTop = 999;
+    };
+
+    fireEvent.click(screen.getByRole('button', { name: /Education/ }));
+    await act(async () => {});
+
+    expect(textarea.scrollTop).toBe(400);
+  });
+
+  it('says that the section was added', async () => {
+    render(<StatefulEditor initial={SKILLS_CV} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Education/ }));
+    await act(async () => {});
+
+    const notice = screen.getByTestId('snippet-notice');
+    expect(notice.textContent).toContain(translations.en.snippetAdded);
+    expect(notice.textContent).toContain('EDUCATION');
+  });
+
+  it('says that the block went into the section that was already there', async () => {
+    render(<StatefulEditor initial={SKILLS_CV} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Skills/ }));
+    await act(async () => {});
+
+    const notice = screen.getByTestId('snippet-notice');
+    expect(notice.textContent).toContain(translations.en.snippetMerged);
+    expect(notice.textContent).toContain('SKILLS');
+  });
+
+  it('offers to take the reader to the block that was added', async () => {
+    render(<StatefulEditor initial={SKILLS_CV} />);
+    const textarea = screen.getByRole('textbox');
+    Object.defineProperty(textarea, 'scrollHeight', { value: 1000, configurable: true });
+    Object.defineProperty(textarea, 'clientHeight', { value: 200, configurable: true });
+
+    fireEvent.click(screen.getByRole('button', { name: /Education/ }));
+    await act(async () => {});
+
+    fireEvent.click(screen.getByRole('button', { name: translations.en.snippetGoTo }));
+    expect(textarea.scrollTop).toBeGreaterThan(0);
+    expect(screen.queryByTestId('snippet-notice')).toBeNull();
+  });
 });
 
 const SKILLS_CV = '# Ana\n\n## SKILLS\n\nReact, \n\n## EXPERIENCE\n\n- Led things\n';
@@ -176,6 +303,23 @@ describe('MarkdownEditor library dropdown', () => {
     renderLibrary();
     expect(screen.queryByRole('menu')).toBe(null);
     expect(trigger().getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('opens inside the screen, even on a narrow phone', () => {
+    const width = window.innerWidth;
+    Object.defineProperty(window, 'innerWidth', { value: 360, configurable: true });
+    try {
+      renderLibrary();
+      fireEvent.click(trigger());
+
+      const menu = screen.getByRole('menu');
+      const left = parseFloat(menu.style.left);
+      const menuWidth = parseFloat(menu.style.width);
+      expect(left).toBeGreaterThanOrEqual(12);
+      expect(left + menuWidth).toBeLessThanOrEqual(360 - 12);
+    } finally {
+      Object.defineProperty(window, 'innerWidth', { value: width, configurable: true });
+    }
   });
 
   it('lists the drafts and the samples in groups, with an icon each', () => {

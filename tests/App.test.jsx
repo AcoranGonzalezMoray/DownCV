@@ -210,6 +210,27 @@ describe('App', () => {
     expect(document.querySelector('.cv-cursor-line')).toBe(null);
   });
 
+  it('marks in the editor the word that was clicked in the preview', async () => {
+    render(<App />);
+    await act(async () => {});
+
+    const title = document.querySelector('.cv-page .cv-section-title');
+    const range = document.createRange();
+    range.setStart(title.firstChild, 0);
+    range.setEnd(title.firstChild, 0);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    await act(async () => {
+      fireEvent.mouseUp(document.querySelector('.cv-paper-container'));
+    });
+
+    const mark = document.querySelector('[data-preview-mark]');
+    expect(mark).toBeTruthy();
+    expect(mark.textContent).toBe(title.textContent.split(' ')[0]);
+  });
+
   it('keeps the view switch in the flow until measured, so it never lands on the tabs', async () => {
     render(<App />);
     await act(async () => {});

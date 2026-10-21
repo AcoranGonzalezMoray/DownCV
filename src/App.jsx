@@ -400,7 +400,9 @@ export default function App() {
   const [cursor, setCursor] = useState(null);
   const cursorNonce = useRef(0);
   const cursorOffsetRef = useRef(undefined);
+  const [pickedRange, setPickedRange] = useState(null);
   const reportCursor = useCallback((offset) => {
+    setPickedRange(null);
     const normalized = offset === null || offset === undefined ? null : offset;
     if (normalized === cursorOffsetRef.current) {
       return;
@@ -409,6 +411,19 @@ export default function App() {
     cursorNonce.current += 1;
     setCursor(normalized === null ? null : { offset: normalized, nonce: cursorNonce.current });
   }, []);
+
+  const pickRange = useCallback((range) => {
+    setPickedRange({
+      start: range.start,
+      end: range.end,
+      focus: range.focus,
+      nonce: Date.now(),
+    });
+  }, []);
+
+  useEffect(() => {
+    setPickedRange(null);
+  }, [markdown]);
 
   const editorSyncRequest = useMemo(
     () => (sync.editor && sync.editor.source === markdown ? sync.editor : null),
@@ -948,6 +963,7 @@ export default function App() {
                 onScrollRatio={editorSync}
                 syncRequest={editorSyncRequest}
                 onCursorOffset={reportCursor}
+                highlightRange={pickedRange}
               />
             </div>
           )}
@@ -976,6 +992,7 @@ export default function App() {
                 onScrollRatio={previewSync}
                 syncRequest={previewSyncRequest}
                 cursorRequest={cursor}
+                onPickRange={pickRange}
                 lang={lang}
                 aiEnabled={aiSettings.enabled}
                 aiSettings={aiSettings}
