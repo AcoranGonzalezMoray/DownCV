@@ -1177,7 +1177,7 @@ export default function CVPreview({
               setAiError(null);
             }
           }}
-          className={`cv-paper-container cv-page-container flex-1 overflow-auto p-4 sm:p-8 flex items-start justify-center${
+          className={`cv-paper-container cv-page-container flex-1 overflow-auto p-4 sm:p-8 flex items-start${
             panning ? ' select-none cursor-grabbing' : ''
           }`}
         >

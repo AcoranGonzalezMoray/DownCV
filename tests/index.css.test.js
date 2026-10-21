@@ -6,7 +6,6 @@ const css = readFileSync(resolve(process.cwd(), 'src/index.css'), 'utf8');
 const preview = readFileSync(resolve(process.cwd(), 'src/components/CVPreview.jsx'), 'utf8');
 const app = readFileSync(resolve(process.cwd(), 'src/App.jsx'), 'utf8');
 
-
 const rulesFor = (selector) => {
   const pattern = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/["']/g, '["\']');
   return [...css.matchAll(new RegExp(`([^{}]*${pattern}[^{}]*)\\{([^}]*)\\}`, 'g'))].map(
@@ -15,7 +14,6 @@ const rulesFor = (selector) => {
 };
 
 describe('the space between sections', () => {
-  
   it('hangs from the section heading, which is what the preview renders', () => {
     const [rule] = rulesFor('h3.cv-section-title').filter((entry) =>
       entry.body.includes('--cv-section-gap'),
@@ -36,7 +34,6 @@ describe('the space between sections', () => {
 });
 
 describe('the sheet of the preview', () => {
-  
   it('has a shadow in light mode strong enough to draw the edge of the page', () => {
     const [rule] = rulesFor('[data-theme="light"] .cv-paper');
     expect(rule, 'no rule gives the sheet a shadow of its own in light mode').toBeTruthy();
@@ -47,6 +44,35 @@ describe('the sheet of the preview', () => {
   it('prints at the real size, never at the zoom of the pane', () => {
     const printed = css.slice(css.indexOf('@media print'));
     expect(printed).toMatch(/\.cv-paper\s*\{[^}]*zoom:\s*1\s*!important/);
+  });
+
+  it('keeps the sheet A4 on every screen, so the measured pages are the printed pages', () => {
+    const small = [...css.matchAll(/@media \(max-width: 768px\) \{([\s\S]*?)\n\}/g)].map(
+      (match) => match[1],
+    );
+    expect(small.join('\n')).not.toMatch(/\.cv-paper(?![\w-])[^}]*width:/);
+
+    const [sheet] = rulesFor('.cv-paper').filter((entry) => entry.selector.trim() === '.cv-paper');
+    expect(sheet.body).toMatch(/width:\s*210mm/);
+
+    const [measure] = rulesFor('.cv-paper-measure').filter(
+      (entry) => entry.selector.trim() === '.cv-paper-measure',
+    );
+    expect(
+      measure.body,
+      'the hidden sheet must measure at the width of the printed one',
+    ).not.toMatch(/width:/);
+  });
+
+  it('keeps the left half of the zoomed sheet reachable', () => {
+    const rules = rulesFor('.cv-paper-container').filter(
+      (entry) => entry.selector.trim() === '.cv-paper-container',
+    );
+    expect(
+      rules.some((entry) => entry.body.includes('justify-content: safe center')),
+      'the pane must centre the sheet safely, or the overflow to the left is unreachable',
+    ).toBe(true);
+    expect(preview).not.toMatch(/cv-paper-container[^"']*justify-center/);
   });
 
   it('prints every sheet, because the app shell cannot clip the stack', () => {
@@ -69,8 +95,7 @@ describe('the sheet of the preview', () => {
   });
 
   it('draws the minimalist heading with the thinnest rule of every option', () => {
-    const widthOf = (selector) =>
-      Number(/([\d.]+)px/.exec(rulesFor(selector)[0].body)[1]);
+    const widthOf = (selector) => Number(/([\d.]+)px/.exec(rulesFor(selector)[0].body)[1]);
     const widths = [
       widthOf('.border-style-minimal h3.cv-section-title'),
       widthOf('.border-style-line h3.cv-section-title'),
@@ -90,7 +115,7 @@ describe('the sheet of the preview', () => {
 describe('the bar of actions', () => {
   it('keeps every label on one line, so the bar does not grow a second row', () => {
     const header = app.slice(app.indexOf('<header'), app.indexOf('</header>'));
-    
+
     const classes = [
       ...header.matchAll(/<button[\s\S]*?className=(?:"([^"]*)"|\{`([^`]*)`\})/g),
     ].map((match) => match[1] || match[2] || '');
@@ -114,9 +139,9 @@ describe('the bar of actions', () => {
 
   it('gives the three views the same width, which is what puts the middle one in the middle', () => {
     const header = app.slice(app.indexOf('<header'), app.indexOf('</header>'));
-    
+
     expect(header).toMatch(/grid-cols-3 items-center/);
-    
+
     const [, viewButton] = /<button[\s\S]*?className=\{`([^`]*)`\}/.exec(header).slice(0, 2) || [];
     expect(viewButton).toMatch(/justify-center/);
     expect(viewButton).toMatch(/whitespace-nowrap/);
