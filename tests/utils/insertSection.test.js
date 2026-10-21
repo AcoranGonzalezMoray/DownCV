@@ -131,6 +131,67 @@ describe('insertSection', () => {
     expect(merged.markdown.slice(merged.insertedAt)).toMatch(/^### /);
   });
 
+  it('writes the profile at the top of an empty CV', () => {
+    const result = insertSection('', snippet('profile', 'en'));
+    expect(result.markdown.startsWith('# [Your Name]')).toBe(true);
+    expect(result.markdown).toContain('**[Your Professional Title]**');
+    expect(result.markdown).toContain(
+      '[xxxx.xxxx@example.com](mailto:xxxx.xxxx@example.com) | +34 600 000 000',
+    );
+    expect(result.markdown).toContain('[linkedin.com/in/xxxx-xxxx](https://linkedin.com/in/xxxx-xxxx)');
+    expect(result.insertedAt).toBe(0);
+  });
+
+  it('keeps the name, the title and the contact line the CV already has', () => {
+    const cv = `# Ana Gomez
+**Data Scientist & AI Engineer**
+
+ana@mail.com | +34 600 000 000 | Barcelona, Spain
+
+## WORK EXPERIENCE
+
+- Did things
+`;
+    const result = insertSection(cv, snippet('profile', 'en'));
+    expect(result.markdown.startsWith('# Ana Gomez')).toBe(true);
+    expect(result.markdown).toContain('**Data Scientist & AI Engineer**');
+    expect(result.markdown).toContain('ana@mail.com | +34 600 000 000 | Barcelona, Spain');
+    expect(result.markdown).not.toContain('[Your Name]');
+    expect(result.merged).toBe(true);
+    expect(result.markdown).toContain('## WORK EXPERIENCE');
+    expect(result.markdown).toContain('- Did things');
+  });
+
+  it('fills in the profile when the CV only has the name', () => {
+    const result = insertSection('# Ana Gomez\n\n## WORK EXPERIENCE\n\n- Did things\n', snippet('profile', 'en'));
+    expect(result.markdown.startsWith('# Ana Gomez')).toBe(true);
+    expect(result.markdown).toContain('**[Your Professional Title]**');
+    expect(result.markdown).toContain('[xxxx.xxxx@example.com](mailto:xxxx.xxxx@example.com)');
+    expect(result.merged).toBe(true);
+  });
+
+  it('writes the professional summary before the other sections, like the templates', () => {
+    const result = insertSection(CV, snippet('summary', 'en'));
+    expect(result.markdown.indexOf('## PROFESSIONAL SUMMARY')).toBeLessThan(
+      result.markdown.indexOf('## WORK EXPERIENCE'),
+    );
+    expect(result.markdown).toContain('[Professional Title] with [X]+ years of experience');
+  });
+
+  it('writes the summary in Spanish when the interface is in Spanish', () => {
+    const result = insertSection(CV, snippet('summary', 'es'));
+    expect(result.markdown).toContain('## RESUMEN PROFESIONAL');
+    expect(result.markdown).toContain('[Puesto] con más de [X] años de experiencia');
+  });
+
+  it('adds a paragraph to the summary the CV already has', () => {
+    const cv = '# Ana\n\n## EXECUTIVE SUMMARY\n\nData scientist with 5+ years.\n\n## EXPERIENCE\n\n- Led things\n';
+    const result = insertSection(cv, snippet('summary', 'en'));
+    expect(result.markdown.match(/^## /gm)).toHaveLength(2);
+    expect(result.markdown).toContain('Data scientist with 5+ years.');
+    expect(result.markdown).toContain('[Professional Title] with [X]+ years of experience');
+  });
+
   it('returns null when there is nothing to insert', () => {
     expect(insertSection(CV, null)).toBe(null);
     expect(insertSection(CV, { heading: 'X' })).toBe(null);
@@ -146,7 +207,14 @@ describe('insertSection', () => {
 
 describe('snippets', () => {
   it('has a block for each button, in both languages', () => {
-    expect(snippetIds).toEqual(['experience', 'education', 'skills', 'certification']);
+    expect(snippetIds).toEqual([
+      'profile',
+      'summary',
+      'experience',
+      'education',
+      'skills',
+      'certification',
+    ]);
     for (const id of snippetIds) {
       for (const lang of ['en', 'es']) {
         const block = snippet(id, lang);

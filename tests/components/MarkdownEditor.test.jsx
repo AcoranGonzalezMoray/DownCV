@@ -59,9 +59,34 @@ describe('MarkdownEditor insert buttons', () => {
 
   it('names the buttons in the language of the interface', () => {
     renderEditor('es');
-    for (const label of ['Experiencia', 'Educación', 'Habilidades', 'Certificación']) {
+    for (const label of ['Perfil', 'Resumen', 'Experiencia', 'Educación', 'Habilidades', 'Certificación']) {
       expect(screen.getByRole('button', { name: new RegExp(`${label}$`) })).toBeTruthy();
     }
+  });
+
+  it('offers the profile and the summary in English too', () => {
+    renderEditor('en');
+    for (const label of ['Profile', 'Summary']) {
+      expect(screen.getByRole('button', { name: new RegExp(`${label}$`) })).toBeTruthy();
+    }
+  });
+
+  it('writes the profile at the top of the CV', () => {
+    const { setMarkdown } = renderEditor('en', '# Ana Gomez\n\n## WORK EXPERIENCE\n\n- Did things\n');
+    click('Profile');
+    const next = setMarkdown.mock.calls.at(-1)[0];
+    expect(next.startsWith('# Ana Gomez')).toBe(true);
+    expect(next).toContain('**[Your Professional Title]**');
+    expect(next).toContain('[xxxx.xxxx@example.com](mailto:xxxx.xxxx@example.com)');
+  });
+
+  it('writes the summary before the other sections', () => {
+    const { setMarkdown } = renderEditor('en', '# Ana Gomez\n\n## WORK EXPERIENCE\n\n- Did things\n');
+    click('Summary');
+    const next = setMarkdown.mock.calls.at(-1)[0];
+    expect(next.indexOf('## PROFESSIONAL SUMMARY')).toBeLessThan(
+      next.indexOf('## WORK EXPERIENCE'),
+    );
   });
 
   it('adds the section in that language', () => {
@@ -193,7 +218,6 @@ describe('MarkdownEditor when a section is added', () => {
     Object.defineProperty(textarea, 'clientHeight', { value: 200, configurable: true });
     textarea.scrollTop = 400;
 
-    // the browser pulls the caret into view whenever the selection is moved
     const setSelectionRange = textarea.setSelectionRange.bind(textarea);
     textarea.setSelectionRange = (start, end) => {
       setSelectionRange(start, end);

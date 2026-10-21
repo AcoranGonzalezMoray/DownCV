@@ -34,6 +34,12 @@ export const translations = {
     savedDraftsGroup: 'My Saved CVs',
     sampleTemplatesGroup: 'Sample Templates',
     insertSnippet: 'Insert:',
+    profileSnippetLabel: 'Profile',
+    summarySnippetLabel: 'Summary',
+    profileSnippetHint:
+      'Adds the name, the title and the contact line at the top of the CV, keeping the ones you already have',
+    summarySnippetHint:
+      'Adds the professional summary section, or another paragraph in the one you already have',
     expSnippetLabel: 'Experience',
     eduSnippetLabel: 'Education',
     skillsSnippetLabel: 'Skills',
@@ -45,6 +51,8 @@ export const translations = {
     certSnippetHint: 'Adds the certifications section, or adds to the one you already have',
     snippetAdded: 'Section added:',
     snippetMerged: 'That section already existed, the block was added at the end of it:',
+    snippetProfileAdded: 'Profile added at the top of the CV:',
+    snippetProfileKept: 'Your name, title and contact line were kept:',
     snippetGoTo: 'Go to it',
     snippetClose: 'Close',
     searchPlaceholder: 'Search word in Markdown...',
@@ -615,6 +623,12 @@ export const translations = {
     savedDraftsGroup: 'Mis CVs Guardados',
     sampleTemplatesGroup: 'Plantillas de Ejemplo',
     insertSnippet: 'Insertar:',
+    profileSnippetLabel: 'Perfil',
+    summarySnippetLabel: 'Resumen',
+    profileSnippetHint:
+      'Añade el nombre, el puesto y la línea de contacto al principio del CV, respetando los que ya tengas',
+    summarySnippetHint:
+      'Añade la sección de resumen profesional, o un párrafo más en la que ya tengas',
     expSnippetLabel: 'Experiencia',
     eduSnippetLabel: 'Educación',
     skillsSnippetLabel: 'Habilidades',
@@ -626,6 +640,8 @@ export const translations = {
     certSnippetHint: 'Añade la sección de certificaciones, o añade más a la que ya tengas',
     snippetAdded: 'Sección añadida:',
     snippetMerged: 'Esa sección ya existía, el bloque se ha añadido al final:',
+    snippetProfileAdded: 'Perfil añadido al principio del CV:',
+    snippetProfileKept: 'Se han respetado tu nombre, puesto y contacto:',
     snippetGoTo: 'Ir',
     snippetClose: 'Cerrar',
     searchPlaceholder: 'Buscar palabra en Markdown...',

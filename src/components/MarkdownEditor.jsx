@@ -8,6 +8,8 @@ import {
   Check,
   PlusCircle,
   CheckCircle2,
+  Contact,
+  AlignLeft,
   Search,
   ChevronUp,
   ChevronDown,
@@ -359,6 +361,7 @@ export default function MarkdownEditor({
     setMarkdown(result.markdown);
     setSnippetNotice({
       title: result.title || block.heading,
+      kind: block.verbatim ? 'profile' : result.merged ? 'merged' : 'added',
       merged: Boolean(result.merged),
       offset: result.insertedAt,
     });
@@ -383,6 +386,8 @@ export default function MarkdownEditor({
   );
 
   const snippets = [
+    { id: 'profile', label: t.profileSnippetLabel, hint: t.profileSnippetHint, icon: Contact },
+    { id: 'summary', label: t.summarySnippetLabel, hint: t.summarySnippetHint, icon: AlignLeft },
     { id: 'experience', label: t.expSnippetLabel, hint: t.expSnippetHint, icon: FileText },
     { id: 'education', label: t.eduSnippetLabel, hint: t.eduSnippetHint, icon: BookOpen },
     { id: 'skills', label: t.skillsSnippetLabel, hint: t.skillsSnippetHint, icon: Code },
@@ -967,7 +972,13 @@ export default function MarkdownEditor({
           >
             <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-[var(--ui-accent)]" />
             <span className="truncate">
-              {snippetNotice.merged ? t.snippetMerged : t.snippetAdded}{' '}
+              {snippetNotice.kind === 'profile'
+                ? snippetNotice.merged
+                  ? t.snippetProfileKept
+                  : t.snippetProfileAdded
+                : snippetNotice.merged
+                  ? t.snippetMerged
+                  : t.snippetAdded}{' '}
               <span className="font-semibold text-[var(--ui-text-primary)]">
                 {snippetNotice.title}
               </span>

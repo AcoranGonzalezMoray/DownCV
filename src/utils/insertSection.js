@@ -1,4 +1,4 @@
-import { listSections } from './markdownSections';
+import { documentHeader, listSections } from './markdownSections';
 
 const normalize = (value) =>
   String(value || '')
@@ -11,6 +11,41 @@ const sameTitle = (title, candidates) => {
   const target = normalize(title);
   return candidates.some((candidate) => normalize(candidate) === target);
 };
+
+const profileLines = (text) => {
+  const lines = String(text || '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const name = lines.find((line) => /^#\s+\S/.test(line)) || '';
+  const title = lines.find((line) => /^\*\*.+\*\*$/.test(line)) || '';
+  const rest = lines.filter((line) => line !== name && line !== title && line !== '<br>');
+  const contact = rest.find((line) => line.includes('@') || line.includes('+')) || rest[0] || '';
+  return { name, title, contact };
+};
+
+function buildProfile(source, template, meta = {}) {
+  const header = documentHeader(source);
+  const current = profileLines(header);
+  const wanted = profileLines(template);
+  const kept = {
+    name: current.name || wanted.name,
+    title: current.title || wanted.title,
+    contact: current.contact || wanted.contact,
+  };
+  const head = [kept.name, kept.title].filter(Boolean).join('\n');
+  const block = kept.contact ? `${head}\n\n${kept.contact}` : head;
+  const rest = source.slice(header.length).trim();
+  const markdown = rest ? `${block}\n\n${rest}\n` : `${block}\n`;
+  return {
+    markdown,
+    caret: block.length,
+    insertedAt: 0,
+    merged: Boolean(current.name || current.title || current.contact),
+    title: meta.title,
+    ...meta,
+  };
+}
 
 function buildInsertion(source, at, heading, body, meta = {}) {
   const before = source.slice(0, at).replace(/\s+$/, '');
@@ -35,6 +70,9 @@ export function insertSection(markdown, block, caret) {
   if (!block?.body) {
     return null;
   }
+  if (block.verbatim) {
+    return buildProfile(source, block.body, { title: block.heading });
+  }
   const sections = listSections(source);
   const body = String(block.body).replace(/\s+$/, '');
   const known = [block.heading, ...(block.aliases || [])].filter(Boolean);
@@ -57,11 +95,12 @@ export function insertSection(markdown, block, caret) {
 
   const onBoundary =
     point === 0 || point >= source.length || /\n[ \t]*$/.test(before) || /^#{1,6} /.test(after);
-  const at = inHeader
-    ? headerEnd
-    : onBoundary
-      ? point
-      : (sections.find((s) => point > s.start && point <= s.end)?.end ?? point);
+  const at =
+    block.first || inHeader
+      ? headerEnd
+      : onBoundary
+        ? point
+        : (sections.find((s) => point > s.start && point <= s.end)?.end ?? point);
 
   return buildInsertion(source, at, block.heading, body, {
     merged: false,
