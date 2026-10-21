@@ -64,6 +64,17 @@ describe('the sheet of the preview', () => {
     ).not.toMatch(/width:/);
   });
 
+  it('keeps the left half of the zoomed sheet reachable', () => {
+    const rules = rulesFor('.cv-paper-container').filter(
+      (entry) => entry.selector.trim() === '.cv-paper-container',
+    );
+    expect(
+      rules.some((entry) => entry.body.includes('justify-content: safe center')),
+      'the pane must centre the sheet safely, or the overflow to the left is unreachable',
+    ).toBe(true);
+    expect(preview).not.toMatch(/cv-paper-container[^"']*justify-center/);
+  });
+
   it('prints every sheet, because the app shell cannot clip the stack', () => {
     const printed = css.slice(css.indexOf('@media print'));
     const [rule] = rulesFor('.app-shell,');

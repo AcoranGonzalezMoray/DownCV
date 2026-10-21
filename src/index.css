@@ -363,6 +363,7 @@ body {
 .cv-paper-container {
   position: relative;
   justify-content: center;
+  justify-content: safe center;
 }
 
 .cv-pages {
