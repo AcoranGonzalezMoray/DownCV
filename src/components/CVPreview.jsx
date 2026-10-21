@@ -1,6 +1,11 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { parseMarkdownToATS } from '../utils/markdownParser';
-import { createRangeForSourceRange, resolveSelection } from '../utils/markdownSelection';
+import {
+  createRangeForSourceRange,
+  resolveSelection,
+  resolveWordAt,
+  resolveFocusOffset,
+} from '../utils/markdownSelection';
 import {
   applyAlign,
   applyHeading,
@@ -127,6 +132,7 @@ export default function CVPreview({
   syncRequest = null,
   onScrollRatio = null,
   cursorRequest = null,
+  onPickRange = null,
   lang = 'en',
   aiEnabled = false,
   aiSettings = {},
@@ -602,6 +608,39 @@ export default function CVPreview({
       moved?.focus?.();
     });
   };
+
+  const handlePaperMouseUp = useCallback(
+    (event) => {
+      if (!onPickRange || reorderMode || handMode) {
+        return;
+      }
+      if (event.target?.closest?.(PAPER_CONTROLS)) {
+        return;
+      }
+      const root = pagesRef.current;
+      const domSelection = window.getSelection();
+      if (!root || !domSelection || domSelection.rangeCount === 0) {
+        return;
+      }
+      const range = domSelection.getRangeAt(0);
+      if (!root.contains(range.commonAncestorContainer)) {
+        return;
+      }
+      const focus = resolveFocusOffset(root, domSelection, markdownRef.current);
+      if (!range.collapsed) {
+        const picked = resolveSelection(root, range, markdownRef.current);
+        if (picked && picked.end > picked.start) {
+          onPickRange({ start: picked.start, end: picked.end, focus });
+        }
+        return;
+      }
+      const word = resolveWordAt(root, range, markdownRef.current);
+      if (word && word.end > word.start) {
+        onPickRange({ start: word.start, end: word.end, focus: focus ?? word.start });
+      }
+    },
+    [onPickRange, reorderMode, handMode],
+  );
 
   const active = useMemo(() => {
     if (!selection) {
@@ -1171,6 +1210,7 @@ export default function CVPreview({
           onPointerMove={movePan}
           onPointerUp={endPan}
           onPointerCancel={endPan}
+          onMouseUp={handlePaperMouseUp}
           onScroll={() => {
             if (!aiLoading) {
               setAiPopover(null);

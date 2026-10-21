@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import {
   FileCode,
   Download,
@@ -63,6 +63,7 @@ export default function MarkdownEditor({
   setSearchOpen,
   lang = 'en',
   syncRequest = null,
+  highlightRange = null,
   onScrollRatio = null,
   onCursorOffset = null,
 }) {
@@ -97,6 +98,33 @@ export default function MarkdownEditor({
   const [snippetNotice, setSnippetNotice] = useState(null);
   const [scrollbarWidth, setScrollbarWidth] = useState(0);
   const syncPausedUntil = useRef(0);
+
+  const previewHighlight = useMemo(() => {
+    if (!highlightRange) {
+      return null;
+    }
+    const start = Math.max(0, Math.min(Number(highlightRange.start) || 0, markdown.length));
+    const end = Math.max(start, Math.min(Number(highlightRange.end) || 0, markdown.length));
+    if (end <= start) {
+      return null;
+    }
+    const focus = Math.max(start, Math.min(Number(highlightRange.focus) || start, end));
+    return { start, end, focus };
+  }, [highlightRange, markdown]);
+
+  const syncBackdrop = useCallback(() => {
+    const textarea = textareaRef.current;
+    const backdrop = backdropRef.current;
+    if (!textarea || !backdrop) {
+      return;
+    }
+    backdrop.scrollTop = textarea.scrollTop;
+    backdrop.scrollLeft = textarea.scrollLeft;
+  }, []);
+
+  useLayoutEffect(() => {
+    syncBackdrop();
+  });
 
   useEffect(() => {
     const updateScrollbarWidth = () => {
@@ -231,33 +259,75 @@ export default function MarkdownEditor({
   }, [searchQuery, markdown, scrollToMatch]);
 
   const renderHighlights = () => {
-    if (!searchOpen || !searchQuery.trim() || matches.length === 0) {
+    const ranges = [];
+    if (previewHighlight) {
+      ranges.push({ start: previewHighlight.start, end: previewHighlight.end, preview: true });
+    }
+    if (searchOpen && searchQuery.trim()) {
+      const queryLen = searchQuery.length;
+      matches.forEach((matchIndex, i) => {
+        const end = matchIndex + queryLen;
+        const overlaps =
+          previewHighlight && matchIndex < previewHighlight.end && end > previewHighlight.start;
+        if (overlaps) {
+          return;
+        }
+        ranges.push({
+          start: matchIndex,
+          end,
+          current: i === currentMatchIndex,
+        });
+      });
+    }
+    if (ranges.length === 0) {
       return null;
     }
-    const queryLen = searchQuery.length;
+    ranges.sort((a, b) => {
+      if (a.preview !== b.preview) {
+        return a.preview ? -1 : 1;
+      }
+      return a.start - b.start;
+    });
+
     const nodes = [];
     let lastIndex = 0;
 
-    matches.forEach((matchIndex, i) => {
-      if (matchIndex > lastIndex) {
-        nodes.push(markdown.slice(lastIndex, matchIndex));
+    ranges.forEach((range, i) => {
+      if (range.start < lastIndex) {
+        return;
       }
-      const isCurrent = i === currentMatchIndex;
-      const matchText = markdown.slice(matchIndex, matchIndex + queryLen);
-      nodes.push(
-        <mark
-          key={`match-${matchIndex}-${i}`}
-          data-match-current={isCurrent ? 'true' : undefined}
-          className={
-            isCurrent
-              ? 'rounded-xs bg-amber-400 text-transparent dark:bg-amber-400/90 ring-2 ring-amber-500 dark:ring-amber-400 font-semibold'
-              : 'rounded-xs bg-amber-300/70 text-transparent dark:bg-amber-400/35'
-          }
-        >
-          {matchText}
-        </mark>,
-      );
-      lastIndex = matchIndex + queryLen;
+      if (range.start > lastIndex) {
+        nodes.push(markdown.slice(lastIndex, range.start));
+      }
+      const rangeText = markdown.slice(range.start, range.end);
+      if (range.preview) {
+        const focusAt = Math.min(Math.max(previewHighlight.focus, range.start), range.end);
+        nodes.push(
+          <mark
+            key={`preview-${range.start}`}
+            data-preview-mark="true"
+            className="rounded-xs bg-sky-400/60 dark:bg-sky-400/35 text-transparent ring-1 ring-sky-500/60"
+          >
+            {markdown.slice(range.start, focusAt)}
+            <span data-preview-focus="true">{markdown.slice(focusAt, range.end)}</span>
+          </mark>,
+        );
+      } else {
+        nodes.push(
+          <mark
+            key={`match-${range.start}-${i}`}
+            data-match-current={range.current ? 'true' : undefined}
+            className={
+              range.current
+                ? 'rounded-xs bg-amber-400 text-transparent dark:bg-amber-400/90 ring-2 ring-amber-500 dark:ring-amber-400 font-semibold'
+                : 'rounded-xs bg-amber-300/70 text-transparent dark:bg-amber-400/35'
+            }
+          >
+            {rangeText}
+          </mark>,
+        );
+      }
+      lastIndex = range.end;
     });
 
     if (lastIndex < markdown.length) {
@@ -384,6 +454,33 @@ export default function MarkdownEditor({
     },
     [markdown],
   );
+
+  useEffect(() => {
+    if (!previewHighlight) {
+      return undefined;
+    }
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      return undefined;
+    }
+    syncPausedUntil.current = Date.now() + 400;
+    const frame = requestAnimationFrame(() => {
+      const backdrop = backdropRef.current;
+      const focus = backdrop?.querySelector('[data-preview-focus]');
+      const mark = backdrop?.querySelector('[data-preview-mark]');
+      const anchor = (focus && focus.textContent ? focus : mark) || null;
+      if (anchor && backdrop) {
+        const target = Math.max(0, anchor.offsetTop - Math.round(textarea.clientHeight / 3));
+        textarea.scrollTop = target;
+        backdrop.scrollTop = textarea.scrollTop;
+        backdrop.scrollLeft = textarea.scrollLeft;
+        return;
+      }
+      scrollToOffset(previewHighlight.focus);
+      syncBackdrop();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [previewHighlight, scrollToOffset, syncBackdrop]);
 
   const snippets = [
     { id: 'profile', label: t.profileSnippetLabel, hint: t.profileSnippetHint, icon: Contact },
@@ -1003,7 +1100,7 @@ export default function MarkdownEditor({
             </button>
           </div>
         )}
-        {searchOpen && searchQuery.trim() && matches.length > 0 && (
+        {((searchOpen && searchQuery.trim() && matches.length > 0) || previewHighlight) && (
           <div
             ref={backdropRef}
             aria-hidden="true"

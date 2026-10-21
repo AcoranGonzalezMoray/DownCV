@@ -109,6 +109,64 @@ function mapBlockSelection(markdown, el, local) {
   return { start, end, whole: false };
 }
 
+const WORD_CHAR = /[\p{L}\p{N}#+._-]/u;
+
+export function expandRangeToWord(range) {
+  const node = range?.startContainer;
+  if (!node || node.nodeType !== 3) {
+    return null;
+  }
+  const text = node.nodeValue ?? '';
+  let start = Math.min(range.startOffset, text.length);
+  let end = start;
+  while (start > 0 && WORD_CHAR.test(text[start - 1])) {
+    start -= 1;
+  }
+  while (end < text.length && WORD_CHAR.test(text[end])) {
+    end += 1;
+  }
+  if (start === end) {
+    return null;
+  }
+  const expanded = range.cloneRange();
+  expanded.setStart(node, start);
+  expanded.setEnd(node, end);
+  return expanded;
+}
+
+export function resolveWordAt(paperEl, range, markdown) {
+  if (!paperEl || !range || !markdown) {
+    return null;
+  }
+  if (!paperEl.contains(range.commonAncestorContainer)) {
+    return null;
+  }
+  const expanded = expandRangeToWord(range);
+  if (!expanded) {
+    return null;
+  }
+  return resolveSelection(paperEl, expanded, markdown);
+}
+
+export function resolveFocusOffset(paperEl, domSelection, markdown) {
+  const node = domSelection?.focusNode;
+  if (!paperEl || !node || !markdown) {
+    return null;
+  }
+  if (!paperEl.contains(node)) {
+    return null;
+  }
+  const range = document.createRange();
+  try {
+    range.setStart(node, Math.min(domSelection.focusOffset ?? 0, node.nodeValue?.length ?? 0));
+  } catch {
+    return null;
+  }
+  range.collapse(true);
+  const word = resolveWordAt(paperEl, range, markdown);
+  return word ? word.start : null;
+}
+
 export function resolveSelection(paperEl, range, markdown) {
   if (!paperEl || !range || range.collapsed || !markdown) {
     return null;
