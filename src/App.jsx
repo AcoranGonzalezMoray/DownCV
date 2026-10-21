@@ -22,6 +22,10 @@ import ThemeToggle from './components/ThemeToggle';
 import CommandPalette from './components/CommandPalette';
 import UpdateModal from './components/UpdateModal';
 import AboutModal from './components/AboutModal';
+import MobileMenu from './components/MobileMenu';
+import MobilePanel from './components/MobilePanel';
+import useMediaQuery from './hooks/useMediaQuery';
+import { compactQuery } from './utils/breakpoints';
 import { sampleCVs, samplesFor, defaultSample } from './data/sampleCVs';
 import { translations } from './data/translations';
 import { applyTemplate } from './data/templates';
@@ -42,6 +46,7 @@ import {
   GitBranch,
   Bell,
   Info,
+  Menu,
 } from 'lucide-react';
 
 const DEFAULT_STYLES = {
@@ -114,6 +119,17 @@ export default function App() {
     apiKey: '',
   });
   const [paletteOpen, setPaletteOpen] = useState(false);
+
+  const isCompact = useMediaQuery(compactQuery);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [panelTab, setPanelTab] = useState(null);
+
+  useEffect(() => {
+    if (!isCompact) {
+      setMenuOpen(false);
+      setPanelTab(null);
+    }
+  }, [isCompact]);
 
   const [styles, setStyles] = useState(DEFAULT_STYLES);
   const resetStyles = () => setStyles(DEFAULT_STYLES);
@@ -502,6 +518,9 @@ export default function App() {
     { id: 'preview', label: t.previewView, icon: Eye },
   ];
 
+  const panelTitle =
+    panelTab === 'styles' ? t.stylesTab : panelTab === 'variants' ? t.variantsTab : t.atsScoreTab;
+
   const headerRef = useRef(null);
   const brandRef = useRef(null);
   const brandTextRef = useRef(null);
@@ -546,217 +565,343 @@ export default function App() {
 
   return (
     <div className="app-shell flex h-screen w-screen flex-col overflow-hidden bg-[var(--ui-bg-primary)] font-sans text-[var(--ui-text-primary)]">
-      <header
-        ref={headerRef}
-        className="relative min-h-14 shrink-0 gap-x-3 gap-y-1 border-b border-[var(--ui-border-primary)] bg-[var(--ui-bg-secondary)] px-3 no-print sm:px-4 flex items-center flex-wrap py-1"
-      >
-        <div ref={brandRef} className="flex min-w-0 flex-1 items-center gap-3">
-          <div className="app-brand-icon flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl shadow-sm">
-            <img
-              src={`${import.meta.env.BASE_URL}icon.jpg`}
-              alt="DownCV"
-              className="h-full w-full object-cover"
-            />
-          </div>
-          <div ref={brandTextRef} className="min-w-0">
-            <h1 className="truncate whitespace-nowrap text-base font-bold tracking-tight text-[var(--ui-text-primary)]">
-              {t.appTitle}
-            </h1>
-            <p className="hidden truncate whitespace-nowrap text-[11px] text-[var(--ui-text-tertiary)] sm:block">
-              {t.appTagline}
-            </p>
-          </div>
-        </div>
-
-        <div
-          ref={switchRef}
-          className={`topbar-switch grid shrink-0 grid-cols-3 items-center gap-0.5 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-primary)] p-1 text-xs ${switchCentered ? 'topbar-switch-centered' : ''} ${switchCentered ? '' : 'topbar-switch-flow'}`}
+      {!isCompact && (
+        <header
+          ref={headerRef}
+          className="relative min-h-14 shrink-0 gap-x-3 gap-y-1 border-b border-[var(--ui-border-primary)] bg-[var(--ui-bg-secondary)] px-3 no-print sm:px-4 flex items-center flex-wrap py-1"
         >
-          {viewButtons.map((v) => {
-            const Icon = v.icon;
-            return (
-              <button
-                key={v.id}
-                onClick={() => setViewMode(v.id)}
-                title={v.label}
-                className={`flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 rounded-md px-3 py-1.5 font-medium transition ${
-                  viewMode === v.id
-                    ? 'bg-[var(--ui-accent)] text-[var(--ui-text-inverse)]'
-                    : 'text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)]'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5 shrink-0" /> <span className="inline">{v.label}</span>
-              </button>
-            );
-          })}
-        </div>
+          <div ref={brandRef} className="flex min-w-0 flex-1 items-center gap-3">
+            <div className="app-brand-icon flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl shadow-sm">
+              <img
+                src={`${import.meta.env.BASE_URL}icon.jpg`}
+                alt="DownCV"
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <div ref={brandTextRef} className="min-w-0">
+              <h1 className="truncate whitespace-nowrap text-base font-bold tracking-tight text-[var(--ui-text-primary)]">
+                {t.appTitle}
+              </h1>
+              <p className="hidden truncate whitespace-nowrap text-[11px] text-[var(--ui-text-tertiary)] sm:block">
+                {t.appTagline}
+              </p>
+            </div>
+          </div>
 
-        <div ref={actionsRef} className="flex shrink-0 items-center justify-end gap-2">
-          <button
-            data-tour="palette"
-            onClick={() => setPaletteOpen(true)}
-            title={`${t.cmdTitle} (Ctrl+K)`}
-            className="flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] px-2.5 py-1.5 text-xs font-medium text-[var(--ui-text-tertiary)] transition hover:border-[var(--ui-accent)] hover:text-[var(--ui-accent)]"
+          <div
+            ref={switchRef}
+            className={`topbar-switch grid shrink-0 grid-cols-3 items-center gap-0.5 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-primary)] p-1 text-xs ${switchCentered ? 'topbar-switch-centered' : ''} ${switchCentered ? '' : 'topbar-switch-flow'}`}
           >
-            <Command className="w-3.5 h-3.5 shrink-0" />
-            <span className="hidden laptop:inline">{t.cmdTitle}</span>
-            <kbd className="rounded border border-[var(--ui-border-primary)] bg-[var(--ui-bg-primary)] px-1 font-mono text-[10px]">
-              K
-            </kbd>
-          </button>
-
-          <div className="flex items-center gap-1 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-primary)] p-1 text-xs">
-            <button
-              onClick={() => setActiveSidebar('styles')}
-              title={t.stylesTab}
-              className={`flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-md px-2.5 py-1 font-medium transition ${
-                activeSidebar === 'styles'
-                  ? 'bg-[var(--ui-accent-muted)] text-[var(--ui-accent)]'
-                  : 'text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)]'
-              }`}
-            >
-              <Palette className="w-3.5 h-3.5 shrink-0" />{' '}
-              <span className="hidden laptop:inline">{t.stylesTab}</span>
-            </button>
-            <button
-              onClick={() => setActiveSidebar('ats')}
-              title={t.atsScoreTab}
-              className={`flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-md px-2.5 py-1 font-medium transition ${
-                activeSidebar === 'ats'
-                  ? 'bg-[var(--ui-accent-muted)] text-[var(--ui-accent)]'
-                  : 'text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)]'
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5 shrink-0" />{' '}
-              <span className="hidden laptop:inline">{t.atsScoreTab}</span>
-              {latestAts ? (
-                <span
-                  className={`shrink-0 rounded px-1.5 font-mono text-[10px] ${
-                    latestAts.score >= 80
-                      ? 'bg-emerald-950 text-emerald-400'
-                      : 'bg-amber-950 text-amber-400'
-                  }`}
-                >
-                  {latestAts.score}%
-                </span>
-              ) : (
-                <span className="shrink-0 rounded bg-[var(--ui-bg-badge)] px-1.5 font-mono text-[10px] text-[var(--ui-text-tertiary)]">
-                  ATS
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setActiveSidebar('variants')}
-              title={t.variantsTab}
-              className={`flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-md px-2.5 py-1 font-medium transition ${
-                activeSidebar === 'variants'
-                  ? 'bg-[var(--ui-accent-muted)] text-[var(--ui-accent)]'
-                  : 'text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)]'
-              }`}
-            >
-              <GitBranch className="w-3.5 h-3.5 shrink-0" />{' '}
-              <span className="hidden laptop:inline">{t.variantsTab}</span>
-              {variantIsDirty && (
-                <span
-                  className="shrink-0 rounded bg-amber-950 px-1.5 font-mono text-[10px] text-amber-400"
-                  title={t.variantsUnsaved}
-                >
-                  *
-                </span>
-              )}
-            </button>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <button
-              data-tour="ai"
-              onClick={() => setAiOpen(true)}
-              title={t.aiAssistantTitle}
-              className="flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg border border-[var(--ui-accent)]/30 bg-[var(--ui-accent-muted)] px-2.5 py-1.5 text-xs font-semibold text-[var(--ui-accent)] transition hover:bg-[var(--ui-accent)] hover:text-[var(--ui-text-inverse)]"
-            >
-              <Sparkles className="w-3.5 h-3.5 shrink-0" />{' '}
-              <span className="hidden laptop:inline">{t.aiAssistantTitle}</span>
-            </button>
-            <button
-              onClick={() => setImportOpen(true)}
-              title={t.importTitle}
-              className="flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] px-2.5 py-1.5 text-xs font-medium text-[var(--ui-text-tertiary)] transition hover:border-[var(--ui-accent-border)] hover:text-[var(--ui-accent)]"
-            >
-              <FileUp className="w-3.5 h-3.5 shrink-0" />{' '}
-              <span className="hidden laptop:inline">{t.importTitle}</span>
-            </button>
-            <button
-              onClick={() => {
-                setLetterJob(null);
-                setLetterOpen(true);
-              }}
-              title={t.letterTitle}
-              className="flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] px-2.5 py-1.5 text-xs font-medium text-[var(--ui-text-tertiary)] transition hover:border-[var(--ui-accent-border)] hover:text-[var(--ui-accent)]"
-            >
-              <FileText className="w-3.5 h-3.5 shrink-0" />{' '}
-              <span className="hidden laptop:inline">{t.letterTitle}</span>
-            </button>
-          </div>
-
-          <ExportMenu
-            t={t}
-            onPdf={handlePrint}
-            onDocx={exportDocx}
-            onRtf={exportRtf}
-            onPng={exportPng}
-            onJson={exportJsonResume}
-            onPortfolio={exportPortfolio}
-          />
-
-          <div className="flex items-center gap-1 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-primary)] p-1 text-xs">
-            {['en', 'es'].map((code) => {
-              const isActive = lang === code;
+            {viewButtons.map((v) => {
+              const Icon = v.icon;
               return (
                 <button
-                  key={code}
-                  onClick={() => setLang(code)}
-                  aria-pressed={isActive}
-                  title={t[`lang${code.toUpperCase()}`]}
-                  className={`flex items-center gap-1 whitespace-nowrap shrink-0 rounded-md px-2 py-1 font-semibold transition ${
-                    isActive
+                  key={v.id}
+                  onClick={() => setViewMode(v.id)}
+                  title={v.label}
+                  className={`flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 rounded-md px-3 py-1.5 font-medium transition ${
+                    viewMode === v.id
                       ? 'bg-[var(--ui-accent)] text-[var(--ui-text-inverse)]'
                       : 'text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)]'
                   }`}
                 >
-                  <Globe className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                  {code.toUpperCase()}
+                  <Icon className="w-3.5 h-3.5 shrink-0" />{' '}
+                  <span className="inline">{v.label}</span>
                 </button>
               );
             })}
           </div>
 
-          <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
-
-          <button
-            onClick={() => setAboutOpen(true)}
-            title={t.aboutTitle}
-            aria-label={t.aboutTitle}
-            className="p-1.5 text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)] bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-card-hover)] rounded border border-[var(--ui-border-primary)] transition flex items-center justify-center text-xs whitespace-nowrap shrink-0"
-          >
-            <Info className="w-4 h-4 shrink-0" />
-          </button>
-
-          {updateCheck.isOutdated && (
+          <div ref={actionsRef} className="flex shrink-0 items-center justify-end gap-2">
             <button
-              data-update-badge
-              onClick={() => updateCheck.reveal()}
-              title={`${updateCheck.updateInfo.aheadBy} ${t.updateCommitsPending}`}
-              aria-label={`${updateCheck.updateInfo.aheadBy} ${t.updateCommitsPending}`}
-              className="update-badge-pulse flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] px-2 py-1.5 text-xs font-medium text-[var(--ui-accent)] transition hover:border-[var(--ui-accent)] hover:bg-[var(--ui-accent-muted)]"
+              data-tour="palette"
+              onClick={() => setPaletteOpen(true)}
+              title={`${t.cmdTitle} (Ctrl+K)`}
+              className="flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] px-2.5 py-1.5 text-xs font-medium text-[var(--ui-text-tertiary)] transition hover:border-[var(--ui-accent)] hover:text-[var(--ui-accent)]"
             >
-              <Bell className="h-3.5 w-3.5 shrink-0" />
-              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--ui-accent)] px-1 text-[10px] font-semibold leading-none text-[var(--ui-text-inverse)]">
-                {updateCheck.updateInfo.aheadBy}
-              </span>
+              <Command className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden laptop:inline">{t.cmdTitle}</span>
+              <kbd className="rounded border border-[var(--ui-border-primary)] bg-[var(--ui-bg-primary)] px-1 font-mono text-[10px]">
+                K
+              </kbd>
             </button>
-          )}
-        </div>
-      </header>
+
+            <div className="flex items-center gap-1 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-primary)] p-1 text-xs">
+              <button
+                onClick={() => setActiveSidebar('styles')}
+                title={t.stylesTab}
+                className={`flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-md px-2.5 py-1 font-medium transition ${
+                  activeSidebar === 'styles'
+                    ? 'bg-[var(--ui-accent-muted)] text-[var(--ui-accent)]'
+                    : 'text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)]'
+                }`}
+              >
+                <Palette className="w-3.5 h-3.5 shrink-0" />{' '}
+                <span className="hidden laptop:inline">{t.stylesTab}</span>
+              </button>
+              <button
+                onClick={() => setActiveSidebar('ats')}
+                title={t.atsScoreTab}
+                className={`flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-md px-2.5 py-1 font-medium transition ${
+                  activeSidebar === 'ats'
+                    ? 'bg-[var(--ui-accent-muted)] text-[var(--ui-accent)]'
+                    : 'text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)]'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5 shrink-0" />{' '}
+                <span className="hidden laptop:inline">{t.atsScoreTab}</span>
+                {latestAts ? (
+                  <span
+                    className={`shrink-0 rounded px-1.5 font-mono text-[10px] ${
+                      latestAts.score >= 80
+                        ? 'bg-emerald-950 text-emerald-400'
+                        : 'bg-amber-950 text-amber-400'
+                    }`}
+                  >
+                    {latestAts.score}%
+                  </span>
+                ) : (
+                  <span className="shrink-0 rounded bg-[var(--ui-bg-badge)] px-1.5 font-mono text-[10px] text-[var(--ui-text-tertiary)]">
+                    ATS
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setActiveSidebar('variants')}
+                title={t.variantsTab}
+                className={`flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-md px-2.5 py-1 font-medium transition ${
+                  activeSidebar === 'variants'
+                    ? 'bg-[var(--ui-accent-muted)] text-[var(--ui-accent)]'
+                    : 'text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)]'
+                }`}
+              >
+                <GitBranch className="w-3.5 h-3.5 shrink-0" />{' '}
+                <span className="hidden laptop:inline">{t.variantsTab}</span>
+                {variantIsDirty && (
+                  <span
+                    className="shrink-0 rounded bg-amber-950 px-1.5 font-mono text-[10px] text-amber-400"
+                    title={t.variantsUnsaved}
+                  >
+                    *
+                  </span>
+                )}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                data-tour="ai"
+                onClick={() => setAiOpen(true)}
+                title={t.aiAssistantTitle}
+                className="flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg border border-[var(--ui-accent)]/30 bg-[var(--ui-accent-muted)] px-2.5 py-1.5 text-xs font-semibold text-[var(--ui-accent)] transition hover:bg-[var(--ui-accent)] hover:text-[var(--ui-text-inverse)]"
+              >
+                <Sparkles className="w-3.5 h-3.5 shrink-0" />{' '}
+                <span className="hidden laptop:inline">{t.aiAssistantTitle}</span>
+              </button>
+              <button
+                onClick={() => setImportOpen(true)}
+                title={t.importTitle}
+                className="flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] px-2.5 py-1.5 text-xs font-medium text-[var(--ui-text-tertiary)] transition hover:border-[var(--ui-accent-border)] hover:text-[var(--ui-accent)]"
+              >
+                <FileUp className="w-3.5 h-3.5 shrink-0" />{' '}
+                <span className="hidden laptop:inline">{t.importTitle}</span>
+              </button>
+              <button
+                onClick={() => {
+                  setLetterJob(null);
+                  setLetterOpen(true);
+                }}
+                title={t.letterTitle}
+                className="flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] px-2.5 py-1.5 text-xs font-medium text-[var(--ui-text-tertiary)] transition hover:border-[var(--ui-accent-border)] hover:text-[var(--ui-accent)]"
+              >
+                <FileText className="w-3.5 h-3.5 shrink-0" />{' '}
+                <span className="hidden laptop:inline">{t.letterTitle}</span>
+              </button>
+            </div>
+
+            <ExportMenu
+              t={t}
+              onPdf={handlePrint}
+              onDocx={exportDocx}
+              onRtf={exportRtf}
+              onPng={exportPng}
+              onJson={exportJsonResume}
+              onPortfolio={exportPortfolio}
+            />
+
+            <div className="flex items-center gap-1 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-primary)] p-1 text-xs">
+              {['en', 'es'].map((code) => {
+                const isActive = lang === code;
+                return (
+                  <button
+                    key={code}
+                    onClick={() => setLang(code)}
+                    aria-pressed={isActive}
+                    title={t[`lang${code.toUpperCase()}`]}
+                    className={`flex items-center gap-1 whitespace-nowrap shrink-0 rounded-md px-2 py-1 font-semibold transition ${
+                      isActive
+                        ? 'bg-[var(--ui-accent)] text-[var(--ui-text-inverse)]'
+                        : 'text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)]'
+                    }`}
+                  >
+                    <Globe className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                    {code.toUpperCase()}
+                  </button>
+                );
+              })}
+            </div>
+
+            <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+
+            <button
+              onClick={() => setAboutOpen(true)}
+              title={t.aboutTitle}
+              aria-label={t.aboutTitle}
+              className="p-1.5 text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)] bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-card-hover)] rounded border border-[var(--ui-border-primary)] transition flex items-center justify-center text-xs whitespace-nowrap shrink-0"
+            >
+              <Info className="w-4 h-4 shrink-0" />
+            </button>
+
+            {updateCheck.isOutdated && (
+              <button
+                data-update-badge
+                onClick={() => updateCheck.reveal()}
+                title={`${updateCheck.updateInfo.aheadBy} ${t.updateCommitsPending}`}
+                aria-label={`${updateCheck.updateInfo.aheadBy} ${t.updateCommitsPending}`}
+                className="update-badge-pulse flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] px-2 py-1.5 text-xs font-medium text-[var(--ui-accent)] transition hover:border-[var(--ui-accent)] hover:bg-[var(--ui-accent-muted)]"
+              >
+                <Bell className="h-3.5 w-3.5 shrink-0" />
+                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--ui-accent)] px-1 text-[10px] font-semibold leading-none text-[var(--ui-text-inverse)]">
+                  {updateCheck.updateInfo.aheadBy}
+                </span>
+              </button>
+            )}
+          </div>
+        </header>
+      )}
+
+      {isCompact && (
+        <header className="relative grid h-14 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2 border-b border-[var(--ui-border-primary)] bg-[var(--ui-bg-secondary)] px-2 no-print">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="app-brand-icon flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg shadow-sm">
+              <img
+                src={`${import.meta.env.BASE_URL}icon.jpg`}
+                alt="DownCV"
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <h1 className="truncate whitespace-nowrap text-sm font-bold tracking-tight text-[var(--ui-text-primary)]">
+              {t.appTitle}
+            </h1>
+          </div>
+
+          <div className="grid shrink-0 grid-cols-3 items-center gap-0.5 rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-primary)] p-0.5">
+            {viewButtons.map((v) => {
+              const Icon = v.icon;
+              const isActive = viewMode === v.id;
+              return (
+                <button
+                  key={v.id}
+                  onClick={() => setViewMode(v.id)}
+                  title={v.label}
+                  aria-label={v.label}
+                  aria-pressed={isActive}
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center whitespace-nowrap rounded-md transition ${
+                    isActive
+                      ? 'bg-[var(--ui-accent)] text-[var(--ui-text-inverse)]'
+                      : 'text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)]'
+                  }`}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center justify-end">
+            <button
+              type="button"
+              onClick={() => setMenuOpen(true)}
+              title={t.mobileMenu}
+              aria-label={t.mobileMenu}
+              aria-expanded={menuOpen}
+              aria-haspopup="dialog"
+              className="flex h-9 w-9 shrink-0 items-center justify-center whitespace-nowrap rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] text-[var(--ui-text-tertiary)] transition hover:text-[var(--ui-text-primary)]"
+            >
+              <Menu className="h-4 w-4 shrink-0" />
+            </button>
+          </div>
+        </header>
+      )}
+
+      <MobileMenu
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        t={t}
+        lang={lang}
+        onLang={setLang}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        onOpenPanel={(tab) => setPanelTab(tab)}
+        onCommandPalette={() => setPaletteOpen(true)}
+        onAi={() => setAiOpen(true)}
+        onImport={() => setImportOpen(true)}
+        onLetter={() => {
+          setLetterJob(null);
+          setLetterOpen(true);
+        }}
+        onAbout={() => setAboutOpen(true)}
+        onUpdate={updateCheck.isOutdated ? () => updateCheck.reveal() : null}
+        latestAts={latestAts}
+        variantIsDirty={variantIsDirty}
+        exports={{
+          onPdf: handlePrint,
+          onDocx: exportDocx,
+          onRtf: exportRtf,
+          onPng: exportPng,
+          onJson: exportJsonResume,
+          onPortfolio: exportPortfolio,
+        }}
+      />
+
+      <MobilePanel
+        open={isCompact && panelTab !== null}
+        title={panelTitle}
+        closeLabel={t.mobileClose}
+        onClose={() => setPanelTab(null)}
+      >
+        {panelTab === 'styles' && (
+          <StyleControls styles={styles} setStyles={setStyles} resetStyles={resetStyles} t={t} />
+        )}
+        {panelTab === 'variants' && (
+          <VariantsPanel
+            markdown={markdown}
+            variants={variants}
+            setVariants={setVariants}
+            activeVariantId={activeVariantId}
+            onOpenVariant={openVariant}
+            onSaveCurrent={saveVariant}
+            t={t}
+            localFile={localFile}
+          />
+        )}
+        {panelTab === 'ats' && (
+          <ATSAnalyzer
+            markdown={markdown}
+            styles={styles}
+            setStyles={setStyles}
+            setMarkdown={setMarkdown}
+            t={t}
+            lang={lang}
+            history={atsHistory}
+            setHistory={setAtsHistory}
+            previewPageCount={previewPageCount}
+            jobBrief={jobBrief}
+            onJobBriefChange={setJobBrief}
+            onRequestLetter={openLetterForJob}
+          />
+        )}
+      </MobilePanel>
 
       {fileNotice && (
         <p className="shrink-0 border-b border-amber-500/30 bg-amber-950/40 px-4 py-1.5 text-[11px] text-amber-300 no-print">
@@ -772,11 +917,17 @@ export default function App() {
       />
 
       <div className="app-main flex flex-1 overflow-hidden">
-        <div className="app-main flex flex-1 overflow-hidden">
+        <div
+          className={`app-main flex flex-1 overflow-hidden ${isCompact ? 'flex-col' : 'flex-row'}`}
+        >
           {(viewMode === 'split' || viewMode === 'editor') && (
             <div
               data-tour="editor"
-              className={`h-full ${viewMode === 'split' ? 'w-1/2' : 'w-full'}`}
+              className={
+                isCompact
+                  ? `w-full min-h-0 ${viewMode === 'split' ? 'h-1/2' : 'h-full'}`
+                  : `h-full ${viewMode === 'split' ? 'w-1/2' : 'w-full'}`
+              }
             >
               <MarkdownEditor
                 markdown={markdown}
@@ -803,7 +954,15 @@ export default function App() {
           {(viewMode === 'split' || viewMode === 'preview') && (
             <div
               data-tour="preview"
-              className={`h-full ${viewMode === 'split' ? 'w-1/2 border-l border-[var(--ui-border-primary)]' : 'w-full'}`}
+              className={
+                isCompact
+                  ? `w-full min-h-0 ${
+                      viewMode === 'split'
+                        ? 'h-1/2 border-t border-[var(--ui-border-primary)]'
+                        : 'h-full'
+                    }`
+                  : `h-full ${viewMode === 'split' ? 'w-1/2 border-l border-[var(--ui-border-primary)]' : 'w-full'}`
+              }
             >
               <CVPreview
                 markdown={markdown}
@@ -825,37 +984,44 @@ export default function App() {
             </div>
           )}
         </div>
-        <div data-tour="sidebar" className="app-sidebar h-full shrink-0 overflow-y-auto no-print">
-          {activeSidebar === 'styles' ? (
-            <StyleControls styles={styles} setStyles={setStyles} resetStyles={resetStyles} t={t} />
-          ) : activeSidebar === 'variants' ? (
-            <VariantsPanel
-              markdown={markdown}
-              variants={variants}
-              setVariants={setVariants}
-              activeVariantId={activeVariantId}
-              onOpenVariant={openVariant}
-              onSaveCurrent={saveVariant}
-              t={t}
-              localFile={localFile}
-            />
-          ) : (
-            <ATSAnalyzer
-              markdown={markdown}
-              styles={styles}
-              setStyles={setStyles}
-              setMarkdown={setMarkdown}
-              t={t}
-              lang={lang}
-              history={atsHistory}
-              setHistory={setAtsHistory}
-              previewPageCount={previewPageCount}
-              jobBrief={jobBrief}
-              onJobBriefChange={setJobBrief}
-              onRequestLetter={openLetterForJob}
-            />
-          )}
-        </div>
+        {!isCompact && (
+          <div data-tour="sidebar" className="app-sidebar h-full shrink-0 overflow-y-auto no-print">
+            {activeSidebar === 'styles' ? (
+              <StyleControls
+                styles={styles}
+                setStyles={setStyles}
+                resetStyles={resetStyles}
+                t={t}
+              />
+            ) : activeSidebar === 'variants' ? (
+              <VariantsPanel
+                markdown={markdown}
+                variants={variants}
+                setVariants={setVariants}
+                activeVariantId={activeVariantId}
+                onOpenVariant={openVariant}
+                onSaveCurrent={saveVariant}
+                t={t}
+                localFile={localFile}
+              />
+            ) : (
+              <ATSAnalyzer
+                markdown={markdown}
+                styles={styles}
+                setStyles={setStyles}
+                setMarkdown={setMarkdown}
+                t={t}
+                lang={lang}
+                history={atsHistory}
+                setHistory={setAtsHistory}
+                previewPageCount={previewPageCount}
+                jobBrief={jobBrief}
+                onJobBriefChange={setJobBrief}
+                onRequestLetter={openLetterForJob}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       <CoverLetterModal
