@@ -61,6 +61,20 @@ describe('insertSection', () => {
     expect(result.markdown).toContain('**Titulación académica**');
   });
 
+  it('recognises the certificates and the skills of the samples', () => {
+    const cv =
+      '# Ana\n\n## CERTIFICACIONES Y IDIOMAS\n- Inglés\n\n## SKILLS & COMPETENCIES\n- React\n';
+    const certificates = insertSection(cv, snippet('certification', 'es'));
+    expect(certificates.markdown.match(/^## CERTIFICACIONES Y IDIOMAS$/gm)).toHaveLength(1);
+    expect(certificates.markdown).not.toMatch(/^## CERTIFICACIONES$/m);
+    expect(certificates.markdown).toContain('Entidad emisora');
+
+    const skills = insertSection(cv, snippet('skills', 'en'));
+    expect(skills.markdown.match(/^## SKILLS & COMPETENCIES$/gm)).toHaveLength(1);
+    expect(skills.markdown).not.toMatch(/^## TECHNICAL SKILLS$/m);
+    expect(skills.markdown).toContain('- **Languages:**');
+  });
+
   it('matches a heading regardless of case and accents', () => {
     const cv = '# Ana\n\n## HABILIDADES TÉCNICAS\n- Una\n';
     const result = insertSection(cv, snippet('skills', 'es'));
@@ -69,7 +83,6 @@ describe('insertSection', () => {
   });
 
   it('writes the section where the caret is when the caret is on a boundary', () => {
-
     const at = CV.indexOf('## EDUCATION');
     const result = insertSection(CV, skills, at);
     expect(result.markdown.indexOf('## TECHNICAL SKILLS')).toBeLessThan(
@@ -79,7 +92,6 @@ describe('insertSection', () => {
   });
 
   it('moves the block to the end of the section being written when the caret is mid line', () => {
-
     const at = CV.indexOf('Kept the billing service');
     const result = insertSection(CV, skills, at);
     expect(result.markdown).toContain('- Kept the billing service under a minute.');
@@ -90,6 +102,33 @@ describe('insertSection', () => {
     const result = insertSection(CV, skills, CV.indexOf('Kept the billing service'));
     const titles = result.markdown.match(/^## .+$/gm);
     expect(titles).toEqual(['## WORK EXPERIENCE', '## TECHNICAL SKILLS', '## EDUCATION']);
+  });
+
+  it('never splits the name when the caret is left in the header', () => {
+    const result = insertSection(CV, skills, 2);
+    expect(result.markdown.startsWith('# Ana Gomez')).toBe(true);
+    expect(result.markdown).toContain('ana@mail.com | +34 600 000 000');
+    expect(result.markdown.indexOf('## TECHNICAL SKILLS')).toBeLessThan(
+      result.markdown.indexOf('## WORK EXPERIENCE'),
+    );
+  });
+
+  it('never splits the contact line when the caret is left in the header', () => {
+    const result = insertSection(CV, skills, CV.indexOf('ana@mail.com') + 4);
+    expect(result.markdown.startsWith('# Ana Gomez')).toBe(true);
+    expect(result.markdown).toContain('ana@mail.com | +34 600 000 000');
+  });
+
+  it('tells where the block was written and whether it merged with a section', () => {
+    const fresh = insertSection(CV, skills);
+    expect(fresh.merged).toBe(false);
+    expect(fresh.title).toBe('TECHNICAL SKILLS');
+    expect(fresh.markdown.slice(fresh.insertedAt)).toMatch(/^## TECHNICAL SKILLS/);
+
+    const merged = insertSection(CV, snippet('experience', 'en'));
+    expect(merged.merged).toBe(true);
+    expect(merged.title).toBe('WORK EXPERIENCE');
+    expect(merged.markdown.slice(merged.insertedAt)).toMatch(/^### /);
   });
 
   it('returns null when there is nothing to insert', () => {

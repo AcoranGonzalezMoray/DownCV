@@ -42,8 +42,10 @@ export const snippets = {
       'SKILLS',
       'COMPETENCIES',
       'CORE SKILLS',
+      'SKILLS & COMPETENCIES',
       'HABILIDADES',
       'HABILIDADES CLAVE',
+      'HABILIDADES Y COMPETENCIAS',
       'COMPETENCIAS',
     ],
     body: {
@@ -58,7 +60,9 @@ export const snippets = {
     aliases: [
       'CERTIFICATES',
       'CERTIFICATIONS AND LANGUAGES',
+      'CERTIFICATIONS & LANGUAGES',
       'CERTIFICACIONES E IDIOMAS',
+      'CERTIFICACIONES Y IDIOMAS',
       'IDIOMAS',
     ],
     body: {

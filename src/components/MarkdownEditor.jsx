@@ -7,6 +7,7 @@ import {
   Save,
   Check,
   PlusCircle,
+  CheckCircle2,
   Search,
   ChevronUp,
   ChevronDown,
@@ -68,6 +69,8 @@ export default function MarkdownEditor({
   const searchInputRef = React.useRef(null);
   const backdropRef = React.useRef(null);
   const pendingSelection = useRef(null);
+  const pendingScroll = useRef(null);
+  const caretRef = useRef(null);
   const [copied, setCopied] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [draftNameInput, setDraftNameInput] = useState('');
@@ -89,6 +92,7 @@ export default function MarkdownEditor({
   const [matches, setMatches] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [suggestionIndex, setSuggestionIndex] = useState(0);
+  const [snippetNotice, setSnippetNotice] = useState(null);
   const [scrollbarWidth, setScrollbarWidth] = useState(0);
   const syncPausedUntil = useRef(0);
 
@@ -117,16 +121,45 @@ export default function MarkdownEditor({
   useEffect(() => {
     const pending = pendingSelection.current;
     if (!pending) {
-      return;
+      return undefined;
     }
     pendingSelection.current = null;
     const textarea = textareaRef.current;
     if (!textarea) {
-      return;
+      return undefined;
     }
-    textarea.focus();
+    const scroll = pendingScroll.current;
+    pendingScroll.current = null;
+    caretRef.current = pending.start;
+    textarea.focus({ preventScroll: true });
     textarea.setSelectionRange(pending.start, pending.end);
+    if (!scroll) {
+      return undefined;
+    }
+    const restore = () => {
+      if (textarea.scrollTop !== scroll.top) {
+        textarea.scrollTop = scroll.top;
+      }
+      if (textarea.scrollLeft !== scroll.left) {
+        textarea.scrollLeft = scroll.left;
+      }
+      if (backdropRef.current) {
+        backdropRef.current.scrollTop = textarea.scrollTop;
+        backdropRef.current.scrollLeft = textarea.scrollLeft;
+      }
+    };
+    restore();
+    const frame = requestAnimationFrame(restore);
+    return () => cancelAnimationFrame(frame);
   }, [markdown]);
+
+  useEffect(() => {
+    if (!snippetNotice) {
+      return undefined;
+    }
+    const timer = setTimeout(() => setSnippetNotice(null), 8000);
+    return () => clearTimeout(timer);
+  }, [snippetNotice]);
 
   const scrollToMatch = useCallback(
     (offset, length) => {
@@ -289,6 +322,20 @@ export default function MarkdownEditor({
     onSaveDraft(name, saveAsNew);
     setShowSaveModal(false);
   };
+  const rememberCaret = useCallback((event) => {
+    const position = event?.target?.selectionStart;
+    if (typeof position === 'number') {
+      caretRef.current = position;
+    }
+  }, []);
+
+  const keepScroll = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      pendingScroll.current = { top: textarea.scrollTop, left: textarea.scrollLeft };
+    }
+  }, []);
+
   const insertSnippet = (id) => {
     const block = snippet(id, lang);
     if (!block) {
@@ -296,14 +343,44 @@ export default function MarkdownEditor({
     }
     const textarea = textareaRef.current;
 
-    const caret = document.activeElement === textarea ? textarea.selectionStart : markdown.length;
+    const caret =
+      document.activeElement === textarea
+        ? textarea.selectionStart
+        : Number.isFinite(caretRef.current)
+          ? caretRef.current
+          : markdown.length;
     const result = insertSection(markdown, block, caret);
-    if (!result) {
+    if (!result || result.markdown === markdown) {
       return;
     }
+    keepScroll();
     pendingSelection.current = { start: result.caret, end: result.caret };
+    setSuggestions([]);
     setMarkdown(result.markdown);
+    setSnippetNotice({
+      title: result.title || block.heading,
+      merged: Boolean(result.merged),
+      offset: result.insertedAt,
+    });
   };
+
+  const scrollToOffset = useCallback(
+    (offset) => {
+      const textarea = textareaRef.current;
+      if (!textarea || !Number.isFinite(offset)) {
+        return;
+      }
+      const ratio = ratioAtOffset(markdown, offset);
+      const scrollable = textarea.scrollHeight - textarea.clientHeight;
+      if (scrollable > 0) {
+        textarea.scrollTop = Math.max(0, Math.round(ratio * scrollable));
+        if (backdropRef.current) {
+          backdropRef.current.scrollTop = textarea.scrollTop;
+        }
+      }
+    },
+    [markdown],
+  );
 
   const snippets = [
     { id: 'experience', label: t.expSnippetLabel, hint: t.expSnippetHint, icon: FileText },
@@ -421,6 +498,7 @@ export default function MarkdownEditor({
     if (!result) {
       return;
     }
+    keepScroll();
     pendingSelection.current = result.range;
     setMarkdown(result.markdown);
   };
@@ -504,11 +582,12 @@ export default function MarkdownEditor({
       const separator = line.includes(',') && !/[,;|]\s*$/.test(line) ? ', ' : '';
       const inserted = `${separator}${name}, `;
       const caretAfter = start + inserted.length;
+      keepScroll();
       pendingSelection.current = { start: caretAfter, end: caretAfter };
       setMarkdown(markdown.slice(0, start) + inserted + markdown.slice(caret));
       setSuggestions([]);
     },
-    [markdown, setMarkdown],
+    [markdown, setMarkdown, keepScroll],
   );
 
   const handleKeyDown = (event) => {
@@ -866,6 +945,8 @@ export default function MarkdownEditor({
           return (
             <button
               key={snip.id}
+              type="button"
+              onMouseDown={(event) => event.preventDefault()}
               onClick={() => insertSnippet(snip.id)}
               title={snip.hint}
               className="px-2 py-1 rounded bg-[var(--ui-bg-card)] hover:bg-[var(--ui-accent-muted)] text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] border border-[var(--ui-border-primary)] transition shrink-0 flex items-center gap-1"
@@ -878,6 +959,39 @@ export default function MarkdownEditor({
       </div>
 
       <div className="flex-1 relative overflow-hidden bg-[var(--ui-bg-primary)]">
+        {snippetNotice && (
+          <div
+            role="status"
+            data-testid="snippet-notice"
+            className="absolute top-2 right-2 z-30 flex items-center gap-2 max-w-[90%] rounded-lg border border-[var(--ui-border-primary)] bg-[var(--ui-bg-card)] shadow-lg px-2.5 py-1.5 text-xs text-[var(--ui-text-secondary)]"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-[var(--ui-accent)]" />
+            <span className="truncate">
+              {snippetNotice.merged ? t.snippetMerged : t.snippetAdded}{' '}
+              <span className="font-semibold text-[var(--ui-text-primary)]">
+                {snippetNotice.title}
+              </span>
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                scrollToOffset(snippetNotice.offset);
+                setSnippetNotice(null);
+              }}
+              className="shrink-0 px-1.5 py-0.5 rounded border border-[var(--ui-border-primary)] text-[var(--ui-text-tertiary)] hover:text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-card-hover)] transition"
+            >
+              {t.snippetGoTo}
+            </button>
+            <button
+              type="button"
+              onClick={() => setSnippetNotice(null)}
+              aria-label={t.snippetClose}
+              className="shrink-0 text-[var(--ui-text-muted)] hover:text-[var(--ui-text-primary)]"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
         {searchOpen && searchQuery.trim() && matches.length > 0 && (
           <div
             ref={backdropRef}
@@ -898,12 +1012,17 @@ export default function MarkdownEditor({
           aria-label={t.markdownEditor}
           value={markdown}
           onChange={(e) => {
+            rememberCaret(e);
             setMarkdown(e.target.value, true);
             refreshSuggestions(e.target.value, e.target.selectionStart);
             reportCursor(e.target.selectionStart);
           }}
           onKeyDown={handleKeyDown}
-          onKeyUp={(e) => reportCursor(e.target.selectionStart)}
+          onKeyUp={(e) => {
+            rememberCaret(e);
+            reportCursor(e.target.selectionStart);
+          }}
+          onSelect={rememberCaret}
           onScroll={(e) => {
             reportScroll();
             if (backdropRef.current) {
@@ -911,13 +1030,15 @@ export default function MarkdownEditor({
               backdropRef.current.scrollLeft = e.target.scrollLeft;
             }
           }}
-          onBlur={() => {
+          onBlur={(e) => {
+            rememberCaret(e);
             cancelAnimationFrame(cursorFrame.current);
             if (onCursorOffset) {
               onCursorOffset(null);
             }
           }}
           onClick={(e) => {
+            rememberCaret(e);
             setSuggestions([]);
             reportCursor(e.target.selectionStart);
           }}
