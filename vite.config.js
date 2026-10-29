@@ -74,6 +74,16 @@ export default defineConfig(({ command }) => ({
     __APP_COMMIT_DATE__: JSON.stringify(getGitDate()),
     __IS_DEV__: JSON.stringify(command === 'serve'),
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'markdown-vendor': ['marked'],
+        },
+      },
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',
