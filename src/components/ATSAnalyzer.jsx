@@ -31,6 +31,7 @@ import { hashMarkdown, toHistoryRecord } from '../utils/atsPdfHistory';
 import { applyFix, applyAllFixes, canApplyFix, pendingFixes } from '../utils/markdownFixes';
 import { diffLines, diffStats, scoreTrend } from '../utils/evaluationDiff';
 import { matchJobDescription } from '../utils/jobMatcher';
+import { scoreDimensions } from '../utils/atsDimensions';
 import ScoreBreakdown from './ScoreBreakdown';
 import AtsRobotView from './AtsRobotView';
 
@@ -417,7 +418,6 @@ export default function ATSAnalyzer({
       return;
     }
     const { downloadAtsReport } = await import('../utils/atsReport');
-    const { scoreDimensions } = await import('../utils/atsDimensions');
     downloadAtsReport(latest, {
       dimensions: scoreDimensions(latest.checks),
       t,

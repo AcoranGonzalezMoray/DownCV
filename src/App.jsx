@@ -1,4 +1,13 @@
-import { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo } from 'react';
+import {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useCallback,
+  useRef,
+  useMemo,
+  lazy,
+  Suspense,
+} from 'react';
 import useTheme from './hooks/useTheme';
 import useLocalStorage from './hooks/useLocalStorage';
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
@@ -13,7 +22,6 @@ import ATSAnalyzer from './components/ATSAnalyzer';
 import VariantsPanel from './components/VariantsPanel';
 import ContactWarnings from './components/ContactWarnings';
 import ConfirmDialog from './components/ConfirmDialog';
-import CoverLetterModal from './components/CoverLetterModal';
 import ImportModal from './components/ImportModal';
 import AIAssistantModal from './components/AIAssistantModal';
 import AppTour from './components/AppTour';
@@ -48,6 +56,8 @@ import {
   Info,
   Menu,
 } from 'lucide-react';
+
+const CoverLetterModal = lazy(() => import('./components/CoverLetterModal'));
 
 const DEFAULT_STYLES = {
   fontFamily: "'Inter', sans-serif",
@@ -1041,19 +1051,23 @@ export default function App() {
         )}
       </div>
 
-      <CoverLetterModal
-        open={letterOpen}
-        onClose={() => {
-          setLetterOpen(false);
-          setLetterJob(null);
-        }}
-        onRequestExport={requestExport}
-        markdown={markdown}
-        styles={styles}
-        t={t}
-        lang={lang}
-        job={letterJob}
-      />
+      {letterOpen && (
+        <Suspense fallback={null}>
+          <CoverLetterModal
+            open={letterOpen}
+            onClose={() => {
+              setLetterOpen(false);
+              setLetterJob(null);
+            }}
+            onRequestExport={requestExport}
+            markdown={markdown}
+            styles={styles}
+            t={t}
+            lang={lang}
+            job={letterJob}
+          />
+        </Suspense>
+      )}
 
       <ImportModal
         open={importOpen}

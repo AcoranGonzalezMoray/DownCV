@@ -29,21 +29,21 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@eslint-react/eslint-plugin": "latest",
+    "@tailwindcss/vite": "^4.0.0",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.7",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.7.0",
-    "@tailwindcss/vite": "^4.0.0",
     "eslint": "^10.0.0",
     "eslint-config-prettier": "^10.1.8",
-    "@eslint-react/eslint-plugin": "latest",
     "jsdom": "^30.1.1",
     "postcss": "^8.4.49",
     "prettier": "^3.9.9",
     "tailwindcss": "^4.0.0",
-    "vite": "^6.0.7",
+    "vite": "^6.4.5",
     "vitest": "^5.0.5"
   },
   "overrides": {
