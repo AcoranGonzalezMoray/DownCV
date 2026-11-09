@@ -48,7 +48,8 @@
   },
   "overrides": {
     "braces": "^3.0.3",
-    "micromatch": "^4.0.8"
+    "micromatch": "^4.0.8",
+    "minimatch": "^11.0.5"
   },
   "allowScripts": {
     "core-js@3.50.0": true,
