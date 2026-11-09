@@ -28,7 +28,7 @@
 
 **DownCV** is a high-performance, open-source web application designed to help job seekers create, format, and optimize professional resumes using **Markdown**. 
 
-Unlike web resume builders that process sensitive personal data on third-party servers, **DownCV runs 100% client-side in your browser**. It includes an isolated **Applicant Tracking System (ATS) evaluation engine** that generates real vector PDFs, reads back the text layer using `pdf.js` (exactly as real ATS parsers do), scores the resume across 12 critical dimensions, and provides **one-click automatic Markdown fixes**.
+Unlike web resume builders that process sensitive personal data on third-party servers, **DownCV runs 100% client-side in your browser**. It includes an isolated **Applicant Tracking System (ATS) evaluation engine** that generates real vector PDFs, reads back the text layer using `pdf.js` (exactly as real ATS parsers do), scores the resume across 19 ATS checks grouped into 5 dimensions, and provides **one-click automatic Markdown fixes**.
 
 
 ## ✨ Key Features
@@ -44,7 +44,7 @@ Edit raw Markdown or select text on the A4 page preview to format elements direc
 
 ### 🛡️ Integrated ATS Simulator & Scorer
 
-Scores your generated PDF against realistic ATS rules (text layer integrity, keyword density, action verbs, contact information, bullet quality, etc.). Also analyses a PDF you already have, and exports the report. The score is the sum of the rules that pass, out of 100. Both lexicons are measured together, so a bilingual CV is never punished for the language of its headings or of its interface.
+Scores your generated PDF against realistic ATS rules (text layer integrity, keyword density, action verbs, contact information, bullet quality, etc.). Also analyses a PDF you already have, and exports the report. The score is the sum of the rules that pass, out of 100. Both lexicons are measured together, so a bilingual CV is not punished just for the language of its headings or interface; the `language` rule only fails when headings and bullets use different languages.
 
 | Rule | Points | What it fails on |
 |---|---:|---|
@@ -60,13 +60,13 @@ Scores your generated PDF against realistic ATS rules (text layer integrity, key
 | `metrics` | 8 | Fewer than two numbers behind the achievements |
 | `phrasing` | 5 | Fillers such as "responsible for" or "hard-working", with the verb that says it better |
 | `duplicates` | 3 | The same bullet copied into two jobs |
-| `keywords` | 5 | Fewer than four relevant terms, including the ones the detected role expects |
+| `keywords` | 5 | Fewer than four relevant terms (role-specific keywords are suggested as gaps, not required) |
 | `bullets` | 4 | More than 30% of the experience bullets with no verb and no number |
 | `language` | 2 | Headings in one language and bullets in another |
 | `dates` | 4 | A date in the future, two date styles mixed, or two jobs claiming the same months |
-| `filename` | 2 | A file name without your name, with spaces, or marked "final" / "v2" |
+| `filename` | 2 | An imported PDF whose file name lacks your name, has spaces, or is marked "final" / "v2" (the auto-generated export name always includes your name, underscores and the date) |
 | `density` | 3 | A single page over 750 words (the densest page, not the average) |
-| `stuffing` | 2 | A term repeated four times in one line, or eating 6% of the document |
+| `stuffing` | 2 | A term repeated four times in one line, or appearing at least six times while eating 6% of the document |
 
 The panel also groups them into five dimensions (structure, contact, verbs, metrics, keywords), lists what is missing sorted by points lost, and can download the whole report as HTML.
 
@@ -108,7 +108,7 @@ Automatically drafts a tailored, professional cover letter derived from your res
 
 ### 📤 Multi-Format Export
 
-Export to native vector PDF (via jsPDF), Microsoft Word (`.docx` via OOXML), or Rich Text Format (`.rtf`).
+Export to vector PDF through your browser's native print dialog (the same A4 file an ATS receives), Microsoft Word (`.docx` via OOXML), or Rich Text Format (`.rtf`). The ATS engine builds the exact PDF it evaluates with `jsPDF` under the hood.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/dd5c4ff6-d0ae-4b23-bd5c-67880cf6db82" alt="Multi-Format Export Demo" width="800" style="border-radius: 12px" />
@@ -116,7 +116,7 @@ Export to native vector PDF (via jsPDF), Microsoft Word (`.docx` via OOXML), or 
 
 ### 📥 Universal Resume Importer
 
-Import existing resumes from `.pdf`, `.docx`, `.txt`, `.md`, or raw text into clean, structured Markdown.
+Import existing resumes from `.pdf`, `.docx`, `.txt`, `.md`, `.json` (JSON Resume), or raw text into clean, structured Markdown.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/2c1ec74a-4fdb-490e-90b5-0cbd59144a4b" alt="Universal Resume Importer Demo" width="800" style="border-radius: 12px" />
@@ -170,8 +170,8 @@ flowchart TD
 1. **Vector Document Build**: `pdfModel.js` converts Markdown into structured style blocks. `pdfBuilder.js` renders real vector text via `jsPDF`.
 2. **Content-Keyed Caching**: `pdfArtifact.js` caches generated binary blobs based on a hash of the Markdown text and layout settings, ensuring scores and downloads never drift.
 3. **Text Layer Extraction**: `pdfText.js` invokes `pdf.js` to extract plain text per page, replicating how Enterprise ATS software (Workday, Taleo, Greenhouse) ingests resumes.
-4. **Scoring & Diagnostics**: `atsPdfEvaluation.js` checks 19 rules worth 100 points (see the table above): text layer existence, length, contact info, section structure, headings the parser cannot read, Markdown residue, exotic characters, action verbs, numbers, weak phrasing, duplicated bullets, keywords, bullet formatting, document language, dates and chronology, file name, page density and keyword stuffing. It can also score any PDF you already have (`evaluatePdfFile`).
-5. **Undoable Pure Fixes**: Detected formatting bugs (e.g. bold hashes, missing email prefix, invalid section headers) trigger single-click fixes applied via pure Markdown string transformations.
+4. **Scoring & Diagnostics**: `atsPdfEvaluation.js` checks 19 rules worth 100 points (see the table above): text layer existence, page count, length, contact info, section structure, headings the parser cannot read, Markdown residue, exotic characters, action verbs, numbers, weak phrasing, duplicated bullets, keywords, bullet formatting, document language, dates and chronology, file name, page density and keyword stuffing. It can also score any PDF you already have (`evaluatePdfFile`).
+5. **Undoable Pure Fixes**: Detected issues trigger single-click fixes applied via pure Markdown string transformations: `insertContact` adds a contact line and `insertSummary` adds a summary section. The page-count rule instead offers a layout `fit` that scales typography and margins until the CV fits, without rewriting the Markdown.
 
 ### How the Local AI Rewriter Works
 
@@ -182,7 +182,7 @@ The AI assistant is **entirely optional and entirely local**. DownCV never proxi
 3. **Select and rewrite**: highlight any paragraph, bullet or heading in the A4 preview and press **Improve with AI**. DownCV first offers instant offline suggestions from `enhanceBulletPoint()` (weak-verb replacement, metric detection), then **Generate with Ollama** asks your model to rewrite the fragment keeping the exact same meaning but with stronger action verbs and quantified impact.
 4. **Apply it**: the answer arrives as one more suggestion; clicking it replaces only the selected range in the Markdown, so it stays undoable with `Ctrl+Z`.
 
-The system prompt (`aiEnhancer.js`) is set to *"You are an expert ATS resume writer and career coach"*, and the request is stripped of quotes so the result can be pasted straight back into the document.
+The system prompt (`aiEnhancer.js`) is set to *"You are an expert ATS resume writer and career coach"*, and the AI response is stripped of quotes so the result can be pasted straight back into the document.
 
 ---
 
@@ -270,7 +270,7 @@ DownCV/
 │   │   ├── CoverLetterModal.jsx  # Cover letter generator & PDF exporter
 │   │   ├── CVPreview.jsx         # A4 paper preview with direct formatting tools
 │   │   ├── ExportMenu.jsx        # Dropdown menu for PDF, DOCX, RTF, PNG, JSON, HTML
-│   │   ├── ImportModal.jsx       # Import PDF, DOCX, TXT, or MD into Markdown
+│   │   ├── ImportModal.jsx       # Import PDF, DOCX, TXT, MD, or JSON into Markdown
 │   │   ├── MarkdownEditor.jsx    # Caret shortcuts, sample CVs, search, draft history
 │   │   ├── StyleControls.jsx     # Font, color palette, margin, line height & layout presets
 │   │   ├── ThemeToggle.jsx       # Dark / light mode toggle
@@ -301,7 +301,9 @@ DownCV/
 │   │   ├── jsonResume.js         # JSON Resume (jsonresume.org) import/export
 │   │   ├── markdownFixes.js      # Pure 1-click Markdown issue resolution
 │   │   ├── markdownParser.js     # marked AST parser with source line offsets
+│   │   ├── pdfArtifact.js        # Content-keyed cache of generated PDF blobs
 │   │   ├── pdfBuilder.js         # Vector PDF rendering engine using jsPDF
+│   │   ├── pdfModel.js           # Markdown → styled PDF block model
 │   │   └── pdfText.js            # pdf.js text layer reader worker
 │   ├── App.jsx             # Main application layout & state coordinator
 │   └── main.jsx            # Application entry point
@@ -316,7 +318,7 @@ DownCV/
 
 We have an active product roadmap! Check out our planned features and technical improvements:
 - 🎨 **Multi-column & Visual Template System** (Sidebar skills/contacts vs main timeline).
-- 🌍 **More languages**: the UI is fully translated to English and Spanish today; French, German and Portuguese are next.
+- 🌍 **More languages**: the interface ships in English and Spanish today (a handful of style-preset labels are still English-only); French, German and Portuguese are next.
 - 🧩 **Plugin-style ATS rule packs**: let users define their own scoring rules as JSON instead of hardcoding them.
 - 🧪 **Snapshot tests for the generated PDF text layer**, to lock the ATS score against regressions.
 - ⌨️ **Richer keyboard navigation** across the preview, the variants panel and the command palette.
