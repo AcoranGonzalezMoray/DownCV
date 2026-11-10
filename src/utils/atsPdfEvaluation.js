@@ -4,6 +4,8 @@ import { getPdfArtifact } from './pdfArtifact';
 import { hashMarkdown } from './atsPdfHistory';
 import { listSections } from './markdownSections';
 import { exportFilename } from './exportName';
+import { CHECK_POINTS, TOTAL_POINTS } from './atsBaseRules';
+import { evaluateCustomRule, customRulesSignature } from './atsCustomRules';
 import {
   ATS_KEYWORDS,
   ATS_KEYWORDS_ES,
@@ -13,29 +15,7 @@ import {
   PHRASE_REWRITES,
 } from './atsScorer';
 
-export const CHECK_POINTS = {
-  text: 10,
-  pages: 8,
-  length: 3,
-  contact: 9,
-  sections: 9,
-  headings: 4,
-  residue: 6,
-  emoji: 3,
-  verbs: 10,
-  metrics: 8,
-  phrasing: 5,
-  duplicates: 3,
-  keywords: 5,
-  bullets: 4,
-  language: 2,
-  dates: 4,
-  filename: 2,
-  density: 3,
-  stuffing: 2,
-};
-
-export const TOTAL_POINTS = Object.values(CHECK_POINTS).reduce((a, b) => a + b, 0);
+export { CHECK_POINTS, TOTAL_POINTS };
 
 const SECTIONS = {
   en: [
@@ -701,7 +681,10 @@ const longParagraphs = (text) =>
     .filter((block) => block.trim() && !BULLET_RE.test(block.trim()))
     .filter((block) => block.split(/\s+/).filter(Boolean).length > LONG_PARAGRAPH_WORDS);
 
-export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = '' } = {}) {
+export function evaluatePdfText(
+  extraction,
+  { lang = 'en', text: sourceText = '', customRules = [] } = {},
+) {
   const t = translations[lang] || translations.en;
   const text = extraction.text || '';
   const lower = text.toLowerCase();
@@ -1079,6 +1062,40 @@ export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = ''
     },
   );
 
+  const basePoints = score;
+
+  for (const rule of customRules) {
+    const ok = evaluateCustomRule(rule, { text, flat, wordCount });
+    const points = Number(rule.points) || 0;
+    const title = rule.title?.[lang] || rule.title?.en || rule.id;
+    const passMessage = rule.passMessage?.[lang] || rule.passMessage?.en || t.atsRulesPassDefault;
+    const failMessage = rule.failMessage?.[lang] || rule.failMessage?.en || t.atsRulesFailDefault;
+    checks.push({
+      id: `custom:${rule.id}`,
+      custom: true,
+      groupId: rule.groupId || null,
+      dimension: rule.dimension || 'structure',
+      title,
+      pass: ok,
+      points: ok ? points : 0,
+      max: points,
+      msg: ok ? passMessage : failMessage,
+      examples: [],
+    });
+    if (ok) {
+      score += points;
+    } else {
+      suggestions.push(failMessage);
+    }
+  }
+
+  const customMaxPoints = customRules.reduce(
+    (total, rule) => total + (Number(rule.points) || 0),
+    0,
+  );
+  const totalPoints = TOTAL_POINTS + customMaxPoints;
+  const percent = totalPoints > 0 ? Math.round((score / totalPoints) * 100) : 0;
+
   const found = {
     verbs,
     metrics,
@@ -1118,9 +1135,15 @@ export function evaluatePdfText(extraction, { lang = 'en', text: sourceText = ''
     .sort((a, b) => b.lost - a.lost);
 
   return {
-    score: Math.round(score),
-    grade: grade(Math.round(score)),
+    score: percent,
+    grade: grade(percent),
     maxScore: TOTAL_POINTS,
+    points: Math.round(score * 100) / 100,
+    totalPoints,
+    basePoints,
+    customPoints: Math.round((score - basePoints) * 100) / 100,
+    customMaxPoints,
+    rulesSignature: customRules.length > 0 ? customRulesSignature(customRules) : '',
     checks,
     suggestions,
     gaps,
@@ -1147,7 +1170,11 @@ export async function evaluatePdfFile(file, options = {}) {
   if ((extraction.charCount ?? 0) < 50) {
     throw new Error(t.atsPdfNoTextLayer);
   }
-  const result = evaluatePdfText(extraction, { lang, text: options.sourceMarkdown || '' });
+  const result = evaluatePdfText(extraction, {
+    lang,
+    text: options.sourceMarkdown || '',
+    customRules: options.customRules || [],
+  });
   return {
     ...result,
     lang,
@@ -1169,7 +1196,7 @@ export async function evaluatePdf(markdown, styles, options = {}) {
   }
   const result = evaluatePdfText(
     { ...extraction, pageCount: extraction.pageCount || artifact.pages },
-    { lang, text: markdown },
+    { lang, text: markdown, customRules: options.customRules || [] },
   );
   return {
     ...result,

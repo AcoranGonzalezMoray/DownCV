@@ -119,6 +119,63 @@ describe('ATSAnalyzer', () => {
     expect(screen.getByRole('button', { name: t.atsPdfEvaluate })).toBeTruthy();
   });
 
+  it('opens the ATS rules manager from the header', () => {
+    renderAnalyzer();
+    fireEvent.click(screen.getByRole('button', { name: t.atsRulesOpen }));
+    const dialog = screen.getByRole('dialog', { name: t.atsRulesTitle });
+    expect(dialog).toBeTruthy();
+    expect(within(dialog).getByRole('heading', { name: t.atsRulesBaseTitle })).toBeTruthy();
+    expect(
+      within(dialog).getByText((content) => content.includes(t.atsRulesBaseIntro)),
+    ).toBeTruthy();
+  });
+
+  it('sends the active custom rules with the evaluation', async () => {
+    vi.mocked(evaluatePdf).mockResolvedValue(evaluation());
+    const ruleGroups = [
+      {
+        id: 'grp_1',
+        enabled: true,
+        name: { en: 'Backend', es: 'Backend' },
+        description: { en: '', es: '' },
+        rules: [
+          {
+            id: 'rule_1',
+            enabled: true,
+            dimension: 'keywords',
+            points: 3,
+            type: 'containsAny',
+            params: { terms: ['docker'] },
+            title: { en: 'Docker', es: 'Docker' },
+            passMessage: { en: 'Docker found.', es: 'Docker encontrado.' },
+            failMessage: { en: 'Add Docker.', es: 'Añade Docker.' },
+          },
+        ],
+      },
+    ];
+    renderAnalyzer({ ruleGroups, setRuleGroups: vi.fn() });
+    clickEvaluate();
+
+    await waitFor(() =>
+      expect(evaluatePdf).toHaveBeenCalledWith(
+        MD,
+        styles,
+        expect.objectContaining({
+          customRules: [expect.objectContaining({ id: 'rule_1', groupId: 'grp_1' })],
+        }),
+      ),
+    );
+  });
+
+  it('does not report a rules change when there are no custom rules', async () => {
+    vi.mocked(evaluatePdf).mockResolvedValue(evaluation());
+    const { state } = renderAnalyzer();
+    clickEvaluate();
+
+    await waitFor(() => expect(state.history).toHaveLength(1));
+    expect(screen.queryByText(t.atsRulesStale)).toBeNull();
+  });
+
   it('scores the PDF and files the record in the history', async () => {
     vi.mocked(evaluatePdf).mockResolvedValue(evaluation());
     const { state } = renderAnalyzer();

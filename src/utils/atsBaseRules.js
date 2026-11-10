@@ -1,0 +1,48 @@
+export const CHECK_POINTS = {
+  text: 10,
+  pages: 8,
+  length: 3,
+  contact: 9,
+  sections: 9,
+  headings: 4,
+  residue: 6,
+  emoji: 3,
+  verbs: 10,
+  metrics: 8,
+  phrasing: 5,
+  duplicates: 3,
+  keywords: 5,
+  bullets: 4,
+  language: 2,
+  dates: 4,
+  filename: 2,
+  density: 3,
+  stuffing: 2,
+};
+
+export const TOTAL_POINTS = Object.values(CHECK_POINTS).reduce(
+  (total, points) => total + points,
+  0,
+);
+
+export const BASE_RULE_LABEL_KEYS = {
+  text: 'atsPdfTextLayer',
+  pages: 'atsPdfPageCount',
+  length: 'atsPdfLength',
+  contact: 'atsPdfContact',
+  sections: 'atsPdfSections',
+  headings: 'atsPdfHeadings',
+  residue: 'atsPdfResidue',
+  emoji: 'atsPdfEmoji',
+  verbs: 'atsPdfVerbs',
+  metrics: 'atsPdfMetrics',
+  phrasing: 'atsPdfPhrasing',
+  duplicates: 'atsPdfDuplicates',
+  keywords: 'atsPdfKeywords',
+  bullets: 'atsPdfBullets',
+  language: 'atsPdfLanguage',
+  dates: 'atsPdfDates',
+  filename: 'atsPdfFilename',
+  density: 'atsPdfDensity',
+  stuffing: 'atsPdfStuffing',
+};
