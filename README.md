@@ -26,7 +26,7 @@
 
 ## 📌 Overview
 
-**DownCV** is a high-performance, open-source web application designed to help job seekers create, format, and optimize professional resumes using **Markdown**. 
+**DownCV** is an open-source, local-first web application for creating, formatting, and optimizing professional resumes in **Markdown**. 
 
 Unlike web resume builders that process sensitive personal data on third-party servers, **DownCV runs 100% client-side in your browser**. It includes an isolated **Applicant Tracking System (ATS) evaluation engine** that generates real vector PDFs, reads back the text layer using `pdf.js` (exactly as real ATS parsers do), scores the resume across 19 ATS checks grouped into 5 dimensions, lets you extend it with your own custom rule groups, and provides **one-click automatic Markdown fixes**.
 
