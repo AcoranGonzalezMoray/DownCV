@@ -70,6 +70,8 @@ Scores your generated PDF against realistic ATS rules (text layer integrity, key
 
 The panel also groups them into five dimensions (structure, contact, verbs, metrics, keywords), lists what is missing sorted by points lost, and can download the whole report as HTML.
 
+The gear button in the ATS sidebar opens the **rules manager**. The 19 base checks above are permanent, but you can add your own rule groups, enable or disable each group and rule, and export or import them as JSON to reuse them in another browser. Custom rules support term matching, minimum/maximum counts, word-count ranges and regular expressions, and every group name, group description, title and message has to be written in both English and Spanish. Their points are added on top of the base 100 and the final score is normalized back to a percentage, so the panel keeps showing a 0–100 score.
+
 <p align="center">
   <img src="https://github.com/user-attachments/assets/ba69470c-031a-46fe-8080-7322b9347b9f" alt="ATS Simulator & Scorer Demo" width="800" style="border-radius: 12px" />
 </p>
@@ -158,7 +160,7 @@ flowchart TD
 
     subgraph ATSPipeline ["ATS Analyzer Engine (Local)"]
         PA --> PT[pdfText.js - pdf.js Text Layer Extractor]
-        PT -->         EVAL[atsPdfEvaluation.js - 19 Scoring Rules]
+        PT -->         EVAL[atsPdfEvaluation.js - 19 Base Scoring Rules]
         EVAL --> SCORE[ATS Score % + Gaps + Report]
         SCORE --> FIXES[markdownFixes.js - 1-Click Fixes]
         FIXES -. Apply Fix .-> MD
@@ -170,7 +172,7 @@ flowchart TD
 1. **Vector Document Build**: `pdfModel.js` converts Markdown into structured style blocks. `pdfBuilder.js` renders real vector text via `jsPDF`.
 2. **Content-Keyed Caching**: `pdfArtifact.js` caches generated binary blobs based on a hash of the Markdown text and layout settings, ensuring scores and downloads never drift.
 3. **Text Layer Extraction**: `pdfText.js` invokes `pdf.js` to extract plain text per page, replicating how Enterprise ATS software (Workday, Taleo, Greenhouse) ingests resumes.
-4. **Scoring & Diagnostics**: `atsPdfEvaluation.js` checks 19 rules worth 100 points (see the table above): text layer existence, page count, length, contact info, section structure, headings the parser cannot read, Markdown residue, exotic characters, action verbs, numbers, weak phrasing, duplicated bullets, keywords, bullet formatting, document language, dates and chronology, file name, page density and keyword stuffing. It can also score any PDF you already have (`evaluatePdfFile`).
+4. **Scoring & Diagnostics**: `atsPdfEvaluation.js` checks 19 base rules worth 100 points (see the table above): text layer existence, page count, length, contact info, section structure, headings the parser cannot read, Markdown residue, exotic characters, action verbs, numbers, weak phrasing, duplicated bullets, keywords, bullet formatting, document language, dates and chronology, file name, page density and keyword stuffing. It can also score any PDF you already have (`evaluatePdfFile`). User-defined groups from `atsCustomRules.js` are evaluated after the base rules; their points extend the total and the result is normalized to a percentage.
 5. **Undoable Pure Fixes**: Detected issues trigger single-click fixes applied via pure Markdown string transformations: `insertContact` adds a contact line and `insertSummary` adds a summary section. The page-count rule instead offers a layout `fit` that scales typography and margins until the CV fits, without rewriting the Markdown.
 
 ### How the Local AI Rewriter Works
@@ -264,6 +266,7 @@ DownCV/
 ├── src/
 │   ├── components/         # React components
 │   │   ├── ATSAnalyzer.jsx       # ATS score display, recommendations, 1-click fixes
+│   │   ├── AtsRulesModal.jsx     # Base/custom ATS rule groups, EN/ES editor & import/export
 │   │   ├── AIAssistantModal.jsx  # Ollama endpoint / model settings & connection test
 │   │   ├── AiRewritePopover.jsx  # AI rewrite suggestions popover
 │   │   ├── ContactWarnings.jsx   # Unverified email/phone/link banner & validator
@@ -288,6 +291,8 @@ DownCV/
 │   │   └── useMarkdownHistory.js     # Pure undo/redo state stack
 │   ├── utils/              # Pure business logic & formatting modules
 │   │   ├── aiEnhancer.js        # Local bullet enhancer + Ollama OpenAI-compatible client
+│   │   ├── atsBaseRules.js       # Permanent ATS check weights & label keys
+│   │   ├── atsCustomRules.js     # User rule groups: schema, validation, evaluation, import/export
 │   │   ├── atsDimensions.js     # Rule groups behind the radar chart
 │   │   ├── atsPdfEvaluation.js   # Main ATS evaluation orchestration (19 rules / 100 pts)
 │   │   ├── atsReport.js          # Standalone HTML score report
@@ -319,7 +324,7 @@ DownCV/
 We have an active product roadmap! Check out our planned features and technical improvements:
 - 🎨 **Multi-column & Visual Template System** (Sidebar skills/contacts vs main timeline).
 - 🌍 **More languages**: the interface ships in English and Spanish today (a handful of style-preset labels are still English-only); French, German and Portuguese are next.
-- 🧩 **Plugin-style ATS rule packs**: let users define their own scoring rules as JSON instead of hardcoding them.
+- 🧩 **Community ATS rule pack library**: share and discover ready-made rule packs built on top of the new custom-rule import/export format.
 - 🧪 **Snapshot tests for the generated PDF text layer**, to lock the ATS score against regressions.
 - ⌨️ **Richer keyboard navigation** across the preview, the variants panel and the command palette.
 

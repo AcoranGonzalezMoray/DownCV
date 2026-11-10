@@ -234,6 +234,7 @@ export default function App() {
   };
 
   const [atsHistory, setAtsHistory] = useLocalStorage('ats_pdf_history', []);
+  const [atsRuleGroups, setAtsRuleGroups] = useLocalStorage('ats_rule_groups', []);
   const latestAts = atsHistory[0] || null;
   const [previewPageCount, setPreviewPageCount] = useState(1);
   const readPreviewPageCount = useCallback((count) => setPreviewPageCount(count), []);
@@ -920,6 +921,8 @@ export default function App() {
             lang={lang}
             history={atsHistory}
             setHistory={setAtsHistory}
+            ruleGroups={atsRuleGroups}
+            setRuleGroups={setAtsRuleGroups}
             previewPageCount={previewPageCount}
             jobBrief={jobBrief}
             onJobBriefChange={setJobBrief}
@@ -1041,6 +1044,8 @@ export default function App() {
                 lang={lang}
                 history={atsHistory}
                 setHistory={setAtsHistory}
+                ruleGroups={atsRuleGroups}
+                setRuleGroups={setAtsRuleGroups}
                 previewPageCount={previewPageCount}
                 jobBrief={jobBrief}
                 onJobBriefChange={setJobBrief}

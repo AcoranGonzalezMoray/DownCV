@@ -16,8 +16,31 @@ export function scoreDimensions(checks = []) {
     }
   });
 
+  const buckets = Object.fromEntries(DIMENSION_IDS.map((id) => [id, []]));
+
+  DIMENSION_IDS.forEach((id) => {
+    DIMENSION_GROUPS[id].forEach((checkId) => {
+      const check = byId.get(checkId);
+      if (check) {
+        buckets[id].push(check);
+      }
+    });
+  });
+
+  checks.forEach((check) => {
+    if (!check?.id) {
+      return;
+    }
+    const isCustom = check.custom || check.id.startsWith('custom:');
+    if (!isCustom) {
+      return;
+    }
+    const dimension = DIMENSION_IDS.includes(check.dimension) ? check.dimension : 'structure';
+    buckets[dimension].push(check);
+  });
+
   return DIMENSION_IDS.map((id) => {
-    const members = DIMENSION_GROUPS[id].map((checkId) => byId.get(checkId)).filter(Boolean);
+    const members = buckets[id];
     const points = members.reduce((total, check) => total + (Number(check.points) || 0), 0);
     const max = members.reduce((total, check) => total + (Number(check.max) || 0), 0);
     return {
