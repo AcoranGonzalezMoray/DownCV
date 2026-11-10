@@ -28,7 +28,7 @@
 
 **DownCV** is a high-performance, open-source web application designed to help job seekers create, format, and optimize professional resumes using **Markdown**. 
 
-Unlike web resume builders that process sensitive personal data on third-party servers, **DownCV runs 100% client-side in your browser**. It includes an isolated **Applicant Tracking System (ATS) evaluation engine** that generates real vector PDFs, reads back the text layer using `pdf.js` (exactly as real ATS parsers do), scores the resume across 19 ATS checks grouped into 5 dimensions, and provides **one-click automatic Markdown fixes**.
+Unlike web resume builders that process sensitive personal data on third-party servers, **DownCV runs 100% client-side in your browser**. It includes an isolated **Applicant Tracking System (ATS) evaluation engine** that generates real vector PDFs, reads back the text layer using `pdf.js` (exactly as real ATS parsers do), scores the resume across 19 ATS checks grouped into 5 dimensions, lets you extend it with your own custom rule groups, and provides **one-click automatic Markdown fixes**.
 
 
 ## ✨ Key Features
@@ -70,10 +70,17 @@ Scores your generated PDF against realistic ATS rules (text layer integrity, key
 
 The panel also groups them into five dimensions (structure, contact, verbs, metrics, keywords), lists what is missing sorted by points lost, and can download the whole report as HTML.
 
-The gear button in the ATS sidebar opens the **rules manager**. The 19 base checks above are permanent, but you can add your own rule groups, enable or disable each group and rule, and export or import them as JSON to reuse them in another browser. Custom rules support term matching, minimum/maximum counts, word-count ranges and regular expressions, and every group name, group description, title and message has to be written in both English and Spanish. Their points are added on top of the base 100 and the final score is normalized back to a percentage, so the panel keeps showing a 0–100 score.
-
 <p align="center">
   <img src="https://github.com/user-attachments/assets/ba69470c-031a-46fe-8080-7322b9347b9f" alt="ATS Simulator & Scorer Demo" width="800" style="border-radius: 12px" />
+</p>
+
+### 🧩 Custom ATS Rule Groups
+
+The gear button in the ATS sidebar opens the **rules manager**. The 19 base checks above are permanent, but you can add your own rule groups and rules, enable or disable each one, and edit them in place inside their own card. Custom rules support term matching, minimum/maximum counts, word-count ranges and regular expressions, and every group name, group description, title and message has to be written in both English and Spanish. Their points are added on top of the base 100 and the final score is normalized back to a percentage, so the panel keeps showing a 0–100 score. Export your groups as JSON to reuse them in another browser, or import a rule pack and choose whether to append it or replace the current groups.
+
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/e87aea63-773a-4166-8b8c-a2b6a32c2363" alt="Custom ATS Rule Groups Demo" width="800" style="border-radius: 12px" />
 </p>
 
 ### ✅ Contact Review & Verification
@@ -324,7 +331,6 @@ DownCV/
 We have an active product roadmap! Check out our planned features and technical improvements:
 - 🎨 **Multi-column & Visual Template System** (Sidebar skills/contacts vs main timeline).
 - 🌍 **More languages**: the interface ships in English and Spanish today (a handful of style-preset labels are still English-only); French, German and Portuguese are next.
-- 🧩 **Community ATS rule pack library**: share and discover ready-made rule packs built on top of the new custom-rule import/export format.
 - 🧪 **Snapshot tests for the generated PDF text layer**, to lock the ATS score against regressions.
 - ⌨️ **Richer keyboard navigation** across the preview, the variants panel and the command palette.
 
